@@ -1,0 +1,7 @@
+﻿services:
+  pricepredicator.app:
+    image: pricepredicator.app
+    build:
+      context: .
+      dockerfile: PricePredicator.App/Dockerfile
+
