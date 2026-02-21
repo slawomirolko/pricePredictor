@@ -1,18 +1,48 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
 using PricePredicator.App;
+using PricePredicator.App.Gateway;
+using PricePredicator.App.Weather;
 
 // Build host
-var builder = Host.CreateApplicationBuilder(args);
+ThreadPool.SetMinThreads(200, 200);
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(50051, o =>
+    {
+        o.Protocols = HttpProtocols.Http2;
+    });
+});
+
+builder.Services.AddGrpc();
+
 
 builder.Services.Configure<NtfySettings>(builder.Configuration.GetSection(NtfySettings.SectionName));
-
 builder.Services.AddHttpClient<NtfyClient>((sp, client) =>
 {
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NtfySettings>>().Value;
     client.BaseAddress = new Uri(settings.BaseUrl);
 });
+builder.Services.AddHttpClient<IOpenMeteoClient, OpenMeteoClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.open-meteo.com/");
+});
+
 
 builder.Services.AddHostedService<NtfyBackgroundService>();
 
-await builder.Build().RunAsync();
+builder.Services.AddSingleton<IGatewayService, GatewayService>();
+builder.Services.AddSingleton<IWeatherService, WeatherService>();
+
+builder.Services.AddHostedService<NtfyBackgroundService>();
+
+var app = builder.Build();
+
+app.MapGrpcService<GatewayRpcEndpoint>();
+
+app.Run();

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option csharp_namespace = "PricePredicator.App.Gateway";
+
+package gateway;
+
+// Main gRPC service
+service Gateway {
+  // Unary call
+  rpc Send (GatewayRequest) returns (GatewayReply);
+}
+
+// Request message
+message GatewayRequest {
+  string payload = 1;
+}
+
+// Response message
+message GatewayReply {
+  string result = 1;
+}
