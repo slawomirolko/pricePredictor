@@ -2,9 +2,10 @@
 import asyncio
 import sys
 import warnings
+import logging
 
 from datetime import datetime
-
+from gateway_client.grpc_client import AsyncGatewayGrpcClient
 from army.crew import Army
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
@@ -27,6 +28,17 @@ async def run_async():
         'topic': 'AI LLMs',
         'current_year': str(datetime.now().year)
     }
+
+    client = AsyncGatewayGrpcClient("localhost:50051")
+    try:
+        payload = f"Running crew for topic={inputs['topic']}"
+        grpc_result = await client.send(payload)
+
+        logger.info("gRPC Gateway response: %s", grpc_result)
+    except Exception as e:
+        logger.error("gRPC call failed: %s", e)
+    finally:
+        await client.close()
 
     try:
         await Army().crew().kickoff_async(inputs=inputs)
