@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 # Replace with inputs you want to test with, it will automatically
 # interpolate any tasks and agents information
 
-def run():
+async def run():
     """
     Run the crew.
     """
@@ -23,7 +23,7 @@ def run():
     }
 
     try:
-        Army().crew().kickoff(inputs=inputs)
+        await Army().crew().kickoff_async(inputs=inputs)
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 
