@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import asyncio
 import sys
 import warnings
 
@@ -13,7 +14,12 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 # Replace with inputs you want to test with, it will automatically
 # interpolate any tasks and agents information
 
-async def run():
+def run():
+    asyncio.run(run_async())
+
+
+
+async def run_async():
     """
     Run the crew.
     """
@@ -26,6 +32,10 @@ async def run():
         await Army().crew().kickoff_async(inputs=inputs)
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
+
+
+if __name__ == "__main__":
+    run()
 
 
 def train():
