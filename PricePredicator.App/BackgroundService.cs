@@ -53,7 +53,7 @@ public class NtfyBackgroundService : BackgroundService
                 _logger.LogError(ex, "Error sending notification");
             }
             
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }
 
         _logger.LogInformation("Ntfy Background Service stopping.");
