@@ -52,3 +52,6 @@ For support, questions, or feedback regarding the Army Crew or crewAI.
 - [Chat with our docs](https://chatg.pt/DWjSBZn)
 
 Let's create wonders together with the power and simplicity of crewAI.
+
+# Generate grpc files:
+python -m grpc_tools.protoc -I./Protos --python_out=./army/src/grpc --grpc_python_out=./army/src/grpc ./Protos/gateway.proto
