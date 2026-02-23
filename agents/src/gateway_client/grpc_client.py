@@ -1,6 +1,6 @@
 import grpc
-import gateway_pb2
-import gateway_pb2_grpc
+from . import gateway_pb2
+from . import gateway_pb2_grpc
 
 
 class AsyncGatewayGrpcClient:

@@ -54,4 +54,8 @@ For support, questions, or feedback regarding the Army Crew or crewAI.
 Let's create wonders together with the power and simplicity of crewAI.
 
 # Generate grpc files:
-python -m grpc_tools.protoc -I./Protos --python_out=./army/src/grpc --grpc_python_out=./army/src/grpc ./Protos/gateway.proto
+ python -m grpc_tools.protoc -I./Protos --python_out=./agents/src/gatewayClient  --grpc_python_out=./agents/src/gatewayClient ./Protos/gateway.proto
+
+powershell -ExecutionPolicy Bypass -File .\agents\.venv\Scripts\Activate.ps1
+
+uv run python -m army.main

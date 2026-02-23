@@ -4,6 +4,10 @@ import sys
 import warnings
 import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 from datetime import datetime
 from gateway_client.grpc_client import AsyncGatewayGrpcClient
 from army.crew import Army
