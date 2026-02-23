@@ -19,6 +19,8 @@ public class GatewayService : IGatewayService
         // Example of using existing services
         var weather = await _weatherService.GetCitiesWeatherAsync();
 
-        return $"Weather:{weather.ToString()}";
+        return string.Join(Environment.NewLine,
+            weather.Select(x => $"{x.City} Max temp: {x.MaxTemp} Min temp: {x.MinTemp}")
+        );
     }
 }
