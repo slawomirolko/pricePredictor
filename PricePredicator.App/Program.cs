@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using PricePredicator.App;
 using PricePredicator.App.Gateway;
+using PricePredicator.App.Gold;
+using PricePredicator.App.News;
 using PricePredicator.App.Weather;
 
 // Build host
@@ -31,6 +33,14 @@ builder.Services.AddHttpClient<NtfyClient>((sp, client) =>
 builder.Services.AddHttpClient<IOpenMeteoClient, OpenMeteoClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.open-meteo.com/");
+});
+builder.Services.AddHttpClient<IGoldPriceService, StooqGoldPriceService>(client =>
+{
+    client.BaseAddress = new Uri("https://stooq.com/");
+});
+builder.Services.AddHttpClient<INewsService, GoogleNewsRssService>(client =>
+{
+    client.BaseAddress = new Uri("https://news.google.com/");
 });
 
 
