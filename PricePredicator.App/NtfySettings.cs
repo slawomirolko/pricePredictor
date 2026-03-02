@@ -4,6 +4,6 @@ public record NtfySettings
 {
     internal const string SectionName = "Ntfy";
     
-    public string BaseUrl { get; init; } 
-    public string Topic { get; init; } 
+    public string BaseUrl { get; init; } = string.Empty;
+    public string Topic { get; init; } = string.Empty;
 }

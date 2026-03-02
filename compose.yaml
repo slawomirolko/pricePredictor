@@ -1,7 +1,32 @@
 ﻿services:
   pricepredicator.app:
-    image: pricepredicator.app
+    container_name: pricepredicator.app
+    image: "pricepredicator.app:latest"
     build:
       context: .
       dockerfile: PricePredicator.App/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - GoldNews__QdrantUrl=http://qdrant:6333
+      - GoldNews__OllamaUrl=http://host.docker.internal:11434
+    ports:
+      - "50051:50051"
+    depends_on:
+      qdrant:
+        condition: service_healthy
 
+  qdrant:
+    image: "qdrant/qdrant:latest"
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/healthz >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  qdrant_data:
