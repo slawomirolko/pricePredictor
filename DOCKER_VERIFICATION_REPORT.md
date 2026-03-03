@@ -183,7 +183,7 @@ AppHost                            net10.0  ✅ Build succeeded
     "DefaultConnection": "Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;"
   },
   "YahooFinance": {
-    "Symbols": [ "GLD", "SLV", "NG=F", "CL=F" ],
+    "Symbols": [ "GC=F", "SI=F", "NG=F", "CL=F" ],
     "Interval": "1m",
     "Range": "1d",
     "VolatilityBackupMinutes": 10,
@@ -248,7 +248,7 @@ When container starts:
    }
    ```
    - ✅ Creates schema if not exists
-   - ✅ Creates 4 tables: Volatility_Gold, Silver, NaturalGas, Oil
+   - ✅ Creates 4 tables: Gold, Silver, NaturalGas, Oil
    - ✅ Creates indexes on Timestamp
 
 3. **gRPC Mapping**
@@ -404,13 +404,13 @@ docker-compose logs -f pricepredicator.app
 # Expected output:
 # Yahoo Finance Background Service started
 # Fetching intraday data at 2026-03-03 14:31:00
-# Symbol: GLD, Timestamp: ..., Close: 192.45, LogReturn: 0.001234, ...
+# Symbol: GC=F, Timestamp: ..., Close: 1925.45, LogReturn: 0.001234, ...
 ```
 
 ### 4. Query Database
 ```bash
 docker exec -it pricepredicator.postgres psql -U postgres -d pricepredictor -c \
-  "SELECT timestamp, close, short_panic_score FROM \"Volatility_Gold\" ORDER BY timestamp DESC LIMIT 5;"
+  "SELECT timestamp, close, short_panic_score FROM \"Gold\" ORDER BY timestamp DESC LIMIT 5;"
 ```
 
 ### 5. Stop Services
@@ -425,22 +425,19 @@ docker-compose down
 ### Every Minute (1-min loop)
 ```
 [INFO] Fetching intraday data at 2026-03-03 14:31:00
-[INFO] Symbol: GLD, Timestamp: 2026-03-03T14:31:00Z, Close: 192.45, 
+[INFO] Symbol: GC=F, Timestamp: 2026-03-03T14:31:00Z, Close: 1925.45, 
        LogReturn: 0.001234, Vol5: 0.025, Vol15: 0.023, Vol60: 0.021, 
        ShortPanic: 0.823, LongPanic: 0.715
-[INFO] Symbol: SLV, Timestamp: 2026-03-03T14:31:00Z, Close: 28.90, ...
-[INFO] Symbol: NG=F, Timestamp: 2026-03-03T14:31:00Z, Close: 3.45, ...
-[INFO] Symbol: CL=F, Timestamp: 2026-03-03T14:31:00Z, Close: 78.50, ...
 ```
 
 ### Every 10 Minutes (Configurable)
 ```
 === VOLATILITY BACKUP LOG (Last 10 minutes) - 2026-03-03 14:40:00 ===
---- GLD (Gold) ---
-  TS: 2026-03-03 14:30:00, O: 192.30, H: 192.60, L: 192.10, C: 192.45, V: 1500000, ...
-  TS: 2026-03-03 14:31:00, O: 192.45, H: 192.70, L: 192.35, C: 192.50, V: 1400000, ...
+--- GC=F (Gold) ---
+  TS: 2026-03-03 14:30:00, O: 1925.30, H: 1926.60, L: 1924.10, C: 1925.45, V: 1500000, ...
+  TS: 2026-03-03 14:31:00, O: 1925.45, H: 1926.70, L: 1925.35, C: 1925.50, V: 1400000, ...
   [8 more rows]
---- SLV (Silver) ---
+--- SI=F (Silver) ---
   [10 rows]
 --- NG=F (Natural Gas) ---
   [10 rows]
@@ -487,4 +484,3 @@ All components of the Yahoo Finance 1-minute volatility analysis system are:
 **Report Generated:** March 3, 2026  
 **Verified By:** Automated verification system  
 **Quality:** PRODUCTION READY
-

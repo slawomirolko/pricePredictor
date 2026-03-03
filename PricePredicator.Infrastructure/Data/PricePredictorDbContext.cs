@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using PricePredicator.Infrastructure.Models;
 
@@ -22,54 +21,53 @@ public class PricePredictorDbContext : DbContext
         // Configure VolatilityGold
         modelBuilder.Entity<VolatilityGold>(entity =>
         {
-            entity.ToTable("Volatility_Gold");
+            entity.ToTable("Gold");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Timestamp).IsRequired();
             entity.Property(e => e.Open).HasPrecision(18, 8);
             entity.Property(e => e.High).HasPrecision(18, 8);
             entity.Property(e => e.Low).HasPrecision(18, 8);
             entity.Property(e => e.Close).HasPrecision(18, 8);
-            entity.HasIndex(e => e.Timestamp).IsUnique(false);
+            entity.HasIndex(e => e.Timestamp).IsUnique(true);
         });
 
         // Configure VolatilitySilver
         modelBuilder.Entity<VolatilitySilver>(entity =>
         {
-            entity.ToTable("Volatility_Silver");
+            entity.ToTable("Silver");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Timestamp).IsRequired();
             entity.Property(e => e.Open).HasPrecision(18, 8);
             entity.Property(e => e.High).HasPrecision(18, 8);
             entity.Property(e => e.Low).HasPrecision(18, 8);
             entity.Property(e => e.Close).HasPrecision(18, 8);
-            entity.HasIndex(e => e.Timestamp).IsUnique(false);
+            entity.HasIndex(e => e.Timestamp).IsUnique(true);
         });
 
         // Configure VolatilityNaturalGas
         modelBuilder.Entity<VolatilityNaturalGas>(entity =>
         {
-            entity.ToTable("Volatility_NaturalGas");
+            entity.ToTable("NaturalGas");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Timestamp).IsRequired();
             entity.Property(e => e.Open).HasPrecision(18, 8);
             entity.Property(e => e.High).HasPrecision(18, 8);
             entity.Property(e => e.Low).HasPrecision(18, 8);
             entity.Property(e => e.Close).HasPrecision(18, 8);
-            entity.HasIndex(e => e.Timestamp).IsUnique(false);
+            entity.HasIndex(e => e.Timestamp).IsUnique(true);
         });
 
         // Configure VolatilityOil
         modelBuilder.Entity<VolatilityOil>(entity =>
         {
-            entity.ToTable("Volatility_Oil");
+            entity.ToTable("Oil");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Timestamp).IsRequired();
             entity.Property(e => e.Open).HasPrecision(18, 8);
             entity.Property(e => e.High).HasPrecision(18, 8);
             entity.Property(e => e.Low).HasPrecision(18, 8);
             entity.Property(e => e.Close).HasPrecision(18, 8);
-            entity.HasIndex(e => e.Timestamp).IsUnique(false);
+            entity.HasIndex(e => e.Timestamp).IsUnique(true);
         });
     }
 }
-

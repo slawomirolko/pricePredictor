@@ -16,10 +16,10 @@ Successfully implemented a complete .NET 10 hosted service for fetching 1-minute
 - `Data/PricePredictorDbContextFactory.cs` - Design-time factory for migrations
 
 **Data Models (one per commodity):**
-- `Models/VolatilityGold.cs` - Table: Volatility_Gold
-- `Models/VolatilitySilver.cs` - Table: Volatility_Silver
-- `Models/VolatilityNaturalGas.cs` - Table: Volatility_NaturalGas
-- `Models/VolatilityOil.cs` - Table: Volatility_Oil
+- `Models/VolatilityGold.cs` - Table: Gold
+- `Models/VolatilitySilver.cs` - Table: Silver
+- `Models/VolatilityNaturalGas.cs` - Table: NaturalGas
+- `Models/VolatilityOil.cs` - Table: Oil
 
 **Migrations:**
 - `Migrations/InitialCreate/` - Auto-generated EF Core migration
@@ -202,7 +202,7 @@ using (var scope = app.Services.CreateScope())
 Four identical tables (one per commodity):
 
 ```sql
-CREATE TABLE "Volatility_Gold" (
+CREATE TABLE "Gold" (
   id INTEGER PRIMARY KEY,
   "Timestamp" TIMESTAMP NOT NULL,
   "Open" DECIMAL(18,8),
@@ -219,7 +219,7 @@ CREATE TABLE "Volatility_Gold" (
   "CreatedAtUtc" TIMESTAMP
 );
 
-CREATE INDEX "IX_Volatility_Gold_Timestamp" ON "Volatility_Gold" ("Timestamp");
+CREATE INDEX "IX_Gold_Timestamp" ON "Gold" ("Timestamp");
 ```
 
 ## Configuration
@@ -230,7 +230,7 @@ CREATE INDEX "IX_Volatility_Gold_Timestamp" ON "Volatility_Gold" ("Timestamp");
     "DefaultConnection": "Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;"
   },
   "YahooFinance": {
-    "Symbols": [ "GLD", "SLV", "NG=F", "CL=F" ],
+    "Symbols": [ "GC=F", "SI=F", "NG=F", "CL=F" ],
     "Interval": "1m",
     "Range": "1d",
     "VolatilityBackupMinutes": 10,
@@ -316,4 +316,3 @@ dotnet run --project PricePredicator.App
 - ✅ FluentAssertions (free assertion library)
 
 **Total Cost: $0** (only your infrastructure)
-

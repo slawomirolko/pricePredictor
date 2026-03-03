@@ -62,8 +62,8 @@ Tests override application settings to ensure 1-minute data ingestion:
 Environment Variables Set:
 - YahooFinance__Interval = "1m"
 - YahooFinance__Range = "1d"
-- YahooFinance__Symbols__0 = "GLD"    // Gold ETF
-- YahooFinance__Symbols__1 = "SLV"    // Silver ETF
+- YahooFinance__Symbols__0 = "GC=F"   // Gold Futures
+- YahooFinance__Symbols__1 = "SI=F"   // Silver Futures
 - YahooFinance__Symbols__2 = "NG=F"   // Natural Gas Futures
 - YahooFinance__Symbols__3 = "CL=F"   // Crude Oil Futures
 ```
@@ -78,18 +78,18 @@ During implementation, we manually verified the system:
 
 **Initial State:**
 ```
-Volatility_Gold:       75 rows
-Volatility_Silver:     76 rows
-Volatility_NaturalGas: 76 rows
-Volatility_Oil:        76 rows
+Gold:       75 rows
+Silver:     76 rows
+NaturalGas: 76 rows
+Oil:        76 rows
 ```
 
 **After Application Restart + Monitoring:**
 ```
-Volatility_Gold:       89-90 rows
-Volatility_Silver:     90 rows
-Volatility_NaturalGas: 90 rows
-Volatility_Oil:        90 rows
+Gold:       89-90 rows
+Silver:     90 rows
+NaturalGas: 90 rows
+Oil:        90 rows
 ```
 
 **Growth Rate:** ✅ ~1 row per minute per symbol (as expected)
@@ -277,10 +277,10 @@ jobs:
 
 | Table | Symbol | Asset | Data Points |
 |-------|--------|-------|-------------|
-| Volatility_Gold | GLD | Gold ETF | Close, LogReturn, Vol5/15/60, Panic Scores |
-| Volatility_Silver | SLV | Silver ETF | Close, LogReturn, Vol5/15/60, Panic Scores |
-| Volatility_NaturalGas | NG=F | Natural Gas Futures | Close, LogReturn, Vol5/15/60, Panic Scores |
-| Volatility_Oil | CL=F | Crude Oil Futures | Close, LogReturn, Vol5/15/60, Panic Scores |
+| Gold | GC=F | Gold Futures | Close, LogReturn, Vol5/15/60, Panic Scores |
+| Silver | SI=F | Silver Futures | Close, LogReturn, Vol5/15/60, Panic Scores |
+| NaturalGas | NG=F | Natural Gas Futures | Close, LogReturn, Vol5/15/60, Panic Scores |
+| Oil | CL=F | Crude Oil Futures | Close, LogReturn, Vol5/15/60, Panic Scores |
 
 **Metrics Calculated:**
 - **Close**: Current price
@@ -321,10 +321,10 @@ cd PricePredicator.Integration.Tests
 dotnet test
 
 # Check database manually
-docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c "SELECT relname, n_live_tup FROM pg_stat_user_tables WHERE schemaname='public' AND relname LIKE 'Volatility_%';"
+docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c "SELECT relname, n_live_tup FROM pg_stat_user_tables WHERE schemaname='public' AND relname in ('Gold','Silver','NaturalGas','Oil');"
 
 # View latest data
-docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c "SELECT * FROM \"Volatility_Gold\" ORDER BY \"CreatedAtUtc\" DESC LIMIT 5;"
+docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c "SELECT * FROM \"Gold\" ORDER BY \"CreatedAtUtc\" DESC LIMIT 5;"
 
 # Check application logs
 docker logs pricepredicator.app --tail 50

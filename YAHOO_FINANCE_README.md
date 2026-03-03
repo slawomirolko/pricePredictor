@@ -48,7 +48,7 @@ PricePredicator.Tests/
 
 Four separate tables, one per commodity:
 
-### Volatility_Gold / Volatility_Silver / Volatility_NaturalGas / Volatility_Oil
+### Gold / Silver / NaturalGas / Oil
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -79,7 +79,7 @@ Four separate tables, one per commodity:
     "DefaultConnection": "Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;"
   },
   "YahooFinance": {
-    "Symbols": [ "GLD", "SLV", "NG=F", "CL=F" ],
+    "Symbols": [ "GC=F", "SI=F", "NG=F", "CL=F" ],
     "Interval": "1m",
     "Range": "1d",
     "VolatilityBackupMinutes": 10,
@@ -89,8 +89,8 @@ Four separate tables, one per commodity:
 ```
 
 **Symbols:**
-- `GLD` → Gold (SPDR Gold Shares ETF)
-- `SLV` → Silver (iShares Silver Trust ETF)
+- `GC=F` → Gold (Futures)
+- `SI=F` → Silver (Futures)
 - `NG=F` → Natural Gas (Futures)
 - `CL=F` → Crude Oil (Futures)
 
@@ -172,7 +172,7 @@ dotnet run --project PricePredicator.App
 ### Every Minute (Real-time)
 
 ```
-Symbol: GLD, Timestamp: 2026-03-03 14:45:00, Close: 192.45, LogReturn: 0.001234, 
+Symbol: GC=F, Timestamp: 2026-03-03 14:45:00, Close: 1925.45, LogReturn: 0.001234, 
 Vol5: 0.025, Vol15: 0.023, Vol60: 0.021, ShortPanic: 0.823, LongPanic: 0.715
 ```
 
@@ -180,12 +180,12 @@ Vol5: 0.025, Vol15: 0.023, Vol60: 0.021, ShortPanic: 0.823, LongPanic: 0.715
 
 ```
 === VOLATILITY BACKUP LOG (Last 10 minutes) - 2026-03-03 14:50:00 ===
---- GLD (Gold) ---
-  TS: 2026-03-03 14:40:00, O: 192.30, H: 192.60, L: 192.10, C: 192.45, V: 1500000, 
+--- GC=F (Gold) ---
+  TS: 2026-03-03 14:40:00, O: 1925.30, H: 1926.60, L: 1924.10, C: 1925.45, V: 1500000, 
   Ret: 0.001234, V5: 0.025, V15: 0.023, V60: 0.021, SP: 0.823, LP: 0.715
-  TS: 2026-03-03 14:41:00, O: 192.45, H: 192.70, L: 192.35, C: 192.50, V: 1400000, 
+  TS: 2026-03-03 14:41:00, O: 1925.45, H: 1926.70, L: 1925.35, C: 1925.50, V: 1400000, 
   Ret: 0.000261, V5: 0.024, V15: 0.023, V60: 0.021, SP: 0.792, LP: 0.715
---- SLV (Silver) ---
+--- SI=F (Silver) ---
   ...
 === END BACKUP LOG ===
 ```

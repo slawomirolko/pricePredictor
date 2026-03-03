@@ -56,7 +56,7 @@ public class YahooFinanceBackgroundService : BackgroundService
                 }
 
                 // Check if it's time for notifications (every 5 minutes)
-                if (DateTime.UtcNow - _lastNotificationTime >= TimeSpan.FromMinutes(5))
+                if (DateTime.UtcNow - _lastNotificationTime >= TimeSpan.FromMinutes(1))
                 {
                     await SendTradingNotificationsAsync(stoppingToken);
                     _lastNotificationTime = DateTime.UtcNow;
@@ -194,6 +194,8 @@ public class YahooFinanceBackgroundService : BackgroundService
             switch (symbol)
             {
                 case "GLD":
+                case "XAUUSD=X":
+                case "GC=F":
                     var goldEntity = new VolatilityGold
                     {
                         Timestamp = candle.Timestamp,
@@ -213,6 +215,8 @@ public class YahooFinanceBackgroundService : BackgroundService
                     break;
 
                 case "SLV":
+                case "XAGUSD=X":
+                case "SI=F":
                     var silverEntity = new VolatilitySilver
                     {
                         Timestamp = candle.Timestamp,
@@ -354,7 +358,11 @@ public class YahooFinanceBackgroundService : BackgroundService
                 var data = symbol switch
                 {
                     "GLD" => (object)await _repository.GetGoldLastAsync(10, cancellationToken),
+                    "XAUUSD=X" => (object)await _repository.GetGoldLastAsync(10, cancellationToken),
+                    "GC=F" => (object)await _repository.GetGoldLastAsync(10, cancellationToken),
                     "SLV" => (object)await _repository.GetSilverLastAsync(10, cancellationToken),
+                    "XAGUSD=X" => (object)await _repository.GetSilverLastAsync(10, cancellationToken),
+                    "SI=F" => (object)await _repository.GetSilverLastAsync(10, cancellationToken),
                     "NG=F" => (object)await _repository.GetNaturalGasLastAsync(10, cancellationToken),
                     "CL=F" => (object)await _repository.GetOilLastAsync(10, cancellationToken),
                     _ => new List<object>()
@@ -406,4 +414,3 @@ public class YahooFinanceBackgroundService : BackgroundService
         }
     }
 }
-

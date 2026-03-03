@@ -117,7 +117,7 @@ dotnet run --project PricePredicator.App
 
 ### 3. Watch Output
 ```
-Symbol: GLD, Timestamp: 2026-03-03 14:31:00, Close: 192.45, 
+Symbol: GC=F, Timestamp: 2026-03-03 14:31:00, Close: 1925.45, 
 LogReturn: 0.001234, Vol5: 0.025, Vol15: 0.023, Vol60: 0.021, 
 ShortPanic: 0.823, LongPanic: 0.715
 ```
@@ -162,10 +162,10 @@ ShortPanic: 0.823, LongPanic: 0.715
 
 | Table | Rows/Day | Indexed | Purpose |
 |-------|----------|---------|---------|
-| Volatility_Gold | 60 | Timestamp | Gold prices |
-| Volatility_Silver | 60 | Timestamp | Silver prices |
-| Volatility_NaturalGas | 60 | Timestamp | Natural gas |
-| Volatility_Oil | 60 | Timestamp | Crude oil |
+| Gold | 60 | Timestamp | Gold prices |
+| Silver | 60 | Timestamp | Silver prices |
+| NaturalGas | 60 | Timestamp | Natural gas |
+| Oil | 60 | Timestamp | Crude oil |
 
 **Columns per Table:**
 - `Timestamp` (UTC, 1-min bars)
@@ -208,7 +208,7 @@ Long Panic:  vol_short=60min, vol_long=60min  (baseline stress)
     "DefaultConnection": "Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;"
   },
   "YahooFinance": {
-    "Symbols": [ "GLD", "SLV", "NG=F", "CL=F" ],
+    "Symbols": [ "GC=F", "SI=F", "NG=F", "CL=F" ],
     "Interval": "1m",
     "Range": "1d",
     "VolatilityBackupMinutes": 10,
@@ -225,7 +225,7 @@ Long Panic:  vol_short=60min, vol_long=60min  (baseline stress)
 
 ### Every Minute
 ```
-Symbol: GLD, Timestamp: 2026-03-03 14:31:00, Close: 192.45, 
+Symbol: GC=F, Timestamp: 2026-03-03 14:31:00, Close: 1925.45, 
 LogReturn: 0.001234, Vol5: 0.025, Vol15: 0.023, Vol60: 0.021, 
 ShortPanic: 0.823, LongPanic: 0.715
 ```
@@ -233,12 +233,12 @@ ShortPanic: 0.823, LongPanic: 0.715
 ### Every 10 Minutes (Configurable)
 ```
 === VOLATILITY BACKUP LOG (Last 10 minutes) - 2026-03-03 14:50:00 ===
---- GLD (Gold) ---
-  TS: 2026-03-03 14:40:00, O: 192.30, H: 192.60, L: 192.10, C: 192.45, 
+--- GC=F (Gold) ---
+  TS: 2026-03-03 14:40:00, O: 1925.30, H: 1926.60, L: 1924.10, C: 1925.45, 
   V: 1500000, Ret: 0.001234, V5: 0.025, V15: 0.023, V60: 0.021, 
   SP: 0.823, LP: 0.715
   ...10 more rows...
---- SLV (Silver) ---
+--- SI=F (Silver) ---
   ...
 --- NG=F (Natural Gas) ---
   ...
@@ -438,7 +438,7 @@ Latency:   ~500ms per symbol (HTTP + parsing + DB insert)
 Memory:    ~50-100MB (4 buffers × 60 returns)
 Storage:   ~1MB per day (60 candles × 4 symbols × 150 bytes)
 Uptime:    Indefinite (no external service dependencies)
-Symbols:   4 in parallel (GLD, SLV, NG=F, CL=F)
+Symbols:   4 in parallel (GC=F, SI=F, NG=F, CL=F)
 Interval:  1-minute candles (Yahoo default)
 Range:     1-day history (auto-updated)
 ```
@@ -485,4 +485,3 @@ You now have a **production-ready, battle-tested, fully documented** .NET 10 ser
 **Created:** March 3, 2026  
 **Status:** ✅ COMPLETE & TESTED  
 **Quality:** Production Ready
-

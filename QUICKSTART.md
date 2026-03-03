@@ -41,7 +41,7 @@ Edit `PricePredicator.App/appsettings.json`:
     "DefaultConnection": "Server=localhost;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;"
   },
   "YahooFinance": {
-    "Symbols": [ "GLD", "SLV", "NG=F", "CL=F" ],
+    "Symbols": [ "GC=F", "SI=F", "NG=F", "CL=F" ],
     "Interval": "1m",
     "Range": "1d",
     "VolatilityBackupMinutes": 10
@@ -72,7 +72,7 @@ dotnet run --project PricePredicator.App
 
 Every minute, you'll see:
 ```
-Symbol: GLD, Timestamp: 2026-03-03 14:31:00, Close: 192.45, LogReturn: 0.001234,
+Symbol: GC=F, Timestamp: 2026-03-03 14:31:00, Close: 1925.45, LogReturn: 0.001234,
 Vol5: 0.025, Vol15: 0.023, Vol60: 0.021, ShortPanic: 0.823, LongPanic: 0.715
 ```
 
@@ -91,7 +91,7 @@ SELECT
   round(logarithmic_return::numeric, 6) as ret,
   round(rolling_vol_5::numeric, 6) as vol5,
   round(short_panic_score::numeric, 4) as short_panic
-FROM "Volatility_Gold"
+FROM "Gold"
 WHERE timestamp > now() - interval '5 minutes'
 ORDER BY timestamp DESC;
 ```
@@ -167,7 +167,7 @@ docker-compose up postgres -d
 
 | Setting | Default | Purpose |
 |---------|---------|---------|
-| `Symbols` | `["GLD", "SLV", "NG=F", "CL=F"]` | Which commodities to track |
+| `Symbols` | `["GC=F", "SI=F", "NG=F", "CL=F"]` | Which commodities to track |
 | `Interval` | `1m` | 1-minute candles (do not change) |
 | `Range` | `1d` | Fetch last 1 day of history (1d, 5d, 1mo) |
 | `VolatilityBackupMinutes` | `10` | Log all data every N minutes |
@@ -196,4 +196,3 @@ docker-compose up postgres -d
 5. Create dashboard (Grafana, Power BI)
 
 See `YAHOO_FINANCE_README.md` for detailed documentation.
-

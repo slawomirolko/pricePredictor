@@ -15,24 +15,36 @@ public class VolatilityRepository : IVolatilityRepository
 
     public async Task AddVolatilityGoldAsync(VolatilityGold entity, CancellationToken cancellationToken = default)
     {
+        if (await _dbContext.VolatilityGold.AnyAsync(x => x.Timestamp == entity.Timestamp, cancellationToken))
+            return;
+
         await _dbContext.VolatilityGold.AddAsync(entity, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task AddVolatilitySilverAsync(VolatilitySilver entity, CancellationToken cancellationToken = default)
     {
+        if (await _dbContext.VolatilitySilver.AnyAsync(x => x.Timestamp == entity.Timestamp, cancellationToken))
+            return;
+
         await _dbContext.VolatilitySilver.AddAsync(entity, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task AddVolatilityNaturalGasAsync(VolatilityNaturalGas entity, CancellationToken cancellationToken = default)
     {
+        if (await _dbContext.VolatilityNaturalGas.AnyAsync(x => x.Timestamp == entity.Timestamp, cancellationToken))
+            return;
+
         await _dbContext.VolatilityNaturalGas.AddAsync(entity, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task AddVolatilityOilAsync(VolatilityOil entity, CancellationToken cancellationToken = default)
     {
+        if (await _dbContext.VolatilityOil.AnyAsync(x => x.Timestamp == entity.Timestamp, cancellationToken))
+            return;
+
         await _dbContext.VolatilityOil.AddAsync(entity, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }

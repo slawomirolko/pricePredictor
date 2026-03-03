@@ -16,7 +16,7 @@ if ($containers) {
 
 Write-Host ""
 Write-Host "Checking database tables..." -ForegroundColor Yellow
-$tables = docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -At -c "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename LIKE 'Volatility_%' ORDER BY tablename"
+$tables = docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -At -c "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename in ('Gold','Silver','NaturalGas','Oil') ORDER BY tablename"
 
 if ($tables) {
     $tableArray = $tables -split [Environment]::NewLine
@@ -26,14 +26,14 @@ if ($tables) {
         }
     }
 } else {
-    Write-Host "ERROR: No volatility tables found" -ForegroundColor Red
+    Write-Host "ERROR: No commodity tables found" -ForegroundColor Red
     exit 1
 }
 
 Write-Host ""
 Write-Host "Getting baseline counts..." -ForegroundColor Yellow
 $baseline = @{}
-$tables = @("Volatility_Gold", "Volatility_Silver", "Volatility_NaturalGas", "Volatility_Oil")
+$tables = @("Gold", "Silver", "NaturalGas", "Oil")
 
 foreach ($table in $tables) {
     $count = docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -At -c "SELECT COUNT(*) FROM ""$table"""
@@ -88,6 +88,4 @@ if ($anyGrowth) {
 
 Write-Host ""
 Write-Host "View latest data:" -ForegroundColor Cyan
-Write-Host "  docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c ""SELECT * FROM \\""Volatility_Gold\\"" ORDER BY \\""CreatedAtUtc\\"" DESC LIMIT 5;""" -ForegroundColor Gray
-
-
+Write-Host "  docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c ""SELECT * FROM \""Gold\"" ORDER BY \""CreatedAtUtc\"" DESC LIMIT 5;""" -ForegroundColor Gray

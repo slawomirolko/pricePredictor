@@ -65,12 +65,12 @@ dotnet test
 
 Check current row counts:
 ```powershell
-docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -At -F "," -c "select relname, n_live_tup from pg_stat_user_tables where schemaname='public' and relname like 'Volatility_%' order by relname;"
+docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -At -F "," -c "select relname, n_live_tup from pg_stat_user_tables where schemaname='public' and relname in ('Gold','Silver','NaturalGas','Oil') order by relname;"
 ```
 
 View latest records:
 ```powershell
-docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c "SELECT \"Timestamp\", \"Close\", \"LogarithmicReturn\", \"RollingVol5\" FROM \"Volatility_Gold\" ORDER BY \"CreatedAtUtc\" DESC LIMIT 5;"
+docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c "SELECT \"Timestamp\", \"Close\", \"LogarithmicReturn\", \"RollingVol5\" FROM \"Gold\" ORDER BY \"CreatedAtUtc\" DESC LIMIT 5;"
 ```
 
 ## Configuration Override
@@ -78,10 +78,10 @@ docker exec pricepredictor.postgres psql -U postgres -d pricepredictor -c "SELEC
 The tests override settings using environment variables to ensure 1-minute intervals:
 - `YahooFinance__Interval=1m`
 - `YahooFinance__Range=1d`
-- `YahooFinance__Symbols__0=GLD` (Gold)
-- `YahooFinance__Symbols__1=SLV` (Silver)
-- `YahooFinance__Symbols__2=NG=F` (Natural Gas)
-- `YahooFinance__Symbols__3=CL=F` (Oil)
+- `YahooFinance__Symbols__0=GC=F` (Gold Futures)
+- `YahooFinance__Symbols__1=SI=F` (Silver Futures)
+- `YahooFinance__Symbols__2=NG=F` (Natural Gas Futures)
+- `YahooFinance__Symbols__3=CL=F` (Oil Futures)
 
 ## Expected Results
 
@@ -105,4 +105,3 @@ After 1 minute of operation, each volatility table should have:
 **TestContainers tests fail:**
 - Rebuild the app image: `docker compose build`
 - Check Docker has sufficient resources (memory/CPU)
-

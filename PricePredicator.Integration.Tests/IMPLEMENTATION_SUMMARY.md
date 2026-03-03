@@ -38,10 +38,10 @@ All tests override application settings to ensure 1-minute data ingestion:
 ```
 YahooFinance__Interval=1m
 YahooFinance__Range=1d
-YahooFinance__Symbols__0=GLD (Gold)
-YahooFinance__Symbols__1=SLV (Silver)
-YahooFinance__Symbols__2=NG=F (Natural Gas)
-YahooFinance__Symbols__3=CL=F (Oil)
+YahooFinance__Symbols__0=GC=F (Gold Futures)
+YahooFinance__Symbols__1=SI=F (Silver Futures)
+YahooFinance__Symbols__2=NG=F (Natural Gas Futures)
+YahooFinance__Symbols__3=CL=F (Oil Futures)
 ```
 
 ### 4. Supporting Files
@@ -58,10 +58,10 @@ YahooFinance__Symbols__3=CL=F (Oil)
 Using the running Docker Compose stack, we verified:
 
 1. **All volatility tables exist:**
-   - Volatility_Gold
-   - Volatility_Silver
-   - Volatility_NaturalGas
-   - Volatility_Oil
+   - Gold
+   - Silver
+   - NaturalGas
+   - Oil
    - __EFMigrationsHistory
 
 2. **Data is being persisted continuously:**
@@ -87,13 +87,13 @@ ORDER BY tablename;
 -- Current row counts
 SELECT relname, n_live_tup 
 FROM pg_stat_user_tables 
-WHERE schemaname='public' AND relname LIKE 'Volatility_%';
+WHERE schemaname='public' AND relname in ('Gold','Silver','NaturalGas','Oil');
 
 -- Results:
-Volatility_Gold: 89 rows
-Volatility_NaturalGas: 90 rows
-Volatility_Oil: 90 rows
-Volatility_Silver: 90 rows
+Gold: 89 rows
+NaturalGas: 90 rows
+Oil: 90 rows
+Silver: 90 rows
 ```
 
 ## How to Run Tests
@@ -185,4 +185,3 @@ To run the full test suite:
 2. Navigate to test project: `cd PricePredicator.Integration.Tests`
 3. Run tests: `dotnet test`
 4. Or run manual script: `.\ManualTest.ps1`
-

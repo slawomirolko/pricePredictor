@@ -186,13 +186,13 @@ Total Tests:                        ~12 KB
 → `YahooFinanceBackgroundService` (modify `SaveToDatabaseAsync` for your DB)
 
 **Dashboard (Grafana, PowerBI):**
-→ Query PostgreSQL directly from `Volatility_*` tables
+→ Query PostgreSQL directly from `Gold`, `Silver`, `NaturalGas`, `Oil` tables
 
 **Alert System (Slack, Email):**
 → Modify `YahooFinanceBackgroundService.ProcessSymbolAsync` to call alert API
 
 **ML Model:**
-→ Export data from `Volatility_*` tables as CSV/JSON
+→ Export data from `Gold`, `Silver`, `NaturalGas`, `Oil` tables as CSV/JSON
 
 **Mobile App:**
 → Create REST API wrapper around `IVolatilityRepository`
@@ -236,4 +236,3 @@ Before deploying, verify:
 **Created:** March 3, 2026  
 **Status:** ✅ COMPLETE  
 **Ready for:** Production Deployment
-

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OllamaSharp;
 using PricePredicator.App;
 using PricePredicator.App.Finance;
@@ -106,17 +107,57 @@ builder.Services.AddSingleton(sp =>
     return new TradingIndicatorNotificationService(ntfyClient, weatherService, ntfySettings.Topic);
 });
 
-builder.Services.AddHostedService<NtfyBackgroundService>();
 builder.Services.AddHostedService<GoldNewsBackgroundService>();
 builder.Services.AddHostedService<YahooFinanceBackgroundService>();
 
 var app = builder.Build();
 
-// Run migrations on startup
-using (var scope = app.Services.CreateScope())
+// Run migrations on startup with retries to handle DB warm-up/race conditions.
+var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+var migrationAttempts = 10;
+
+for (var attempt = 1; attempt <= migrationAttempts; attempt++)
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
-    dbContext.Database.Migrate();
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
+        var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
+
+        if (pendingMigrations.Count > 0)
+        {
+            startupLogger.LogInformation(
+                "Applying {Count} pending migration(s): {Migrations}",
+                pendingMigrations.Count,
+                string.Join(", ", pendingMigrations));
+
+            dbContext.Database.Migrate();
+            startupLogger.LogInformation("Database migrations applied successfully.");
+        }
+        else
+        {
+            startupLogger.LogInformation("No pending migrations detected.");
+        }
+
+        break;
+    }
+    catch (Exception ex) when (attempt < migrationAttempts)
+    {
+        startupLogger.LogWarning(
+            ex,
+            "Migration check/apply attempt {Attempt}/{Total} failed. Retrying in 3 seconds...",
+            attempt,
+            migrationAttempts);
+        await Task.Delay(TimeSpan.FromSeconds(3));
+    }
+    catch (Exception ex)
+    {
+        startupLogger.LogCritical(
+            ex,
+            "Failed to complete migration check/apply after {Total} attempts. App startup aborted.",
+            migrationAttempts);
+        throw;
+    }
 }
 
 app.MapGrpcService<GatewayRpcEndpoint>();

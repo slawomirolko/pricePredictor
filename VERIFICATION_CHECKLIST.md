@@ -211,10 +211,10 @@ IndicatorsCalculator
 VolatilityRepository
     ↓ (EF Core InsertAsync)
 PostgreSQL
-    ├─ Volatility_Gold
-    ├─ Volatility_Silver
-    ├─ Volatility_NaturalGas
-    └─ Volatility_Oil
+    ├─ Gold
+    ├─ Silver
+    ├─ NaturalGas
+    └─ Oil
 ```
 
 ✅ All stages verified
@@ -225,7 +225,7 @@ PostgreSQL
 
 **appsettings.json:**
 - [x] ConnectionStrings:DefaultConnection set
-- [x] YahooFinance:Symbols = [GLD, SLV, NG=F, CL=F]
+- [x] YahooFinance:Symbols = [GC=F, SI=F, NG=F, CL=F]
 - [x] YahooFinance:Interval = 1m
 - [x] YahooFinance:Range = 1d
 - [x] YahooFinance:VolatilityBackupMinutes = 10
@@ -296,4 +296,3 @@ A complete, enterprise-grade .NET 10 solution for:
 **Verified by:** Automated verification system  
 **Quality Level:** PRODUCTION READY  
 **Ready to Deploy:** YES ✅
-
