@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -22,9 +22,19 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PricePredicator.Infrastructure\PricePredicator.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -40,4 +50,9 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Volatility\" />
+    </ItemGroup>
+
 </Project>
+

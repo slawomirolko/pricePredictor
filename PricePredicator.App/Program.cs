@@ -1,14 +1,17 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
 using PricePredicator.App;
+using PricePredicator.App.Finance;
 using PricePredicator.App.Gateway;
 using PricePredicator.App.Gold;
 using PricePredicator.App.News;
 using PricePredicator.App.GoldNews;
 using PricePredicator.App.Weather;
+using PricePredicator.Infrastructure.Data;
 
 // Build host
 ThreadPool.SetMinThreads(200, 200);
@@ -26,6 +29,14 @@ builder.WebHost.ConfigureKestrel(options =>
 
 builder.Services.AddGrpc();
 
+// Add DbContext
+builder.Services.AddDbContext<PricePredictorDbContext>(options =>
+{
+    var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"] ?? 
+        "Server=localhost;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;";
+    options.UseNpgsql(connectionString);
+});
+
 builder.Services.AddSingleton<IOllamaApiClient>(sp => 
 {
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoldNewsSettings>>().Value;
@@ -37,6 +48,7 @@ builder.Services.AddSingleton<IWeatherService, WeatherService>();
 
 builder.Services.Configure<NtfySettings>(builder.Configuration.GetSection("Ntfy"));
 builder.Services.Configure<GoldNewsSettings>(builder.Configuration.GetSection("GoldNews"));
+builder.Services.Configure<YahooFinanceSettings>(builder.Configuration.GetSection("YahooFinance"));
 
 builder.Services.AddHttpClient<NtfyClient>((sp, client) =>
 {
@@ -74,11 +86,38 @@ builder.Services.AddHttpClient<INewsService, GoogleNewsRssService>(client =>
     client.BaseAddress = new Uri("https://news.google.com/");
 });
 
+// Add Yahoo Finance typed client
+builder.Services.AddHttpClient<YahooFinanceClient>(client =>
+{
+    client.BaseAddress = new Uri("https://query1.finance.yahoo.com/");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36");
+});
+
+// Add repositories and hosted services
+builder.Services.AddScoped<IVolatilityRepository, VolatilityRepository>();
+
+// Register TradingIndicatorNotificationService for real-time panic score notifications
+builder.Services.AddSingleton(sp =>
+{
+    var ntfyClient = sp.GetRequiredService<NtfyClient>();
+    var weatherService = sp.GetRequiredService<IWeatherService>();
+    var ntfySettings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NtfySettings>>().Value;
+    return new TradingIndicatorNotificationService(ntfyClient, weatherService, ntfySettings.Topic);
+});
 
 builder.Services.AddHostedService<NtfyBackgroundService>();
 builder.Services.AddHostedService<GoldNewsBackgroundService>();
+builder.Services.AddHostedService<YahooFinanceBackgroundService>();
 
 var app = builder.Build();
+
+// Run migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.MapGrpcService<GatewayRpcEndpoint>();
 
