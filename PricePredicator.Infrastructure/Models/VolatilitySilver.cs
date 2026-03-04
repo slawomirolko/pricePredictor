@@ -3,6 +3,8 @@ namespace PricePredicator.Infrastructure.Models;
 public class VolatilitySilver
 {
     public int Id { get; set; }
+    public int CommodityId { get; set; }
+    public Commodity Commodity { get; set; } = null!;
     public DateTime Timestamp { get; set; }
     public decimal Open { get; set; }
     public decimal High { get; set; }
@@ -17,4 +19,3 @@ public class VolatilitySilver
     public double LongPanicScore { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }
-

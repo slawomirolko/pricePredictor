@@ -152,7 +152,9 @@ public class YahooFinanceBackgroundService : BackgroundService
 
             // Save to database
             await SaveToDatabaseAsync(symbol, lastCandle, logReturn, vol5, vol15, vol60, shortPanicScore, longPanicScore, cancellationToken);
-            
+
+            await UpdateDailySummaryAsync(symbol, candles, cancellationToken);
+
             // Store metrics for notification
             StoreMetricsForNotification(symbol, lastCandle, logReturn, vol5, vol15, vol60, 
                 shortPanicScore, longPanicScore, compositePanicScore, atr, rsiDeviation, 
@@ -198,6 +200,7 @@ public class YahooFinanceBackgroundService : BackgroundService
                 case "GC=F":
                     var goldEntity = new VolatilityGold
                     {
+                        CommodityId = 1, // Gold
                         Timestamp = candle.Timestamp,
                         Open = candle.Open,
                         High = candle.High,
@@ -219,6 +222,7 @@ public class YahooFinanceBackgroundService : BackgroundService
                 case "SI=F":
                     var silverEntity = new VolatilitySilver
                     {
+                        CommodityId = 2, // Silver
                         Timestamp = candle.Timestamp,
                         Open = candle.Open,
                         High = candle.High,
@@ -238,6 +242,7 @@ public class YahooFinanceBackgroundService : BackgroundService
                 case "NG=F":
                     var ngEntity = new VolatilityNaturalGas
                     {
+                        CommodityId = 3, // NaturalGas
                         Timestamp = candle.Timestamp,
                         Open = candle.Open,
                         High = candle.High,
@@ -257,6 +262,7 @@ public class YahooFinanceBackgroundService : BackgroundService
                 case "CL=F":
                     var clEntity = new VolatilityOil
                     {
+                        CommodityId = 4, // Oil
                         Timestamp = candle.Timestamp,
                         Open = candle.Open,
                         High = candle.High,
@@ -412,5 +418,47 @@ public class YahooFinanceBackgroundService : BackgroundService
         {
             _logger.LogError(ex, "Error logging backup data");
         }
+    }
+
+    private async Task UpdateDailySummaryAsync(string symbol, List<CandlePoint> candles, CancellationToken cancellationToken)
+    {
+        var lastCandle = candles[^1];
+        var day = DateOnly.FromDateTime(lastCandle.Timestamp);
+        var dayCandles = candles
+            .Where(c => DateOnly.FromDateTime(c.Timestamp) == day)
+            .OrderBy(c => c.Timestamp)
+            .ToList();
+
+        if (dayCandles.Count == 0)
+            return;
+
+        var open = dayCandles[0].Open;
+        var close = dayCandles[^1].Close;
+        var high = dayCandles.Max(c => c.High);
+        var low = dayCandles.Min(c => c.Low);
+        var avg = dayCandles.Average(c => c.Close);
+        var volumeSum = dayCandles.Sum(c => c.Volume ?? 0L);
+
+        var rangePct = 0m;
+        if (open != 0m)
+        {
+            var baseRange = (high - low) / open * 100m;
+            rangePct = close >= open ? baseRange : -baseRange;
+        }
+
+        var daily = new VolatilityDaily
+        {
+            Id = Guid.CreateVersion7(),
+            Day = day,
+            Open = open,
+            Close = close,
+            High = high,
+            Low = low,
+            Avg = avg,
+            VolumeSum = volumeSum,
+            RangePct = rangePct
+        };
+
+        await _repository.UpsertDailyAsync(SymbolMapper.GetTableName(symbol), daily, cancellationToken);
     }
 }

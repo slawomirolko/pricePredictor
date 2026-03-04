@@ -181,18 +181,26 @@ public class TradingIndicatorNotificationService
         sb.AppendLine("═════════════════════════════════════════════");
         sb.AppendLine();
 
-        // All symbols summary
-        foreach (var kvp in allMetrics.OrderByDescending(x => x.Value.CompositePanicScore))
+        // Fixed order: Gold, Silver, Natural Gas, Oil
+        var symbolOrder = new[] { "GC=F", "SI=F", "NG=F", "CL=F" };
+        
+        foreach (var symbol in symbolOrder)
         {
-            var symbol = kvp.Key;
-            var metrics = kvp.Value;
-            var commodityName = SymbolMapper.GetFullName(symbol);
+            if (allMetrics.TryGetValue(symbol, out var metrics))
+            {
+                var commodityName = SymbolMapper.GetFullName(symbol);
+                
+                // Determine reliability (data age in minutes)
+                var dataAge = DateTime.UtcNow - metrics.Timestamp;
+                var isReliable = dataAge.TotalMinutes >= 30;
+                var reliabilityIndicator = isReliable ? "✅ RELIABLE" : "⚠️ BUILDING";
 
-            sb.AppendLine($"{commodityName} ({symbol})");
-            sb.AppendLine($"  Price: ${metrics.Close:F2} | Return: {metrics.LogReturn:F6}");
-            sb.AppendLine($"  Composite Score: {metrics.CompositePanicScore:F4} {GetPanicScoreEmoji(metrics.CompositePanicScore)}");
-            sb.AppendLine($"  Volatility (5/60m): {metrics.Vol5:F6} / {metrics.Vol60:F6}");
-            sb.AppendLine();
+                sb.AppendLine($"{commodityName} ({symbol}) [{reliabilityIndicator}]");
+                sb.AppendLine($"  Price: ${metrics.Close:F2} | Return: {metrics.LogReturn:F6}");
+                sb.AppendLine($"  Composite Score: {metrics.CompositePanicScore:F4} {GetPanicScoreEmoji(metrics.CompositePanicScore)}");
+                sb.AppendLine($"  Volatility (5/60m): {metrics.Vol5:F6} / {metrics.Vol60:F6}");
+                sb.AppendLine();
+            }
         }
 
         // Add weather context

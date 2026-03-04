@@ -5,9 +5,9 @@ public record YahooFinanceSettings
     public const string SectionName = "YahooFinance";
 
     /// <summary>
-    /// Symbols to fetch: GC=F, XAUUSD=X, SI=F, NG=F, CL=F
+    /// Symbols to fetch (CFD symbols for commodities): GC=F, SI=F, NG=F, CL=F
     /// </summary>
-    public string[] Symbols { get; init; } = new[] { "GC=F", "XAUUSD=X", "SI=F", "NG=F", "CL=F" };
+    public string[] Symbols { get; init; } = new[] { "GC=F", "SI=F", "NG=F", "CL=F" };
 
     /// <summary>
     /// Interval for data: 1m for 1-minute
@@ -31,17 +31,13 @@ public record YahooFinanceSettings
 }
 
 /// <summary>
-/// Mapping of Yahoo ticker symbols to commodity names for table naming
+/// Mapping of CFD ticker symbols to commodity names
 /// </summary>
 public static class SymbolMapper
 {
     private static readonly Dictionary<string, string> SymbolToTableName = new()
     {
-        { "GLD", "Gold" },
-        { "XAUUSD=X", "Gold" },
         { "GC=F", "Gold" },
-        { "SLV", "Silver" },
-        { "XAGUSD=X", "Silver" },
         { "SI=F", "Silver" },
         { "NG=F", "NaturalGas" },
         { "CL=F", "Oil" }
@@ -53,11 +49,7 @@ public static class SymbolMapper
     public static string GetFullName(string symbol) =>
         symbol switch
         {
-            "GLD" => "Gold",
-            "XAUUSD=X" => "Gold",
             "GC=F" => "Gold",
-            "SLV" => "Silver",
-            "XAGUSD=X" => "Silver",
             "SI=F" => "Silver",
             "NG=F" => "Natural Gas",
             "CL=F" => "Oil",

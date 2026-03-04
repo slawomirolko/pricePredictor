@@ -30,8 +30,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 builder.Services.AddGrpc();
 
-// Add DbContext
-builder.Services.AddDbContext<PricePredictorDbContext>(options =>
+builder.Services.AddDbContextFactory<PricePredictorDbContext>(options =>
 {
     var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"] ?? 
         "Server=localhost;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;";

@@ -16,5 +16,5 @@ public interface IVolatilityRepository
     Task<List<VolatilitySilver>> GetSilverLastAsync(int minutes, CancellationToken cancellationToken = default);
     Task<List<VolatilityNaturalGas>> GetNaturalGasLastAsync(int minutes, CancellationToken cancellationToken = default);
     Task<List<VolatilityOil>> GetOilLastAsync(int minutes, CancellationToken cancellationToken = default);
+    Task UpsertDailyAsync(string commodityName, VolatilityDaily entity, CancellationToken cancellationToken = default);
 }
-
