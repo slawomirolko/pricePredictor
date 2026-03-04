@@ -153,12 +153,12 @@ public class YahooFinanceBackgroundService : BackgroundService
             // Save to database
             await SaveToDatabaseAsync(symbol, lastCandle, logReturn, vol5, vol15, vol60, shortPanicScore, longPanicScore, cancellationToken);
 
-            await UpdateDailySummaryAsync(symbol, candles, cancellationToken);
+            var dailySummary = await UpdateDailySummaryAsync(symbol, candles, cancellationToken);
 
             // Store metrics for notification
             StoreMetricsForNotification(symbol, lastCandle, logReturn, vol5, vol15, vol60, 
                 shortPanicScore, longPanicScore, compositePanicScore, atr, rsiDeviation, 
-                bollingerDeviation, volumeSpike, vroc);
+                bollingerDeviation, volumeSpike, vroc, dailySummary);
         }
         catch (Exception ex)
         {
@@ -288,6 +288,8 @@ public class YahooFinanceBackgroundService : BackgroundService
 
     private readonly Dictionary<string, TradingMetrics> _latestMetrics = new();
 
+    private sealed record DailySummary(decimal High, decimal Low);
+
     private void StoreMetricsForNotification(
         string symbol,
         CandlePoint candle,
@@ -302,7 +304,8 @@ public class YahooFinanceBackgroundService : BackgroundService
         double rsiDeviation,
         double bollingerDeviation,
         double volumeSpike,
-        double vroc)
+        double vroc,
+        DailySummary? dailySummary)
     {
         _latestMetrics[symbol] = new TradingMetrics
         {
@@ -320,7 +323,9 @@ public class YahooFinanceBackgroundService : BackgroundService
             RSIDeviation = rsiDeviation,
             BollingerDeviation = bollingerDeviation,
             VolumeSpike = volumeSpike,
-            VROC = vroc
+            VROC = vroc,
+            DailyHigh = dailySummary?.High,
+            DailyLow = dailySummary?.Low
         };
     }
 
@@ -333,10 +338,8 @@ public class YahooFinanceBackgroundService : BackgroundService
             if (_latestMetrics.Count == 0)
                 return;
 
-            // Send summary notification with all symbols and weather context
             await _notificationService.SendSummaryNotificationAsync(_latestMetrics, cancellationToken);
 
-            // Optionally send individual high-panic-score alerts
             foreach (var kvp in _latestMetrics.Where(x => x.Value.CompositePanicScore > 1.5))
             {
                 var symbol = kvp.Key;
@@ -420,7 +423,7 @@ public class YahooFinanceBackgroundService : BackgroundService
         }
     }
 
-    private async Task UpdateDailySummaryAsync(string symbol, List<CandlePoint> candles, CancellationToken cancellationToken)
+    private async Task<DailySummary?> UpdateDailySummaryAsync(string symbol, List<CandlePoint> candles, CancellationToken cancellationToken)
     {
         var lastCandle = candles[^1];
         var day = DateOnly.FromDateTime(lastCandle.Timestamp);
@@ -430,7 +433,7 @@ public class YahooFinanceBackgroundService : BackgroundService
             .ToList();
 
         if (dayCandles.Count == 0)
-            return;
+            return null;
 
         var open = dayCandles[0].Open;
         var close = dayCandles[^1].Close;
@@ -460,5 +463,7 @@ public class YahooFinanceBackgroundService : BackgroundService
         };
 
         await _repository.UpsertDailyAsync(SymbolMapper.GetTableName(symbol), daily, cancellationToken);
+
+        return new DailySummary(high, low);
     }
 }

@@ -180,8 +180,7 @@ public class TradingIndicatorNotificationService
         sb.AppendLine($"⏰ {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
         sb.AppendLine("═════════════════════════════════════════════");
         sb.AppendLine();
-
-        // Fixed order: Gold, Silver, Natural Gas, Oil
+// Fixed order: Gold, Silver, Natural Gas, Oil
         var symbolOrder = new[] { "GC=F", "SI=F", "NG=F", "CL=F" };
         
         foreach (var symbol in symbolOrder)
@@ -199,6 +198,10 @@ public class TradingIndicatorNotificationService
                 sb.AppendLine($"  Price: ${metrics.Close:F2} | Return: {metrics.LogReturn:F6}");
                 sb.AppendLine($"  Composite Score: {metrics.CompositePanicScore:F4} {GetPanicScoreEmoji(metrics.CompositePanicScore)}");
                 sb.AppendLine($"  Volatility (5/60m): {metrics.Vol5:F6} / {metrics.Vol60:F6}");
+                if (metrics.DailyLow.HasValue && metrics.DailyHigh.HasValue)
+                {
+                    sb.AppendLine($"  Daily Low/High: {metrics.DailyLow.Value:F2} / {metrics.DailyHigh.Value:F2}");
+                }
                 sb.AppendLine();
             }
         }
@@ -259,5 +262,6 @@ public record TradingMetrics
     public double BollingerDeviation { get; init; }
     public double VolumeSpike { get; init; }
     public double VROC { get; init; }
+    public decimal? DailyHigh { get; init; }
+    public decimal? DailyLow { get; init; }
 }
-
