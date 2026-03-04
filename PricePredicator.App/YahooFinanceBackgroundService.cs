@@ -462,7 +462,16 @@ public class YahooFinanceBackgroundService : BackgroundService
             RangePct = rangePct
         };
 
-        await _repository.UpsertDailyAsync(SymbolMapper.GetTableName(symbol), daily, cancellationToken);
+        var commodity = symbol switch
+        {
+            "GLD" or "XAUUSD=X" or "GC=F" => VolatilityCommodity.Gold,
+            "SLV" or "XAGUSD=X" or "SI=F" => VolatilityCommodity.Silver,
+            "NG=F" => VolatilityCommodity.NaturalGas,
+            "CL=F" => VolatilityCommodity.Oil,
+            _ => throw new InvalidOperationException($"Unknown symbol: {symbol}")
+        };
+
+        await _repository.UpsertDailyAsync(commodity, daily, cancellationToken);
 
         return new DailySummary(high, low);
     }
