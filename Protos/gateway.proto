@@ -4,10 +4,13 @@ option csharp_namespace = "PricePredicator.App.Gateway";
 
 package gateway;
 
+import "google/protobuf/timestamp.proto";
+
 // Main gRPC service
 service Gateway {
   // Unary call
   rpc Send (GatewayRequest) returns (GatewayReply);
+  rpc GetVolatility (VolatilityQueryRequest) returns (VolatilityQueryReply);
 }
 
 // Request message
@@ -18,4 +21,38 @@ message GatewayRequest {
 // Response message
 message GatewayReply {
   string result = 1;
+}
+
+enum Commodity {
+  UNSPECIFIED = 0;
+  GOLD = 1;
+  SILVER = 2;
+  NATURAL_GAS = 3;
+  OIL = 4;
+}
+
+message VolatilityQueryRequest {
+  Commodity commodity = 1;
+  google.protobuf.Timestamp date = 2;
+  int32 minutes = 3;
+}
+
+message VolatilityPoint {
+  google.protobuf.Timestamp timestamp = 1;
+  double open = 2;
+  double high = 3;
+  double low = 4;
+  double close = 5;
+  int64 volume = 6;
+  double log_return = 7;
+  double vol5 = 8;
+  double vol15 = 9;
+  double vol60 = 10;
+  double short_panic = 11;
+  double long_panic = 12;
+}
+
+message VolatilityQueryReply {
+  Commodity commodity = 1;
+  repeated VolatilityPoint points = 2;
 }
