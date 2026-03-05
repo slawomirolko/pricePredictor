@@ -2,7 +2,7 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
-from army.tools import GatewayMessageTool
+from army.tools import GatewayMessageTool, VolatilityQueryTool
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -26,7 +26,7 @@ class Army():
             config=self.agents_config['researcher'], # type: ignore[index]
             verbose=True,
             llm="ollama/phi3",
-            tools=[GatewayMessageTool()]
+            tools=[GatewayMessageTool(), VolatilityQueryTool()]
         )
 
     @agent
@@ -35,7 +35,16 @@ class Army():
             config=self.agents_config['reporting_analyst'], # type: ignore[index]
             verbose=True,
             llm="ollama/phi3",
-            tools=[GatewayMessageTool()]
+            tools=[GatewayMessageTool(), VolatilityQueryTool()]
+        )
+
+    @agent
+    def price_prediction_specialist(self) -> Agent:
+        return Agent(
+            config=self.agents_config['price_prediction_specialist'], # type: ignore[index]
+            verbose=True,
+            llm="ollama/phi3",
+            tools=[VolatilityQueryTool()]
         )
 
     # To learn more about structured task outputs,
@@ -45,6 +54,12 @@ class Army():
     def research_task(self) -> Task:
         return Task(
             config=self.tasks_config['research_task'], # type: ignore[index]
+        )
+
+    @task
+    def price_prediction_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['price_prediction_task'], # type: ignore[index]
         )
 
     @task

@@ -30,6 +30,9 @@ async def run_async():
     """
     inputs = {
         'topic': 'AI LLMs',
+        'commodity': 'GOLD',
+        'date': '2026-03-05',  # Current date
+        'minutes': 120,  # Last 2 hours of data
         'current_year': str(datetime.now().year)
     }
 
