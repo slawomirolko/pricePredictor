@@ -55,8 +55,8 @@ public class YahooFinanceBackgroundService : BackgroundService
                     await ProcessSymbolAsync(symbol, stoppingToken);
                 }
 
-                // Check if it's time for notifications (every 5 minutes)
-                if (DateTime.UtcNow - _lastNotificationTime >= TimeSpan.FromMinutes(1))
+                // Check if it's time for notifications (configurable interval)
+                if (DateTime.UtcNow - _lastNotificationTime >= TimeSpan.FromMinutes(_settings.NotificationIntervalMinutes))
                 {
                     await SendTradingNotificationsAsync(stoppingToken);
                     _lastNotificationTime = DateTime.UtcNow;

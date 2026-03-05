@@ -28,6 +28,11 @@ public record YahooFinanceSettings
     /// Windows for rolling volatility calculation (in minutes)
     /// </summary>
     public int[] VolatilityWindows { get; init; } = new[] { 5, 15, 60 };
+
+    /// <summary>
+    /// Interval for sending notifications (in minutes)
+    /// </summary>
+    public int NotificationIntervalMinutes { get; init; } = 5;
 }
 
 /// <summary>
