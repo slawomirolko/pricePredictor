@@ -1,29 +1,62 @@
-using System.Text.Json;
 using System.Xml.Linq;
+using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredicator.App.GoldNews;
+using PricePredicator.Infrastructure.Data;
 
 namespace PricePredicator.App;
 
 public class GoldNewsBackgroundService : BackgroundService
 {
+    private const int MaxSeenLinks = 2000;
+    private static readonly string[] RelevanceKeywords =
+    [
+        "gold",
+        "bullion",
+        "xau",
+        "xauusd",
+        "precious metal",
+        "safe haven",
+        "geopolitic",
+        "war",
+        "conflict",
+        "sanction",
+        "tariff",
+        "central bank",
+        "fed",
+        "ecb",
+        "pbo",
+        "boe",
+        "inflation",
+        "interest rate",
+        "rate hike",
+        "rate cut",
+        "recession",
+        "crisis"
+    ];
+
     private readonly ILogger<GoldNewsBackgroundService> _logger;
     private readonly IGoldNewsClient _client;
+    private readonly IGoldNewsEmbeddingRepository _embeddingRepository;
     private readonly IOllamaApiClient _ollama;
     private readonly GoldNewsSettings _settings;
     private readonly HashSet<string> _seen = new();
+    private readonly Queue<string> _seenOrder = new();
 
     public GoldNewsBackgroundService(
         ILogger<GoldNewsBackgroundService> logger,
         IGoldNewsClient client,
+        IGoldNewsEmbeddingRepository embeddingRepository,
         IOllamaApiClient ollama,
         IOptions<GoldNewsSettings> settings)
     {
         _logger = logger;
         _client = client;
+        _embeddingRepository = embeddingRepository;
         _ollama = ollama;
         _settings = settings.Value;
         _ollama.SelectedModel = _settings.OllamaModel;
@@ -35,11 +68,11 @@ public class GoldNewsBackgroundService : BackgroundService
 
         try
         {
-            await CreateCollectionIfNotExists(stoppingToken);
+            await EnsureVectorStorageAsync(stoppingToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to ensure Qdrant collection exists at {Url}.", _settings.QdrantUrl);
+            _logger.LogError(ex, "Failed to ensure pgvector storage for gold news embeddings.");
         }
 
         while (!stoppingToken.IsCancellationRequested)
@@ -48,28 +81,73 @@ public class GoldNewsBackgroundService : BackgroundService
             {
                 _logger.LogInformation("Checking news at {Time}", DateTime.UtcNow);
 
-                var xml = await TryGetRssXmlAsync(stoppingToken);
-                if (string.IsNullOrWhiteSpace(xml))
+                var feeds = await GetRssFeedsAsync(stoppingToken);
+                if (feeds.Count == 0)
                 {
                     _logger.LogWarning("No RSS content fetched (all configured URLs failed).");
-                    continue;
                 }
-
-                var doc = XDocument.Parse(xml);
-
-                foreach (var (title, link, desc) in ExtractItems(doc))
+                else
                 {
-                    if (string.IsNullOrEmpty(link) || _seen.Contains(link))
-                        continue;
+                    foreach (var (url, xml) in feeds)
+                    {
+                        XDocument doc;
+                        try
+                        {
+                            doc = XDocument.Parse(xml);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to parse RSS XML from {RssUrl}", url);
+                            continue;
+                        }
 
-                    _seen.Add(link);
+                        foreach (var (title, link, desc) in ExtractItems(doc))
+                        {
+                            var normalizedLink = link?.Trim() ?? string.Empty;
+                            if (string.IsNullOrWhiteSpace(normalizedLink))
+                                continue;
 
-                    var content = $"{title}. {desc}";
+                            if (!TryMarkSeen(normalizedLink))
+                                continue;
 
-                    var responseEmbed = await _ollama.EmbedAsync(content, stoppingToken);
+                            var normalizedTitle = NormalizeText(title);
+                            var normalizedDesc = NormalizeText(desc);
 
-                    await StoreInQdrant(link, content, responseEmbed.Embeddings[0], stoppingToken);
-                    _logger.LogInformation("Stored: {Title}", title);
+                            if (!IsRelevant(normalizedTitle, normalizedDesc))
+                                continue;
+
+                            // ALWAYS use RSS description as base content (reliable)
+                            var content = BuildContent(normalizedTitle, normalizedDesc, null);
+                            
+                            // OPTIONALLY try to enhance with article content (non-blocking)
+                            try
+                            {
+                                var articleContent = await _client.FetchArticleContentAsync(normalizedLink, stoppingToken);
+                                if (!string.IsNullOrWhiteSpace(articleContent))
+                                {
+                                    // Only append if we got meaningful article content
+                                    content = content + ". " + articleContent;
+                                    _logger.LogDebug("Enhanced {Title} with article content ({Chars} chars)", normalizedTitle, articleContent.Length);
+                                }
+                                else
+                                {
+                                    _logger.LogDebug("No article content extracted for {Title}, using RSS only", normalizedTitle);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogDebug(ex, "Article fetch failed for {Title}, continuing with RSS description", normalizedTitle);
+                            }
+
+                            if (string.IsNullOrWhiteSpace(content))
+                                continue;
+
+                            var responseEmbed = await _ollama.EmbedAsync(content, stoppingToken);
+
+                            await StoreEmbeddingAsync(normalizedLink, content, responseEmbed.Embeddings[0], stoppingToken);
+                            _logger.LogInformation("Stored: {Title} ({TotalLength} chars)", normalizedTitle, content.Length);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -83,39 +161,26 @@ public class GoldNewsBackgroundService : BackgroundService
         _logger.LogInformation("Gold News Background Service stopping.");
     }
 
-    private async Task CreateCollectionIfNotExists(CancellationToken stoppingToken)
+    private async Task EnsureVectorStorageAsync(CancellationToken stoppingToken)
     {
-        await _client.EnsureQdrantCollectionAsync(_settings.QdrantUrl, stoppingToken);
-        _logger.LogInformation("Collection 'gold_news' ensure requested.");
+        await _embeddingRepository.EnsureStorageAsync(_settings.EmbeddingDimensions, stoppingToken);
+        _logger.LogInformation("PostgreSQL pgvector storage ensure requested.");
     }
 
-    private async Task StoreInQdrant(string id, string text, IEnumerable<float> vector, CancellationToken stoppingToken)
+    private async Task StoreEmbeddingAsync(string id, string text, IEnumerable<float> vector, CancellationToken stoppingToken)
     {
-        var body = new
-        {
-            points = new[]
-            {
-                new
-                {
-                    id = Guid.NewGuid().ToString(),
-                    vector,
-                    payload = new
-                    {
-                        url = id,
-                        content = text,
-                        timestamp = DateTime.UtcNow
-                    }
-                }
-            }
-        };
-
         try
         {
-            await _client.UpsertPointsAsync(_settings.QdrantUrl, "gold_news", body, stoppingToken);
+            await _embeddingRepository.UpsertAsync(
+                id,
+                text,
+                vector as IReadOnlyList<float> ?? vector.ToArray(),
+                _settings.EmbeddingDimensions,
+                stoppingToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to store point in Qdrant");
+            _logger.LogError(ex, "Failed to store gold news embedding in PostgreSQL pgvector.");
         }
     }
 
@@ -134,15 +199,21 @@ public class GoldNewsBackgroundService : BackgroundService
             : new[] { _settings.RssUrl.Trim() };
     }
 
-    private async Task<string?> TryGetRssXmlAsync(CancellationToken stoppingToken)
+    private async Task<IReadOnlyList<(string Url, string Xml)>> GetRssFeedsAsync(CancellationToken stoppingToken)
     {
         var urls = GetRssUrls();
+        var feeds = new List<(string Url, string Xml)>();
+
         foreach (var url in urls)
         {
             try
             {
                 _logger.LogInformation("Fetching RSS from {RssUrl}", url);
-                return await _client.GetRssXmlAsync(url, stoppingToken);
+                var xml = await _client.GetRssXmlAsync(url, stoppingToken);
+                if (!string.IsNullOrWhiteSpace(xml))
+                {
+                    feeds.Add((url, xml));
+                }
             }
             catch (Exception ex)
             {
@@ -150,7 +221,60 @@ public class GoldNewsBackgroundService : BackgroundService
             }
         }
 
-        return null;
+        return feeds;
+    }
+
+    private bool TryMarkSeen(string link)
+    {
+        if (_seen.Contains(link))
+        {
+            return false;
+        }
+
+        _seen.Add(link);
+        _seenOrder.Enqueue(link);
+
+        while (_seenOrder.Count > MaxSeenLinks)
+        {
+            var toRemove = _seenOrder.Dequeue();
+            _seen.Remove(toRemove);
+        }
+
+        return true;
+    }
+
+    private static string NormalizeText(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+
+        var decoded = WebUtility.HtmlDecode(input);
+        var withoutTags = Regex.Replace(decoded, "<.*?>", string.Empty);
+        return withoutTags.Replace("\r", " ").Replace("\n", " ").Trim();
+    }
+
+    private static bool IsRelevant(string title, string description)
+    {
+        var text = $"{title} {description}".ToLowerInvariant();
+        return RelevanceKeywords.Any(k => text.Contains(k));
+    }
+
+    private static string BuildContent(string title, string description, string? articleText)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(title))
+            parts.Add(title.Trim());
+
+        if (!string.IsNullOrWhiteSpace(description))
+            parts.Add(description.Trim());
+
+        if (!string.IsNullOrWhiteSpace(articleText))
+            parts.Add(articleText.Trim());
+
+        return parts.Count == 0 ? string.Empty : string.Join(". ", parts);
     }
 
     private static IEnumerable<(string Title, string Link, string Description)> ExtractItems(XDocument doc)

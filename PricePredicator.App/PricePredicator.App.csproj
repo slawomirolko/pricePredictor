@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,22 +16,26 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" Version="13.1.1" />
-      <PackageReference Include="Google.Protobuf" Version="3.33.5" />
-      <PackageReference Include="Grpc.AspNetCore" Version="2.76.0" />
-      <PackageReference Include="Grpc.Tools" Version="2.78.0">
+      <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" />
+      <PackageReference Include="Google.Protobuf" />
+      <PackageReference Include="Grpc.AspNetCore" />
+      <PackageReference Include="Grpc.Tools">
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <PackageReference Include="Microsoft.EntityFrameworkCore" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
-      <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
-      <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" />
+      <PackageReference Include="Microsoft.Extensions.Http" />
+      <PackageReference Include="Microsoft.Extensions.Http.Polly" />
+      <PackageReference Include="HtmlAgilityPack" />
+      <PackageReference Include="Selenium.WebDriver" />
+      <PackageReference Include="Selenium.WebDriver.ChromeDriver" />
     </ItemGroup>
 
     <ItemGroup>

@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using OllamaSharp;
+using Polly;
+using Polly.Extensions.Http;
 using PricePredicator.App;
 using PricePredicator.App.Finance;
 using PricePredicator.App.Gateway;
@@ -12,12 +13,23 @@ using PricePredicator.App.Gold;
 using PricePredicator.App.News;
 using PricePredicator.App.GoldNews;
 using PricePredicator.App.Weather;
+using PricePredicator.Infrastructure;
 using PricePredicator.Infrastructure.Data;
 
 // Build host
 ThreadPool.SetMinThreads(200, 200);
 
 var builder = WebApplication.CreateBuilder(args);
+
+var sharedHttpRetryPolicy = HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .OrResult(response => response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+    .WaitAndRetryAsync(
+        retryCount: 3,
+        sleepDurationProvider: retryAttempt =>
+            TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)) +
+            TimeSpan.FromMilliseconds(Random.Shared.Next(100, 400))
+    );
 
 
 builder.WebHost.ConfigureKestrel(options =>
@@ -54,37 +66,53 @@ builder.Services.AddHttpClient<NtfyClient>((sp, client) =>
 {
     var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NtfySettings>>().Value;
     client.BaseAddress = new Uri(settings.BaseUrl);
-});
+})
+.AddPolicyHandler(sharedHttpRetryPolicy);
 
 builder.Services.AddHttpClient<IGoldNewsClient, GoldNewsClient>(client =>
 {
-    // Some RSS endpoints are fronted by WAF/CDN that returns 404/403 for "unknown" clients.
-    // These headers make requests look more like a regular browser.
+    // Simulate a real Chrome browser to get past WAF/CDN and cookie consent
     client.DefaultRequestHeaders.UserAgent.ParseAdd(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36");
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
     client.DefaultRequestHeaders.Accept.ParseAdd(
-        "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.1");
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
     client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
-    client.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true };
+    client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, deflate, br");
+    client.DefaultRequestHeaders.Add("Referer", "https://www.google.com/");
+    client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "document");
+    client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
+    client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "none");
+    client.DefaultRequestHeaders.Add("Sec-Fetch-User", "?1");
+    client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
+    client.DefaultRequestHeaders.Add("DNT", "1");
+    client.DefaultRequestHeaders.Add("Connection", "keep-alive");
+    // Pre-accept cookies in headers
+    client.DefaultRequestHeaders.Add("Cookie", "consent=accepted; gdpr=accepted; cookies=accepted; cookieConsent=yes");
 })
 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
     AllowAutoRedirect = true,
-    AutomaticDecompression = System.Net.DecompressionMethods.All
-});
+    AutomaticDecompression = System.Net.DecompressionMethods.All,
+    UseCookies = true,
+    CookieContainer = new System.Net.CookieContainer()
+})
+.AddPolicyHandler(sharedHttpRetryPolicy);
 
 builder.Services.AddHttpClient<IOpenMeteoClient, OpenMeteoClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.open-meteo.com/");
-});
+})
+.AddPolicyHandler(sharedHttpRetryPolicy);
 builder.Services.AddHttpClient<IGoldPriceService, StooqGoldPriceService>(client =>
 {
     client.BaseAddress = new Uri("https://stooq.com/");
-});
+})
+.AddPolicyHandler(sharedHttpRetryPolicy);
 builder.Services.AddHttpClient<INewsService, GoogleNewsRssService>(client =>
 {
     client.BaseAddress = new Uri("https://news.google.com/");
-});
+})
+.AddPolicyHandler(sharedHttpRetryPolicy);
 
 // Add Yahoo Finance typed client
 builder.Services.AddHttpClient<YahooFinanceClient>(client =>
@@ -92,10 +120,12 @@ builder.Services.AddHttpClient<YahooFinanceClient>(client =>
     client.BaseAddress = new Uri("https://query1.finance.yahoo.com/");
     client.DefaultRequestHeaders.UserAgent.ParseAdd(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36");
-});
+})
+.AddPolicyHandler(sharedHttpRetryPolicy);
 
 // Add repositories and hosted services
 builder.Services.AddScoped<IVolatilityRepository, VolatilityRepository>();
+builder.Services.AddScoped<IGoldNewsEmbeddingRepository, GoldNewsEmbeddingRepository>();
 
 // Register TradingIndicatorNotificationService for real-time panic score notifications
 builder.Services.AddSingleton(sp =>
@@ -111,53 +141,7 @@ builder.Services.AddHostedService<YahooFinanceBackgroundService>();
 
 var app = builder.Build();
 
-// Run migrations on startup with retries to handle DB warm-up/race conditions.
-var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
-var migrationAttempts = 10;
-
-for (var attempt = 1; attempt <= migrationAttempts; attempt++)
-{
-    try
-    {
-        using var scope = app.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
-        var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
-
-        if (pendingMigrations.Count > 0)
-        {
-            startupLogger.LogInformation(
-                "Applying {Count} pending migration(s): {Migrations}",
-                pendingMigrations.Count,
-                string.Join(", ", pendingMigrations));
-
-            dbContext.Database.Migrate();
-            startupLogger.LogInformation("Database migrations applied successfully.");
-        }
-        else
-        {
-            startupLogger.LogInformation("No pending migrations detected.");
-        }
-
-        break;
-    }
-    catch (Exception ex) when (attempt < migrationAttempts)
-    {
-        startupLogger.LogWarning(
-            ex,
-            "Migration check/apply attempt {Attempt}/{Total} failed. Retrying in 3 seconds...",
-            attempt,
-            migrationAttempts);
-        await Task.Delay(TimeSpan.FromSeconds(3));
-    }
-    catch (Exception ex)
-    {
-        startupLogger.LogCritical(
-            ex,
-            "Failed to complete migration check/apply after {Total} attempts. App startup aborted.",
-            migrationAttempts);
-        throw;
-    }
-}
+app.Services.ApplyPendingMigrations();
 
 app.MapGrpcService<GatewayRpcEndpoint>();
 
