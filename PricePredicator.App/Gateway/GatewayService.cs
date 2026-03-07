@@ -1,7 +1,7 @@
 using System.Text.Json;
-using PricePredicator.App.Gold;
 using PricePredicator.App.News;
 using PricePredicator.App.Weather;
+using PricePredicator.Infrastructure.Gold;
 
 namespace PricePredicator.App.Gateway;
 

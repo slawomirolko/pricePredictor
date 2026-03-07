@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 
-namespace PricePredicator.App.Finance;
+namespace PricePredicator.Infrastructure.Finance;
 
 /// <summary>
 /// Typed HTTP Client for Yahoo Finance API

@@ -1,4 +1,4 @@
-namespace PricePredicator.App.News;
+namespace PricePredicator.Infrastructure.News;
 
 public sealed class GoogleNewsRssClient : IGoogleNewsRssClient
 {

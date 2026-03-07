@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace PricePredicator.App.Gold;
+namespace PricePredicator.Infrastructure.Gold;
 
 public class StooqGoldPriceService : IGoldPriceService
 {

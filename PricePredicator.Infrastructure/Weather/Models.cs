@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PricePredicator.App.Weather;
+namespace PricePredicator.Infrastructure.Weather;
 
 public class WeatherForecastResponse
 {

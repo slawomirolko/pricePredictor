@@ -1,4 +1,4 @@
-namespace PricePredicator.App;
+namespace PricePredicator.Infrastructure;
 public sealed record GoldNewsSettings
 {
     public const string SectionName = "GoldNews";

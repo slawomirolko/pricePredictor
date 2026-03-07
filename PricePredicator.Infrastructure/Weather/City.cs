@@ -1,4 +1,4 @@
-namespace PricePredicator.App.Weather;
+namespace PricePredicator.Infrastructure.Weather;
 
 public enum City
 {

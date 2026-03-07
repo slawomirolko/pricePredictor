@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PricePredicator.App.GoldNews;
+using PricePredicator.Infrastructure.GoldNews;
 
 namespace PricePredicator.Integration.Tests;
 

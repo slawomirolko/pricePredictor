@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PricePredicator.App.Finance;
+using PricePredicator.Infrastructure.Finance;
 using PricePredicator.Infrastructure.Models;
 
-namespace PricePredicator.App.Finance;
+namespace PricePredicator.App;
 
 public class YahooFinanceBackgroundService : BackgroundService
 {

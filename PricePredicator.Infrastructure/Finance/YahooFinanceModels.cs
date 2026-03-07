@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PricePredicator.App.Finance;
+namespace PricePredicator.Infrastructure.Finance;
 
 /// <summary>
 /// Models for parsing Yahoo Finance JSON response

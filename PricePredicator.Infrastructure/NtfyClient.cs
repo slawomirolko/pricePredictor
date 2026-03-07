@@ -1,6 +1,6 @@
-namespace PricePredicator.App;
-
 using System.Text;
+
+namespace PricePredicator.Infrastructure;
 
 public class NtfyClient
 {

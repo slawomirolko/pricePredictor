@@ -2,11 +2,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Extensions.Http;
-using PricePredicator.App.Finance;
-using PricePredicator.App.Gold;
-using PricePredicator.App.GoldNews;
-using PricePredicator.App.News;
-using PricePredicator.App.Weather;
+using PricePredicator.Infrastructure.Finance;
+using PricePredicator.Infrastructure.Gold;
+using PricePredicator.Infrastructure.GoldNews;
+using PricePredicator.Infrastructure.News;
+using PricePredicator.Infrastructure.Weather;
 
 namespace PricePredicator.Infrastructure;
 

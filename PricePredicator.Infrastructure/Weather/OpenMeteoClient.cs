@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 
-namespace PricePredicator.App.Weather;
+namespace PricePredicator.Infrastructure.Weather;
 
 internal class OpenMeteoClient : IOpenMeteoClient
 {

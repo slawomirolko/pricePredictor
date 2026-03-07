@@ -6,7 +6,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredicator.App.GoldNews;
+using PricePredicator.Infrastructure;
 using PricePredicator.Infrastructure.Data;
+using PricePredicator.Infrastructure.GoldNews;
 
 namespace PricePredicator.App;
 

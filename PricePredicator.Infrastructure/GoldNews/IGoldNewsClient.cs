@@ -1,4 +1,4 @@
-namespace PricePredicator.App.GoldNews;
+namespace PricePredicator.Infrastructure.GoldNews;
 
 public interface IGoldNewsClient
 {

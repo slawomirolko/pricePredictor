@@ -6,7 +6,9 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using PricePredicator.App;
 using PricePredicator.App.GoldNews;
+using PricePredicator.Infrastructure;
 using PricePredicator.Infrastructure.Data;
+using PricePredicator.Infrastructure.GoldNews;
 using Xunit;
 
 namespace PricePredicator.Tests.GoldNews;

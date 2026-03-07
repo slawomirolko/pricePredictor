@@ -1,4 +1,4 @@
-namespace PricePredicator.App.Gold;
+namespace PricePredicator.Infrastructure.Gold;
 
 public interface IGoldPriceService
 {

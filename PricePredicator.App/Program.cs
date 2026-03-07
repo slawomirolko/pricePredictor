@@ -11,6 +11,7 @@ using PricePredicator.App.News;
 using PricePredicator.App.Weather;
 using PricePredicator.Infrastructure;
 using PricePredicator.Infrastructure.Data;
+using PricePredicator.Infrastructure.News;
 
 // Build host
 ThreadPool.SetMinThreads(200, 200);

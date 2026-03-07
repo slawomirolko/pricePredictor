@@ -1,5 +1,6 @@
 using System.Text;
 using PricePredicator.App.Weather;
+using PricePredicator.Infrastructure;
 
 namespace PricePredicator.App.Finance;
 
