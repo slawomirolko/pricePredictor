@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using PricePredicator.App.Finance;
 using Xunit;
 
@@ -19,8 +19,8 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateLogarithmicReturn(currentPrice, previousPrice);
 
         // Assert
-        result.Should().BeGreaterThan(0);
-        result.Should().BeApproximately(0.010050335, 0.0000001);
+        result.ShouldBeGreaterThan(0);
+        result.ShouldBe(0.010050335, 0.0000001);
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateLogarithmicReturn(currentPrice, previousPrice);
 
         // Assert
-        result.Should().Be(0);
+        result.ShouldBe(0);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateLogarithmicReturn(currentPrice, previousPrice);
 
         // Assert
-        result.Should().BeLessThan(0);
+        result.ShouldBeLessThan(0);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateLogarithmicReturn(currentPrice, previousPrice);
 
         // Assert
-        result.Should().BeApproximately(0, 0.0000001);
+        result.ShouldBe(0, 0.0000001);
     }
 
     #endregion
@@ -79,7 +79,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateRollingVolatility(returns);
 
         // Assert
-        result.Should().BeGreaterThan(0);
+        result.ShouldBeGreaterThan(0);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateRollingVolatility(returns);
 
         // Assert
-        result.Should().BeApproximately(0, 0.0000001);
+        result.ShouldBe(0, 0.0000001);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateRollingVolatility(returns);
 
         // Assert
-        result.Should().Be(0);
+        result.ShouldBe(0);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateRollingVolatility(returns);
 
         // Assert
-        result.Should().Be(0);
+        result.ShouldBe(0);
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateRollingVolatility(returns);
 
         // Assert
-        result.Should().BeGreaterThan(0.04);
+        result.ShouldBeGreaterThan(0.04);
     }
 
     #endregion
@@ -151,7 +151,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateStdDev(values);
 
         // Assert
-        result.Should().BeApproximately(expectedStdDev, 0.0001);
+        result.ShouldBe(expectedStdDev, 0.0001);
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateStdDev(values);
 
         // Assert
-        result.Should().BeApproximately(0, 0.0000001);
+        result.ShouldBe(0, 0.0000001);
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CalculateStdDev(values);
 
         // Assert
-        result.Should().Be(0);
+        result.ShouldBe(0);
     }
 
     #endregion
@@ -198,7 +198,7 @@ public class IndicatorsCalculatorTests
             logReturn, shortVolatility, longVolatility);
 
         // Assert - when ratio is 1 (equal volatilities), still returns 0.7 from weights
-        result.Should().BeApproximately(0.7003, 0.001);
+        result.ShouldBe(0.7003, 0.001);
     }
 
     [Fact]
@@ -214,7 +214,7 @@ public class IndicatorsCalculatorTests
             logReturn, shortVolatility, longVolatility);
 
         // Assert
-        result.Should().BeGreaterThan(0.4); // High panic score
+        result.ShouldBeGreaterThan(0.4); // High panic score
     }
 
     [Fact]
@@ -230,10 +230,10 @@ public class IndicatorsCalculatorTests
             logReturn, shortVolatility, longVolatility);
 
         // Assert - should use 1e-9 instead of 0
-        result.Should().BeGreaterThan(0);
-        result.Should().NotBe(double.PositiveInfinity);
-        result.Should().NotBe(double.NegativeInfinity);
-        result.Should().NotBe(double.NaN);
+        result.ShouldBeGreaterThan(0);
+        result.ShouldNotBe(double.PositiveInfinity);
+        result.ShouldNotBe(double.NegativeInfinity);
+        result.ShouldNotBe(double.NaN);
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public class IndicatorsCalculatorTests
             logReturnNegative, shortVolatility, longVolatility);
 
         // Assert
-        resultPositive.Should().BeApproximately(resultNegative, 0.0001);
+        resultPositive.ShouldBe(resultNegative, 0.0001);
     }
 
     [Fact]
@@ -273,7 +273,7 @@ public class IndicatorsCalculatorTests
             logReturn, shortVolatility, longVolatility, weightReturn, weightVol);
 
         // Assert
-        result.Should().BeApproximately(expected, 0.0001);
+        result.ShouldBe(expected, 0.0001);
     }
 
     [Fact]
@@ -289,7 +289,7 @@ public class IndicatorsCalculatorTests
             logReturn, vol5min, vol60min, 0.3, 0.7);
 
         // Assert - should detect higher stress
-        shortPanicScore.Should().BeGreaterThan(0.7);
+        shortPanicScore.ShouldBeGreaterThan(0.7);
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public class IndicatorsCalculatorTests
             logReturn, 0.08, longVolatility); // Double short volatility
 
         // Act & Assert
-        panicScore.Should().BeGreaterThan(stableScoreBase);
+        panicScore.ShouldBeGreaterThan(stableScoreBase);
     }
 
     #endregion
@@ -326,7 +326,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.Return(close, prevClose);
 
         // Assert
-        result.Should().BeApproximately(0.00554018, delta); // Standard log return
+        result.ShouldBe(0.00554018, delta); // Standard log return
     }
 
     [Fact]
@@ -341,7 +341,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.RollingVolatility(last15Returns);
 
         // Assert
-        result.Should().BeApproximately(0.00182818, delta); // Standard deviation (population)
+        result.ShouldBe(0.00182818, delta); // Standard deviation (population)
     }
 
     [Fact]
@@ -357,7 +357,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.ATR(high, low, prevClose);
 
         // Assert
-        result.Should().BeApproximately(2.5, delta);
+        result.ShouldBe(2.5, delta);
     }
 
     [Fact]
@@ -371,7 +371,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.RSIDeviation(last15Closes);
 
         // Assert
-        result.Should().BeApproximately(19.76744, delta); // Standard RSI deviation from 50
+        result.ShouldBe(19.76744, delta); // Standard RSI deviation from 50
     }
 
     [Fact]
@@ -386,7 +386,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.BollingerDeviation(close, last20Closes);
 
         // Assert
-        result.Should().BeApproximately(0, delta); // Not enough points for 20-period bands
+        result.ShouldBe(0, delta); // Not enough points for 20-period bands
     }
 
     [Fact]
@@ -401,7 +401,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.VolumeSpike(volume, avgVolume);
 
         // Assert
-        result.Should().BeApproximately(1.5, delta);
+        result.ShouldBe(1.5, delta);
     }
 
     [Fact]
@@ -416,7 +416,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.VROC(volume, pastVolume);
 
         // Assert
-        result.Should().BeApproximately(0.25, delta);
+        result.ShouldBe(0.25, delta);
     }
 
     [Fact]
@@ -446,7 +446,7 @@ public class IndicatorsCalculatorTests
         var result = IndicatorsCalculator.CompositePanicScore(ret, rollingVol, atr, rsiDev, bbDev, volSpike, vroc);
 
         // Assert
-        result.Should().BeApproximately(1.415583, delta); // Standard formula + weights
+        result.ShouldBe(1.415583, delta); // Standard formula + weights
     }
 
     #endregion
@@ -473,9 +473,9 @@ public class IndicatorsCalculatorTests
             logReturns[^1], vol, vol, 0.3, 0.7);
 
         // Assert
-        logReturns.Should().HaveCount(4);
-        vol.Should().BeGreaterThan(0);
-        panicScore.Should().BeGreaterThan(0);
+        logReturns.Count.ShouldBe(4);
+        vol.ShouldBeGreaterThan(0);
+        panicScore.ShouldBeGreaterThan(0);
     }
 
     [Fact]
@@ -498,10 +498,10 @@ public class IndicatorsCalculatorTests
             allReturns[^1], vol60, vol60, 0.3, 0.7);
 
         // Assert
-        vol5.Should().BeGreaterThanOrEqualTo(0);
-        vol60.Should().BeGreaterThanOrEqualTo(0);
-        shortPanic.Should().BeGreaterThanOrEqualTo(0);
-        longPanic.Should().BeGreaterThanOrEqualTo(0);
+        vol5.ShouldBeGreaterThanOrEqualTo(0);
+        vol60.ShouldBeGreaterThanOrEqualTo(0);
+        shortPanic.ShouldBeGreaterThanOrEqualTo(0);
+        longPanic.ShouldBeGreaterThanOrEqualTo(0);
     }
 
     #endregion

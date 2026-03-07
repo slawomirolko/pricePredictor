@@ -1,7 +1,7 @@
 ﻿services:
   postgres:
     container_name: pricepredictor.postgres
-    image: "postgres:17-alpine"
+    image: "pgvector/pgvector:pg17"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -25,7 +25,7 @@
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;
-      - GoldNews__QdrantUrl=http://qdrant:6333
+      - GoldNews__EmbeddingDimensions=3072
       - GoldNews__OllamaUrl=http://host.docker.internal:11434
     ports:
       - "50051:50051"
@@ -38,19 +38,5 @@
         max-size: "10m"
         max-file: "3"
 
-  qdrant:
-    image: "qdrant/qdrant:latest"
-    container_name: qdrant
-    ports:
-      - "6333:6333"
-    volumes:
-      - qdrant_data:/qdrant/storage
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/healthz >/dev/null 2>&1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 volumes:
   postgres_data:
-  qdrant_data:
