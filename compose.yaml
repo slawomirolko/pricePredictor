@@ -27,6 +27,8 @@
       - ConnectionStrings__DefaultConnection=Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;
       - GoldNews__EmbeddingDimensions=3072
       - GoldNews__OllamaUrl=http://host.docker.internal:11434
+      - GoogleNewsRss__BaseUrl=https://news.google.com/
+      - GoogleNewsRss__RssPath=rss/search?q=gold+price+XAUUSD&hl=en-US&gl=US&ceid=US:en
     ports:
       - "50051:50051"
     depends_on:

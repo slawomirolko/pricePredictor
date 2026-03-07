@@ -22,6 +22,25 @@ public class GoldNewsEmbeddingRepository : IGoldNewsEmbeddingRepository
         await Task.CompletedTask;
     }
 
+    public async Task<bool> ExistsAsync(string url, CancellationToken cancellationToken)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var connection = dbContext.Database.GetDbConnection();
+
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM gold_news_embeddings WHERE url = @url";
+        
+        AddParameter(command, "@url", url);
+
+        var result = await command.ExecuteScalarAsync(cancellationToken);
+        return Convert.ToInt64(result) > 0;
+    }
+
     public async Task UpsertAsync(
         string url,
         string content,

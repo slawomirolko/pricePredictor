@@ -26,6 +26,7 @@
 - ✅ Register typed clients with `AddHttpClient<Interface, Implementation>`
 - ✅ Each client must have its own extension method (e.g., `AddGoogleNewsRssClient`)
 - ✅ All DI and setup should be in extension methods extending `IServiceCollection`
+- ✅ Keep HTTP client extension methods in the Infrastructure project (`PricePredicator.Infrastructure/ClientsExtensions.cs`)
 - ✅ All client extension methods must be called explicitly in `Program.cs` (not inside `AddAppServices`)
 
 ## SETTINGS

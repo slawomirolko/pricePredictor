@@ -11,6 +11,7 @@ service Gateway {
   // Unary call
   rpc Send (GatewayRequest) returns (GatewayReply);
   rpc GetVolatility (VolatilityQueryRequest) returns (VolatilityQueryReply);
+  rpc DownloadGoldNewsArticle (DownloadArticleRequest) returns (DownloadArticleReply);
 }
 
 // Request message
@@ -56,3 +57,15 @@ message VolatilityQueryReply {
   Commodity commodity = 1;
   repeated VolatilityPoint points = 2;
 }
+
+message DownloadArticleRequest {
+  string url = 1;
+}
+
+message DownloadArticleReply {
+  bool success = 1;
+  string message = 2;
+  bool was_already_stored = 3;
+  int32 content_length = 4;
+}
+

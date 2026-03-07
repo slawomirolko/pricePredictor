@@ -5,20 +5,18 @@ namespace PricePredicator.App.News;
 
 public class GoogleNewsRssService : INewsService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IGoogleNewsRssClient _rssClient;
 
-    public GoogleNewsRssService(HttpClient httpClient)
+    public GoogleNewsRssService(IGoogleNewsRssClient rssClient)
     {
-        _httpClient = httpClient;
+        _rssClient = rssClient;
     }
 
     public async Task<IReadOnlyList<NewsItem>> GetGoldNewsAsync(int count, CancellationToken cancellationToken)
     {
         var requested = Math.Clamp(count, 1, 100);
-        var response = await _httpClient.GetAsync("rss/search?q=gold+price+XAUUSD&hl=en-US&gl=US&ceid=US:en", cancellationToken);
-        response.EnsureSuccessStatusCode();
+        var xml = await _rssClient.GetGoldNewsRssAsync(cancellationToken);
 
-        var xml = await response.Content.ReadAsStringAsync(cancellationToken);
         return Parse(xml)
             .Take(requested)
             .ToArray();

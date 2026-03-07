@@ -1,8 +1,7 @@
 namespace PricePredicator.App;
-
-public record GoldNewsSettings
+public sealed record GoldNewsSettings
 {
-    internal const string SectionName = "GoldNews";
+    public const string SectionName = "GoldNews";
 
     // Backward-compatible single URL.
     public string RssUrl { get; init; } = string.Empty;

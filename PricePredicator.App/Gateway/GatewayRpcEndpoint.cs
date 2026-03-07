@@ -1,6 +1,8 @@
 using Grpc.Core;
 using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.Logging;
 using PricePredicator.App.Finance;
+using PricePredicator.App.GoldNews;
 
 namespace PricePredicator.App.Gateway;
 
@@ -8,11 +10,19 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
 {
     private readonly IGatewayService _gatewayService;
     private readonly IVolatilityRepository _volatilityRepository;
+    private readonly INewsService _goldNewsService;
+    private readonly ILogger<GatewayRpcEndpoint> _logger;
 
-    public GatewayRpcEndpoint(IGatewayService gatewayService, IVolatilityRepository volatilityRepository)
+    public GatewayRpcEndpoint(
+        IGatewayService gatewayService,
+        IVolatilityRepository volatilityRepository,
+        INewsService goldNewsService,
+        ILogger<GatewayRpcEndpoint> logger)
     {
         _gatewayService = gatewayService;
         _volatilityRepository = volatilityRepository;
+        _goldNewsService = goldNewsService;
+        _logger = logger;
     }
 
     public override async Task<GatewayReply> Send(
@@ -61,6 +71,41 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
         reply.Points.AddRange(points.Select(MapPoint));
 
         return reply;
+    }
+
+    public override async Task<DownloadArticleReply> DownloadGoldNewsArticle(
+        DownloadArticleRequest request,
+        ServerCallContext context)
+    {
+        if (string.IsNullOrWhiteSpace(request.Url))
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "URL is required."));
+        }
+
+        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out _))
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid URL format."));
+        }
+
+        _logger.LogInformation("📥 Download article request: {Url}", request.Url);
+
+        try
+        {
+            var result = await _goldNewsService.DownloadAndStoreAsync(request.Url, context.CancellationToken);
+
+            return new DownloadArticleReply
+            {
+                Success = result.Success,
+                Message = result.Message,
+                WasAlreadyStored = result.WasAlreadyStored,
+                ContentLength = result.ContentLength
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error processing article: {Url}", request.Url);
+            throw new RpcException(new Status(StatusCode.Internal, $"Error processing article: {ex.Message}"));
+        }
     }
 
     private static VolatilityCommodity MapCommodity(Commodity commodity) => commodity switch

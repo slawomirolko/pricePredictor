@@ -3,6 +3,7 @@ namespace PricePredicator.Infrastructure.Data;
 public interface IGoldNewsEmbeddingRepository
 {
     Task EnsureStorageAsync(int dimensions, CancellationToken cancellationToken);
+    Task<bool> ExistsAsync(string url, CancellationToken cancellationToken);
     Task UpsertAsync(
         string url,
         string content,
