@@ -1,14 +1,19 @@
 using Npgsql;
+using PricePredicator.Integration.Tests.Setup;
 
 namespace PricePredicator.Integration.Tests;
 
-/// <summary>
-/// Simplified integration tests that connect to an already-running Docker Compose stack.
-/// Run 'docker compose up' before executing these tests.
-/// </summary>
+[Collection("integration")]
 public class LiveSystemDataPersistenceTests
 {
-    private const string ConnectionString = "Server=localhost;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;";
+    private readonly PostgresContainerFixture _fixture;
+    private string ConnectionString => _fixture.ConnectionString;
+
+    public LiveSystemDataPersistenceTests(PostgresContainerFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
 
     [Fact]
     public async Task LiveSystem_ShouldHaveAllVolatilityTables()
@@ -147,7 +152,26 @@ public class LiveSystemDataPersistenceTests
         }
     }
 
-    private static async Task<Dictionary<string, int>> GetTableRowCountsAsync()
+    [Fact]
+    public async Task LiveSystem_ShouldHavePgvectorStorageReady()
+    {
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        await using var extensionCmd = new NpgsqlCommand(
+            "SELECT 1 FROM pg_extension WHERE extname = 'vector'",
+            connection);
+        var extensionExists = await extensionCmd.ExecuteScalarAsync();
+        Assert.NotNull(extensionExists);
+
+        await using var tableCmd = new NpgsqlCommand(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='gold_news_embeddings'",
+            connection);
+        var tableExists = await tableCmd.ExecuteScalarAsync();
+        Assert.NotNull(tableExists);
+    }
+
+    private async Task<Dictionary<string, int>> GetTableRowCountsAsync()
     {
         await using var connection = new NpgsqlConnection(ConnectionString);
         await connection.OpenAsync();
@@ -165,7 +189,7 @@ public class LiveSystemDataPersistenceTests
         return counts;
     }
 
-    private static async Task<List<string>> GetPublicTablesAsync()
+    private async Task<List<string>> GetPublicTablesAsync()
     {
         await using var connection = new NpgsqlConnection(ConnectionString);
         await connection.OpenAsync();
@@ -185,7 +209,7 @@ public class LiveSystemDataPersistenceTests
         return tables;
     }
 
-    private static async Task<Dictionary<string, object>?> GetLatestRowAsync(string tableName)
+    private async Task<Dictionary<string, object>?> GetLatestRowAsync(string tableName)
     {
         await using var connection = new NpgsqlConnection(ConnectionString);
         await connection.OpenAsync();

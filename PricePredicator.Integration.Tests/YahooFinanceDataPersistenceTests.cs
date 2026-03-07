@@ -17,7 +17,7 @@ public class YahooFinanceDataPersistenceTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        // Start PostgreSQL container
+        // Start PostgreSQL container - using dynamic port assignment
         _postgresContainer = new PostgreSqlBuilder()
             .WithImage("postgres:17-alpine")
             .WithDatabase("pricepredictor")
@@ -28,6 +28,7 @@ public class YahooFinanceDataPersistenceTests : IAsyncLifetime
 
         await _postgresContainer.StartAsync();
 
+        // Use the connection string provided by the container (with dynamic port)
         _connectionString = _postgresContainer.GetConnectionString();
 
         // Build the application container with overridden settings
@@ -42,9 +43,8 @@ public class YahooFinanceDataPersistenceTests : IAsyncLifetime
             .WithEnvironment("YahooFinance__Symbols__3", "CL=F")
             .WithEnvironment("YahooFinance__Interval", "1m")
             .WithEnvironment("YahooFinance__Range", "1d")
+            .WithEnvironment("GoldNews__EmbeddingDimensions", "3072")
             .WithEnvironment("GoldNews__OllamaUrl", "http://host.docker.internal:11434")
-            .WithEnvironment("GoldNews__QdrantUrl", "http://host.docker.internal:6333")
-            .WithPortBinding(50051, 50051)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("Yahoo Finance Background Service started"))
             .WithCleanUp(true)
             .Build();

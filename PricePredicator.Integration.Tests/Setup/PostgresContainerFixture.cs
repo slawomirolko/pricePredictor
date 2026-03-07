@@ -1,4 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using PricePredicator.Infrastructure;
+using PricePredicator.Infrastructure.Data;
 using Testcontainers.PostgreSql;
 
 namespace PricePredicator.Integration.Tests.Setup;
@@ -31,6 +35,14 @@ public class PostgresContainerFixture : IAsyncLifetime
         await connection.OpenAsync();
         await using var cmd = new NpgsqlCommand("CREATE EXTENSION IF NOT EXISTS vector;", connection);
         await cmd.ExecuteNonQueryAsync();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddDbContext<PricePredictorDbContext>(options =>
+            options.UseNpgsql(ConnectionString));
+
+        var serviceProvider = services.BuildServiceProvider();
+        serviceProvider.ApplyPendingMigrations();
     }
 
     public async Task DisposeAsync()
