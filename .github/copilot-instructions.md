@@ -57,11 +57,17 @@
   - Call `AddApplication()` explicitly in `Program.cs`
   - Contains Domain layer in directory Domain, where all domain models are defined
   
+- ✅ **Persistence Layer** (`PricePredictor.Persistence`):
+  - Contains DbContext and EF Core configuration
+  - Contains migrations in `/Migrations` directory
+  - Contains repository implementations that depend on DbContext
+  - Has ONE extension method: `AddPersistence(this IServiceCollection services, IConfiguration configuration)`
+  - This extension registers DbContext and repositories
+
 - ✅ **Infrastructure Layer** (`PricePredictor.Infrastructure`):
-  - Contains repository implementations (EF Core)
-  - Contains database context and migrations
   - Contains external HTTP clients
-  - Contains infrastructure-specific models
+  - Contains infrastructure-specific DTOs and mappers
+  - Contains settings classes
   - Has extension methods for infrastructure setup (e.g., `AddGoogleNewsRssClient`, `AddNtfyClient`)
   
 - ✅ **API Layer** (`PricePredictor.Api`):
