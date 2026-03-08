@@ -1,5 +1,6 @@
 using System.Globalization;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 
 namespace PricePredictor.Infrastructure.Gold;
 

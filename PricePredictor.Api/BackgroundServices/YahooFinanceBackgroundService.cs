@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Application.Models;
 using PricePredictor.Infrastructure.Finance;
 

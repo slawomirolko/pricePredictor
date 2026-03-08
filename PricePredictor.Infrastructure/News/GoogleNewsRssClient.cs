@@ -1,4 +1,5 @@
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 
 namespace PricePredictor.Infrastructure.News;
 

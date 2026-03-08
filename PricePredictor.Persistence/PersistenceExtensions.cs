@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Persistence.Data;
 using PricePredictor.Persistence.Repositories;
 

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredictor.Application.Data;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 
 namespace PricePredictor.Api.BackgroundServices;

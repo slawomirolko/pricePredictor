@@ -2,6 +2,7 @@
 using Google.Protobuf.WellKnownTypes;
 using PricePredictor.Application;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 
 namespace PricePredictor.Api.Gateway;
 

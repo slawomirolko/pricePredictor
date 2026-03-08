@@ -1,4 +1,4 @@
-namespace PricePredictor.Application.Finance;
+namespace PricePredictor.Application.Finance.Interfaces;
 
 public interface IGoogleNewsRssClient
 {

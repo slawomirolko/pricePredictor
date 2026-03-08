@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 
 namespace PricePredictor.Api.Controllers;
 

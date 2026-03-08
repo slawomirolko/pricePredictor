@@ -1,6 +1,6 @@
 ﻿﻿using PricePredictor.Application.Models;
 
-namespace PricePredictor.Application.Finance;
+ namespace PricePredictor.Application.Finance.Interfaces;
 
 /// <summary>
 /// Repository for storing volatility data

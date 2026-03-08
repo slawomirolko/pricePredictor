@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredictor.Application.Data;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 
 namespace PricePredictor.Application;
 

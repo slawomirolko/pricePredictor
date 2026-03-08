@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Extensions.Http;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Application.Notifications;
 using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure.Finance;
