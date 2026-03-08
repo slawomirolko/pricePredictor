@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PricePredictor.Api.Finance;
-using PricePredicator.Infrastructure.Finance;
-using PricePredicator.Infrastructure.Models;
+using PricePredictor.Infrastructure.Finance;
+using PricePredictor.Infrastructure.Models;
 
 namespace PricePredictor.Api;
 

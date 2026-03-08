@@ -17,7 +17,7 @@ Complete .NET 10 implementation for fetching real-time intraday data from Yahoo 
 ## Architecture
 
 ```
-PricePredicator.Infrastructure/
+PricePredictor.Infrastructure/
 ├── Data/
 │   ├── PricePredictorDbContext.cs (EF Core DbContext)
 │   └── PricePredictorDbContextFactory.cs (Design-time factory)
@@ -27,7 +27,7 @@ PricePredicator.Infrastructure/
     ├── VolatilityNaturalGas.cs
     └── VolatilityOil.cs
 
-PricePredicator.App/
+PricePredictor.App/
 ├── Finance/
 │   ├── YahooFinanceClient.cs (Typed HTTP client)
 │   ├── YahooFinanceModels.cs (JSON response DTOs)
@@ -39,7 +39,7 @@ PricePredicator.App/
 ├── Program.cs (DI registration + migration runner)
 └── appsettings.json (Configuration)
 
-PricePredicator.Tests/
+PricePredictor.Tests/
 └── Finance/
     └── IndicatorsCalculatorTests.cs (22 comprehensive unit tests)
 ```
@@ -135,7 +135,7 @@ panic_score = w1 * |return| + w2 * (vol_short / vol_long)
 docker-compose up -d
 
 # View logs
-docker-compose logs -f pricepredicator.app
+docker-compose logs -f PricePredictor.app
 
 # Stop
 docker-compose down
@@ -161,10 +161,10 @@ dotnet restore
 dotnet build
 
 # Run migrations (auto-runs at startup, but can also run manually)
-dotnet ef database update -p PricePredicator.Infrastructure
+dotnet ef database update -p PricePredictor.Infrastructure
 
 # Run
-dotnet run --project PricePredicator.App
+dotnet run --project PricePredictor.App
 ```
 
 ## Output Logging
@@ -195,7 +195,7 @@ Vol5: 0.025, Vol15: 0.023, Vol60: 0.021, ShortPanic: 0.823, LongPanic: 0.715
 Run all 22 tests:
 
 ```bash
-dotnet test PricePredicator.Tests
+dotnet test PricePredictor.Tests
 ```
 
 **Test Coverage:**
@@ -332,4 +332,5 @@ This implementation is provided as-is for educational and trading purposes.
 - Yahoo Finance JSON API: `https://query1.finance.yahoo.com/v8/finance/chart/`
 - Volatility Metrics: https://en.wikipedia.org/wiki/Volatility_(finance)
 - Logarithmic Returns: https://en.wikipedia.org/wiki/Rate_of_return#Logarithmic_return
+
 

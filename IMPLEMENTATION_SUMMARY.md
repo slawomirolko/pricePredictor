@@ -6,10 +6,10 @@ Successfully implemented a complete .NET 10 hosted service for fetching 1-minute
 
 ## Files Created
 
-### Infrastructure Project: `PricePredicator.Infrastructure/`
+### Infrastructure Project: `PricePredictor.Infrastructure/`
 
 **Project File:**
-- `PricePredicator.Infrastructure.csproj` - NuGet: EF Core, Npgsql
+- `PricePredictor.Infrastructure.csproj` - NuGet: EF Core, Npgsql
 
 **Database Context:**
 - `Data/PricePredictorDbContext.cs` - EF Core DbContext with 4 DbSets
@@ -24,7 +24,7 @@ Successfully implemented a complete .NET 10 hosted service for fetching 1-minute
 **Migrations:**
 - `Migrations/InitialCreate/` - Auto-generated EF Core migration
 
-### App Project: `PricePredicator.App/`
+### App Project: `PricePredictor.App/`
 
 **Finance Module:**
 - `Finance/YahooFinanceClient.cs` - Typed HTTP client (BaseAddress: query1.finance.yahoo.com)
@@ -60,7 +60,7 @@ Successfully implemented a complete .NET 10 hosted service for fetching 1-minute
   - ConnectionStrings:DefaultConnection
   - YahooFinance settings (symbols, interval, range, backup minutes)
 
-### Test Project: `PricePredicator.Tests/`
+### Test Project: `PricePredictor.Tests/`
 
 **Finance Tests:**
 - `Finance/IndicatorsCalculatorTests.cs` - 22 comprehensive xunit tests:
@@ -71,7 +71,7 @@ Successfully implemented a complete .NET 10 hosted service for fetching 1-minute
   - **Integration** (2 tests): full pipeline with synthetic data
 
 **Updated Project File:**
-- `PricePredicator.Tests.csproj` - Added xunit.runner.visualstudio, FluentAssertions, Infrastructure reference
+- `PricePredictor.Tests.csproj` - Added xunit.runner.visualstudio, FluentAssertions, Infrastructure reference
 
 ### Documentation
 
@@ -98,7 +98,7 @@ Successfully implemented a complete .NET 10 hosted service for fetching 1-minute
 
 **Updated:**
 - `compose.yaml` - Added PostgreSQL service with healthcheck
-- `PricePredicator.App.csproj` - Added EF Core packages, Infrastructure reference
+- `PricePredictor.App.csproj` - Added EF Core packages, Infrastructure reference
 
 ## Technical Highlights
 
@@ -276,7 +276,7 @@ docker-compose up -d
 
 ### Local
 ```bash
-dotnet run --project PricePredicator.App
+dotnet run --project PricePredictor.App
 # Requires: PostgreSQL on localhost:5432
 ```
 
@@ -316,3 +316,4 @@ dotnet run --project PricePredicator.App
 - ✅ FluentAssertions (free assertion library)
 
 **Total Cost: $0** (only your infrastructure)
+

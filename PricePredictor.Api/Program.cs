@@ -8,9 +8,9 @@ using PricePredictor.Api;
 using PricePredictor.Api.Finance;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Api.Weather;
-using PricePredicator.Infrastructure;
-using PricePredicator.Infrastructure.Data;
-using PricePredicator.Infrastructure.News;
+using PricePredictor.Infrastructure;
+using PricePredictor.Infrastructure.Data;
+using PricePredictor.Infrastructure.News;
 
 // Build host
 ThreadPool.SetMinThreads(200, 200);

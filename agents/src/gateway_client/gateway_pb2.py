@@ -24,14 +24,14 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgateway.proto\x12\x07gateway\"!\n\x0eGatewayRequest\x12\x0f\n\x07payload\x18\x01 \x01(\t\"\x1e\n\x0cGatewayReply\x12\x0e\n\x06result\x18\x01 \x01(\t2A\n\x07Gateway\x12\x36\n\x04Send\x12\x17.gateway.GatewayRequest\x1a\x15.gateway.GatewayReplyB\x1e\xaa\x02\x1bPricePredicator.App.Gatewayb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgateway.proto\x12\x07gateway\"!\n\x0eGatewayRequest\x12\x0f\n\x07payload\x18\x01 \x01(\t\"\x1e\n\x0cGatewayReply\x12\x0e\n\x06result\x18\x01 \x01(\t2A\n\x07Gateway\x12\x36\n\x04Send\x12\x17.gateway.GatewayRequest\x1a\x15.gateway.GatewayReplyB\x1e\xaa\x02\x1bPricePredictor.App.Gatewayb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'gateway_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'\252\002\033PricePredicator.App.Gateway'
+  _globals['DESCRIPTOR']._serialized_options = b'\252\002\033PricePredictor.App.Gateway'
   _globals['_GATEWAYREQUEST']._serialized_start=26
   _globals['_GATEWAYREQUEST']._serialized_end=59
   _globals['_GATEWAYREPLY']._serialized_start=61
@@ -39,3 +39,4 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GATEWAY']._serialized_start=93
   _globals['_GATEWAY']._serialized_end=158
 # @@protoc_insertion_point(module_scope)
+

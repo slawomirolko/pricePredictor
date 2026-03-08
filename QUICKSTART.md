@@ -33,7 +33,7 @@ psql -h localhost -U postgres -d pricepredictor -c "SELECT version();"
 
 ## Step 3: Verify Configuration
 
-Edit `PricePredicator.App/appsettings.json`:
+Edit `PricePredictor.App/appsettings.json`:
 
 ```json
 {
@@ -59,12 +59,12 @@ dotnet restore
 dotnet build
 
 # Run (migrations run automatically)
-dotnet run --project PricePredicator.App
+dotnet run --project PricePredictor.App
 
 # Expected output:
-# info: PricePredicator.App.Finance.YahooFinanceBackgroundService[0]
+# info: PricePredictor.App.Finance.YahooFinanceBackgroundService[0]
 #       Yahoo Finance Background Service started.
-# info: PricePredicator.App.Finance.YahooFinanceBackgroundService[0]
+# info: PricePredictor.App.Finance.YahooFinanceBackgroundService[0]
 #       Fetching intraday data at 2026-03-03 14:30:00...
 ```
 
@@ -99,7 +99,7 @@ ORDER BY timestamp DESC;
 ## Step 7: Run Tests
 
 ```bash
-dotnet test PricePredicator.Tests
+dotnet test PricePredictor.Tests
 
 # Expected: 22 tests passed
 ```
@@ -196,3 +196,4 @@ docker-compose up postgres -d
 5. Create dashboard (Grafana, Power BI)
 
 See `YAHOO_FINANCE_README.md` for detailed documentation.
+

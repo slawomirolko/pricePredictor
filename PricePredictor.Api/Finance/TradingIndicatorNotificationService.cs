@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using PricePredictor.Api.Weather;
-using PricePredicator.Infrastructure;
+using PricePredictor.Infrastructure;
 
 namespace PricePredictor.Api.Finance;
 

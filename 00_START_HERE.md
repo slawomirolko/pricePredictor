@@ -28,8 +28,8 @@ A complete .NET 10 hosted service for fetching real-time 1-minute candlestick da
 
 ### Infrastructure Project (Database)
 ```
-PricePredicator.Infrastructure/
-├── PricePredicator.Infrastructure.csproj
+PricePredictor.Infrastructure/
+├── PricePredictor.Infrastructure.csproj
 ├── Data/
 │   ├── PricePredictorDbContext.cs
 │   └── PricePredictorDbContextFactory.cs
@@ -46,7 +46,7 @@ PricePredicator.Infrastructure/
 
 ### App Project (Business Logic)
 ```
-PricePredicator.App/
+PricePredictor.App/
 ├── Finance/
 │   ├── YahooFinanceClient.cs (Typed HTTP Client)
 │   ├── YahooFinanceModels.cs (JSON DTOs)
@@ -57,15 +57,15 @@ PricePredicator.App/
 ├── YahooFinanceBackgroundService.cs (Main Loop)
 ├── Program.cs (Updated: DI + Migrations)
 ├── appsettings.json (Updated: Config)
-└── PricePredicator.App.csproj (Updated: Deps)
+└── PricePredictor.App.csproj (Updated: Deps)
 ```
 
 ### Test Project (Quality Assurance)
 ```
-PricePredicator.Tests/
+PricePredictor.Tests/
 ├── Finance/
 │   └── IndicatorsCalculatorTests.cs (22 tests)
-└── PricePredicator.Tests.csproj (Updated: xunit + FluentAssertions)
+└── PricePredictor.Tests.csproj (Updated: xunit + FluentAssertions)
 ```
 
 ### Documentation
@@ -112,7 +112,7 @@ docker-compose up postgres -d
 
 ### 2. Run Application
 ```bash
-dotnet run --project PricePredicator.App
+dotnet run --project PricePredictor.App
 ```
 
 ### 3. Watch Output
@@ -253,7 +253,7 @@ ShortPanic: 0.823, LongPanic: 0.715
 
 ### Run All Tests
 ```bash
-dotnet test PricePredicator.Tests
+dotnet test PricePredictor.Tests
 ```
 
 **Expected Output:**
@@ -311,7 +311,7 @@ docker-compose up -d
 ### Local Development
 ```bash
 # Prerequisites: PostgreSQL running on localhost:5432
-dotnet run --project PricePredicator.App
+dotnet run --project PricePredictor.App
 ```
 
 ### Cloud (AWS, Azure, GCP)
@@ -358,7 +358,7 @@ dotnet run --project PricePredicator.App
 ### Immediate (Getting Started)
 1. Read `QUICKSTART.md` (5 minutes)
 2. Run `docker-compose up -d postgres -d`
-3. Execute `dotnet run --project PricePredicator.App`
+3. Execute `dotnet run --project PricePredictor.App`
 4. Observe logs for panic scores
 
 ### Short Term (Integration)
@@ -485,3 +485,4 @@ You now have a **production-ready, battle-tested, fully documented** .NET 10 ser
 **Created:** March 3, 2026  
 **Status:** ✅ COMPLETE & TESTED  
 **Quality:** Production Ready
+

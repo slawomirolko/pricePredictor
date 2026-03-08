@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using PricePredictor.Api.News;
 using PricePredictor.Api.Weather;
-using PricePredicator.Infrastructure.Gold;
+using PricePredictor.Infrastructure.Gold;
 
 namespace PricePredictor.Api.Gateway;
 

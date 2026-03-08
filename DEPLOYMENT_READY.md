@@ -105,7 +105,7 @@ docker run -d -p 5432:5432 \
 
 # Terminal 2: Run application
 cd C:\Users\sawek\Documents\Git\DotNet\PricePredictor
-dotnet run --project PricePredicator.App
+dotnet run --project PricePredictor.App
 ```
 
 ### Run with Docker Compose
@@ -114,7 +114,7 @@ cd C:\Users\sawek\Documents\Git\DotNet\PricePredictor
 docker-compose up -d
 
 # View logs
-docker-compose logs -f pricepredicator.app
+docker-compose logs -f PricePredictor.app
 ```
 
 ---
@@ -263,4 +263,5 @@ All documentation is in markdown format in the project root:
 Created: March 3, 2026  
 Quality: Production Ready  
 Status: ✅ COMPLETE
+
 

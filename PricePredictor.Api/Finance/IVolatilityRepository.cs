@@ -1,4 +1,4 @@
-﻿using PricePredicator.Infrastructure.Models;
+﻿using PricePredictor.Infrastructure.Models;
 
 namespace PricePredictor.Api.Finance;
 

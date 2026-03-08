@@ -6,9 +6,9 @@
   <Folder Name="/Protos/">
     <File Path="Protos/gateway.proto" />
   </Folder>
-  <Project Path="PricePredictor.Api/PricePredictor.Api.csproj" Type="C#" />
-  <Project Path="PricePredicator.Infrastructure/PricePredicator.Infrastructure.csproj" Type="C#" />
-  <Project Path="PricePredicator.Tests/PricePredicator.Tests.csproj" Type="C#" />
-  <Project Path="PricePredicator.Integration.Tests/PricePredicator.Integration.Tests.csproj" Type="C#" />
+  <Project Path="PricePredictor.Api/PricePredictor.Api.csproj" />
+  <Project Path="PricePredictor.Infrastructure/PricePredictor.Infrastructure.csproj" />
+  <Project Path="PricePredictor.Integration.Tests/PricePredictor.Integration.Tests.csproj" />
+  <Project Path="PricePredictor.Tests/PricePredictor.Tests.csproj" />
 </Solution>
 

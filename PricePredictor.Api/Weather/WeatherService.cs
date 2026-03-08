@@ -1,4 +1,4 @@
-﻿using PricePredicator.Infrastructure.Weather;
+﻿using PricePredictor.Infrastructure.Weather;
 
 namespace PricePredictor.Api.Weather;
 

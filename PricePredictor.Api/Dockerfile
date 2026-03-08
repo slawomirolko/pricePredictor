@@ -4,7 +4,7 @@ WORKDIR /src
 
 # Copy project files
 COPY ["PricePredictor.Api/PricePredictor.Api.csproj", "PricePredictor.Api/"]
-COPY ["PricePredicator.Infrastructure/PricePredicator.Infrastructure.csproj", "PricePredicator.Infrastructure/"]
+COPY ["PricePredictor.Infrastructure/PricePredictor.Infrastructure.csproj", "PricePredictor.Infrastructure/"]
 
 # Restore dependencies
 RUN dotnet restore "PricePredictor.Api/PricePredictor.Api.csproj"

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Xml.Linq;
-using PricePredicator.Infrastructure.News;
+using PricePredictor.Infrastructure.News;
 
 namespace PricePredictor.Api.News;
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PricePredicator.Infrastructure.Data;
-using PricePredicator.Infrastructure.Models;
+using PricePredictor.Infrastructure.Data;
+using PricePredictor.Infrastructure.Models;
 
 namespace PricePredictor.Api.Finance;
 

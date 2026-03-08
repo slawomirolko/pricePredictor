@@ -39,7 +39,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\PricePredicator.Infrastructure\PricePredicator.Infrastructure.csproj" />
+      <ProjectReference Include="..\PricePredictor.Infrastructure\PricePredictor.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>
