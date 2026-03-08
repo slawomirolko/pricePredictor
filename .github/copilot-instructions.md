@@ -21,6 +21,11 @@
   - `result.ShouldBe(0.5, 0.001); // with tolerance`
   - `collection.Count.ShouldBe(4);`
 
+## TEST DOUBLES
+- ✅ Unit tests in `PricePredictor.Tests` must mock dependencies with NSubstitute
+- ❌ Do not create internal stubs for integration tests
+- ✅ Integration tests in `PricePredictor.Tests.Integration` must use real implementations wired through `WebApplicationFactory`
+
 ## HTTP CLIENTS
 - ✅ Use typed HTTP clients (wrapper client classes) instead of injecting `HttpClient` directly into services
 - ✅ Register typed clients with `AddHttpClient<Interface, Implementation>`
