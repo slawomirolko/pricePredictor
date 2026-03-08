@@ -28,6 +28,7 @@
 - ✅ All DI and setup should be in extension methods extending `IServiceCollection`
 - ✅ Keep HTTP client extension methods in the Infrastructure project (`PricePredicator.Infrastructure/ClientsExtensions.cs`)
 - ✅ All client extension methods must be called explicitly in `Program.cs` (not inside `AddAppServices`)
+- ❌ Do not introduce adapter patterns for clients
 
 ## SETTINGS
 - ✅ Settings types must be sealed `record` with `init` properties
