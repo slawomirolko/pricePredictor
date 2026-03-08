@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace PricePredictor.Persistence.Data;
+namespace PricePredictor.Persistence;
 
 public class PricePredictorDbContextFactory : IDesignTimeDbContextFactory<PricePredictorDbContext>
 {

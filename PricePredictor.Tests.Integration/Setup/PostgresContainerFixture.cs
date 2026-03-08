@@ -1,8 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using PricePredictor.Infrastructure;
-using PricePredictor.Persistence.Data;
+using PricePredictor.Persistence;
 using Testcontainers.PostgreSql;
 
 namespace PricePredictor.Tests.Integration.Setup;

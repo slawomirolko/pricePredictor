@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PricePredictor.Application.Models;
 
-namespace PricePredictor.Persistence.Data;
+namespace PricePredictor.Persistence;
 
 public class PricePredictorDbContext : DbContext
 {

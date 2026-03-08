@@ -3,12 +3,10 @@ using OllamaSharp;
 using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Application;
-using PricePredictor.Application.Data;
 using PricePredictor.Application.Finance;
 using PricePredictor.Application.Notifications;
 using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure;
-using PricePredictor.Infrastructure.Data;
 using PricePredictor.Infrastructure.News;
 using PricePredictor.Persistence;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
@@ -61,8 +59,6 @@ builder.Services.Configure<GoldNewsSettings>(builder.Configuration.GetSection(Go
 builder.Services.Configure<YahooFinanceSettings>(builder.Configuration.GetSection(YahooFinanceSettings.SectionName));
 builder.Services.Configure<GoogleNewsRssSettings>(builder.Configuration.GetSection(GoogleNewsRssSettings.SectionName));
 
-// Infrastructure: Repository that wraps Persistence (specific infrastructure concern)
-builder.Services.AddScoped<IGoldNewsEmbeddingRepository, GoldNewsEmbeddingRepository>();
 
 builder.Services.AddSingleton(sp =>
 {

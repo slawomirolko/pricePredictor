@@ -2,11 +2,15 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# Copy package management
+COPY ["Directory.Packages.props", "."]
+
 # Copy project files
 COPY ["PricePredictor.Api/PricePredictor.Api.csproj", "PricePredictor.Api/"]
 COPY ["PricePredictor.Application/PricePredictor.Application.csproj", "PricePredictor.Application/"]
 COPY ["PricePredictor.Domain/PricePredictor.Domain.csproj", "PricePredictor.Domain/"]
 COPY ["PricePredictor.Infrastructure/PricePredictor.Infrastructure.csproj", "PricePredictor.Infrastructure/"]
+COPY ["PricePredictor.Persistence/PricePredictor.Persistence.csproj", "PricePredictor.Persistence/"]
 
 # Restore dependencies
 RUN dotnet restore "PricePredictor.Api/PricePredictor.Api.csproj"

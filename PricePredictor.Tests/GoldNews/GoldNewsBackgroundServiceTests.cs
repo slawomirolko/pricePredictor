@@ -5,8 +5,8 @@ using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Application.Data;
 using PricePredictor.Application.Finance;
 using PricePredictor.Application.Finance.Interfaces;
-using PricePredictor.Infrastructure.Data;
 using PricePredictor.Infrastructure.GoldNews;
+using PricePredictor.Persistence.Repositories;
 using Xunit;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 

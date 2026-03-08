@@ -22,5 +22,9 @@
     <ProjectReference Include="..\PricePredictor.Application\PricePredictor.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
+
 </Project>
 

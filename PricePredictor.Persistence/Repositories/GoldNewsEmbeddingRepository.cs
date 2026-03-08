@@ -4,9 +4,8 @@ using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using PricePredictor.Application.Data;
-using PricePredictor.Persistence.Data;
 
-namespace PricePredictor.Infrastructure.Data;
+namespace PricePredictor.Persistence.Repositories;
 
 public class GoldNewsEmbeddingRepository : IGoldNewsEmbeddingRepository
 {
@@ -112,3 +111,4 @@ DO UPDATE SET
         return sb.ToString();
     }
 }
+

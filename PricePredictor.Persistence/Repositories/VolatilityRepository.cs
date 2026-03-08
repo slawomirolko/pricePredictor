@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using PricePredictor.Application.Finance;
 using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Application.Models;
-using PricePredictor.Persistence.Data;
 
 namespace PricePredictor.Persistence.Repositories;
 
