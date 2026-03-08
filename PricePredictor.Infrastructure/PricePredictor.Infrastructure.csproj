@@ -23,7 +23,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PricePredictor.Domain\PricePredictor.Domain.csproj" />
+        <ProjectReference Include="..\PricePredictor.Application\PricePredictor.Application.csproj" />
+        <ProjectReference Include="..\PricePredictor.Persistence\PricePredictor.Persistence.csproj" />
     </ItemGroup>
     
 </Project>

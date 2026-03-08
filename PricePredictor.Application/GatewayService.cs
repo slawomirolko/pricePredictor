@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using PricePredictor.Application.Finance;
 using PricePredictor.Application.Weather;
 
 namespace PricePredictor.Application;

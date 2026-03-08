@@ -1,3 +1,5 @@
+using PricePredictor.Application.Weather;
+
 namespace PricePredictor.Infrastructure.Weather;
 
 internal static class CityCoordinates

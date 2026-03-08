@@ -45,6 +45,7 @@
   - Has ONE extension method: `AddApplication(this IServiceCollection services)`
   - This extension registers ALL application services and their interfaces
   - Call `AddApplication()` explicitly in `Program.cs`
+  - Contains Domain layer in directory Domain, where all domain models are defined
   
 - ✅ **Infrastructure Layer** (`PricePredictor.Infrastructure`):
   - Contains repository implementations (EF Core)
@@ -58,11 +59,6 @@
   - Contains background services (e.g., `YahooFinanceBackgroundService`)
   - Contains `Program.cs` and startup configuration
   - Minimal business logic - delegates to Application layer
-
-- ✅ **Domain Layer** (`PricePredictor.Domain`):
-  - Contains all domain entities/models (e.g., `Commodity`, `Volatility*`)
-  - No infrastructure concerns (no EF Core, no HTTP, no DI)
-  - Shared by Application and Infrastructure for persistence/model mapping
 
 ## DEPENDENCY DIRECTION
 - ✅ API → Application

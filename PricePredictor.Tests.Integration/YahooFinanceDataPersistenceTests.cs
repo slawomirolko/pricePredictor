@@ -3,7 +3,7 @@ using DotNet.Testcontainers.Containers;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
-namespace PricePredictor.Integration.Tests;
+namespace PricePredictor.Tests.Integration;
 
 /// <summary>
 /// Integration tests that verify the application stores volatility data every 1 minute.

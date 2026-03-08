@@ -1,7 +1,7 @@
 using Npgsql;
-using PricePredictor.Integration.Tests.Setup;
+using PricePredictor.Tests.Integration.Setup;
 
-namespace PricePredictor.Integration.Tests;
+namespace PricePredictor.Tests.Integration;
 
 [Collection("integration")]
 public class LiveSystemDataPersistenceTests

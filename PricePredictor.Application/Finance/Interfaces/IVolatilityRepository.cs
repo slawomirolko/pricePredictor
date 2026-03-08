@@ -1,4 +1,4 @@
-﻿using PricePredictor.Domain.Models;
+﻿﻿using PricePredictor.Application.Models;
 
 namespace PricePredictor.Application.Finance;
 

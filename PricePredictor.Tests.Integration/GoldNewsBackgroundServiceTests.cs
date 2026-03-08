@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PricePredictor.Infrastructure.GoldNews;
 
-namespace PricePredictor.Integration.Tests;
+namespace PricePredictor.Tests.Integration;
 
 /// <summary>
 /// Integration tests for GoldNewsBackgroundService.

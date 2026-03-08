@@ -1,3 +1,5 @@
+using PricePredictor.Application.Finance;
+
 namespace PricePredictor.Infrastructure.News;
 
 public sealed class GoogleNewsRssClient : IGoogleNewsRssClient

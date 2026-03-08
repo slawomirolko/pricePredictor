@@ -1,4 +1,4 @@
-namespace PricePredictor.Integration.Tests.Setup;
+namespace PricePredictor.Tests.Integration.Setup;
 
 [CollectionDefinition("integration")]
 public class IntegrationCollection : ICollectionFixture<PostgresContainerFixture>;

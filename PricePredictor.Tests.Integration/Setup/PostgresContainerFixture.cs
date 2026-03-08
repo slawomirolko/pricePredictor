@@ -2,10 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using PricePredictor.Infrastructure;
-using PricePredictor.Infrastructure.Data;
+using PricePredictor.Persistence.Data;
 using Testcontainers.PostgreSql;
 
-namespace PricePredictor.Integration.Tests.Setup;
+namespace PricePredictor.Tests.Integration.Setup;
 
 
 public class PostgresContainerFixture : IAsyncLifetime

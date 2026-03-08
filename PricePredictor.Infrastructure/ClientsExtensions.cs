@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Extensions.Http;
+using PricePredictor.Application.Notifications;
 using PricePredictor.Infrastructure.Finance;
 using PricePredictor.Infrastructure.Gold;
 using PricePredictor.Infrastructure.GoldNews;
@@ -30,7 +31,7 @@ public static class ClientsExtensions
         ArgumentNullException.ThrowIfNull(configuration);
         var retryPolicy = CreateSharedHttpRetryPolicy();
 
-        services.AddHttpClient<NtfyClient>((sp, client) =>
+        services.AddHttpClient<INtfyClient, NtfyClient>((sp, client) =>
             {
                 var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NtfySettings>>().Value;
                 client.BaseAddress = new Uri(settings.BaseUrl);

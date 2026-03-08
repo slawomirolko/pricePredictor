@@ -2,7 +2,7 @@ using System.Net;
 using System.Text.Json;
 using System.Xml.Linq;
 
-namespace PricePredictor.Integration.Tests;
+namespace PricePredictor.Tests.Integration;
 
 public class ExternalResourceAvailabilityTests
 {

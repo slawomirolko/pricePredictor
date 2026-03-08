@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using PricePredictor.Application.Finance;
-using PricePredictor.Domain.Models;
+using PricePredictor.Application.Models;
 using PricePredictor.Infrastructure.Finance;
 
 namespace PricePredictor.Api.BackgroundServices;

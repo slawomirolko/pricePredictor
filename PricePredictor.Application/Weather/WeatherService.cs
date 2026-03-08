@@ -36,7 +36,7 @@ public class WeatherService : IWeatherService
 
 public record CityWeather
 {
-    public City City { get; init; }
+    public required City City { get; init; }
     public double MaxTemp { get; init; }
     public double MinTemp { get; init; }
     public int WeatherCode { get; init; }

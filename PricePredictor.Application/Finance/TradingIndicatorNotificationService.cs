@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using PricePredictor.Application.Notifications;
 using PricePredictor.Application.Weather;
 
 namespace PricePredictor.Application.Finance;
@@ -9,11 +10,11 @@ namespace PricePredictor.Application.Finance;
 /// </summary>
 public class TradingIndicatorNotificationService
 {
-    private readonly NtfyClient _ntfyClient;
+    private readonly INtfyClient _ntfyClient;
     private readonly IWeatherService _weatherService;
     private readonly string _topic;
 
-    public TradingIndicatorNotificationService(NtfyClient ntfyClient, IWeatherService weatherService, string topic)
+    public TradingIndicatorNotificationService(INtfyClient ntfyClient, IWeatherService weatherService, string topic)
     {
         _ntfyClient = ntfyClient;
         _weatherService = weatherService;

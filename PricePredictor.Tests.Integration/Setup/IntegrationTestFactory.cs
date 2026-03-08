@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using PricePredictor.Infrastructure.Data;
+using PricePredictor.Persistence.Data;
 
-namespace PricePredictor.Integration.Tests.Setup;
+namespace PricePredictor.Tests.Integration.Setup;
 
 public class IntegrationTestFactory : WebApplicationFactory<Program>
 {

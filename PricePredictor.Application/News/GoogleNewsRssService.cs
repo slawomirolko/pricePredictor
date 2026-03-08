@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Xml.Linq;
+using PricePredictor.Application.Finance;
 
 namespace PricePredictor.Application.News;
 

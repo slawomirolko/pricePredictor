@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PricePredictor.Infrastructure.Data;
+using PricePredictor.Persistence.Data;
 
 namespace PricePredictor.Infrastructure;
 

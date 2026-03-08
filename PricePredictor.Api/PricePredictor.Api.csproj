@@ -40,8 +40,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\PricePredictor.Application\PricePredictor.Application.csproj" />
-      <ProjectReference Include="..\PricePredictor.Domain\PricePredictor.Domain.csproj" />
       <ProjectReference Include="..\PricePredictor.Infrastructure\PricePredictor.Infrastructure.csproj" />
+      <ProjectReference Include="..\PricePredictor.Persistence\PricePredictor.Persistence.csproj" />
     </ItemGroup>
 
     <ItemGroup>

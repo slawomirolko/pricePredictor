@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.EntityFrameworkCore;
 using OllamaSharp;
-using PricePredictor.Api;
 using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Application;
@@ -10,6 +8,7 @@ using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure;
 using PricePredictor.Infrastructure.Data;
 using PricePredictor.Infrastructure.News;
+using PricePredictor.Persistence;
 
 // Build host
 ThreadPool.SetMinThreads(200, 200);
@@ -34,6 +33,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddGrpc();
 
+// Infrastructure: External adapters and clients
 builder.Services.AddNtfyClient(builder.Configuration);
 builder.Services.AddGoldNewsClient();
 builder.Services.AddOpenMeteoClient();
@@ -41,12 +41,8 @@ builder.Services.AddStooqGoldPriceClient();
 builder.Services.AddGoogleNewsRssClient(builder.Configuration);
 builder.Services.AddYahooFinanceClient();
 
-builder.Services.AddDbContextFactory<PricePredictorDbContext>(options =>
-{
-    var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"] ??
-                           "Server=localhost;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;";
-    options.UseNpgsql(connectionString);
-});
+// Persistence: Database and repository setup
+builder.Services.AddPersistence(builder.Configuration);
 
 builder.Services.AddSingleton<IOllamaApiClient>(sp =>
 {
@@ -62,7 +58,7 @@ builder.Services.Configure<GoldNewsSettings>(builder.Configuration.GetSection(Go
 builder.Services.Configure<YahooFinanceSettings>(builder.Configuration.GetSection(YahooFinanceSettings.SectionName));
 builder.Services.Configure<GoogleNewsRssSettings>(builder.Configuration.GetSection(GoogleNewsRssSettings.SectionName));
 
-builder.Services.AddScoped<IVolatilityRepository, VolatilityRepository>();
+// Infrastructure: Repository that wraps Persistence (specific infrastructure concern)
 builder.Services.AddScoped<IGoldNewsEmbeddingRepository, GoldNewsEmbeddingRepository>();
 
 builder.Services.AddSingleton(sp =>

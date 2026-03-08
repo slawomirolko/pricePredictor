@@ -1,8 +1,8 @@
 using Npgsql;
-using PricePredictor.Integration.Tests.Setup;
+using PricePredictor.Tests.Integration.Setup;
 using Testcontainers.PostgreSql;
 
-namespace PricePredictor.Integration.Tests;
+namespace PricePredictor.Tests.Integration;
 
 /// <summary>
 /// Integration tests for Gold News embeddings using pgvector.

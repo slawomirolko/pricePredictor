@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
+using PricePredictor.Application.Finance;
 
 namespace PricePredictor.Infrastructure.GoldNews;
 

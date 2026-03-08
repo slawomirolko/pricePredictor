@@ -1,9 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
-using PricePredictor.Infrastructure;
-using PricePredictor.Infrastructure.Data;
-using PricePredictor.Infrastructure.GoldNews;
+using PricePredictor.Application.Data;
+using PricePredictor.Application.Finance;
 
 namespace PricePredictor.Application;
 
