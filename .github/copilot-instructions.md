@@ -87,6 +87,11 @@
 - ✅ Application defines interfaces
 - ✅ Never: Application → API or Application → Infrastructure
 
+## TEMP FILE CLEANUP
+- ✅ Remove all temporary `.txt` and `.log` files created for the task before finishing
+- ✅ Keep only files explicitly requested by the user
+- ❌ Do not leave test output or debug logs in the repository root
+
 ## WHEN TASK IS DONE
 - Say "Done" or brief summary
 - ❌ DO NOT create documentation files
