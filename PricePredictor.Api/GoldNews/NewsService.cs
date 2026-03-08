@@ -1,11 +1,11 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredicator.Infrastructure;
 using PricePredicator.Infrastructure.Data;
 using PricePredicator.Infrastructure.GoldNews;
 
-namespace PricePredicator.App.GoldNews;
+namespace PricePredictor.Api.GoldNews;
 
 public interface INewsService
 {
@@ -98,4 +98,5 @@ public sealed record NewsServiceResult(
         false,
         contentLength);
 }
+
 

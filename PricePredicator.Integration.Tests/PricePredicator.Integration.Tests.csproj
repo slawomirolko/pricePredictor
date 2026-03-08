@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PricePredicator.App\PricePredicator.App.csproj" />
+    <ProjectReference Include="..\PricePredictor.Api\PricePredictor.Api.csproj" />
     <ProjectReference Include="..\PricePredicator.Infrastructure\PricePredicator.Infrastructure.csproj" />
   </ItemGroup>
 

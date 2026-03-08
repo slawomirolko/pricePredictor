@@ -1,4 +1,4 @@
-namespace PricePredicator.App.Finance;
+﻿namespace PricePredictor.Api.Finance;
 
 public sealed class VolatilityCommodity
 {
@@ -31,5 +31,6 @@ public sealed class VolatilityCommodity
     public override bool Equals(object? obj) => obj is VolatilityCommodity other && Id == other.Id;
     public override int GetHashCode() => Id.GetHashCode();
 }
+
 
 

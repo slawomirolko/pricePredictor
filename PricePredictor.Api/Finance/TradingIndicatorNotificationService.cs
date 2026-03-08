@@ -1,8 +1,8 @@
-using System.Text;
-using PricePredicator.App.Weather;
+﻿using System.Text;
+using PricePredictor.Api.Weather;
 using PricePredicator.Infrastructure;
 
-namespace PricePredicator.App.Finance;
+namespace PricePredictor.Api.Finance;
 
 /// <summary>
 /// Service to format and send trading indicators as notifications
@@ -109,24 +109,24 @@ public class TradingIndicatorNotificationService
         double vroc)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"🔔 {commodityName} ({symbol}) - {timestamp:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"đź”” {commodityName} ({symbol}) - {timestamp:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine();
 
         // Price Section
-        sb.AppendLine("📊 PRICE DATA");
+        sb.AppendLine("đź“Š PRICE DATA");
         sb.AppendLine($"  Close: ${close:F2}");
-        sb.AppendLine($"  Return: {logReturn:F6} ({(logReturn > 0 ? "📈" : "📉")})");
+        sb.AppendLine($"  Return: {logReturn:F6} ({(logReturn > 0 ? "đź“" : "đź“‰")})");
         sb.AppendLine();
 
         // Volatility Section
-        sb.AppendLine("📈 VOLATILITY METRICS");
+        sb.AppendLine("đź“ VOLATILITY METRICS");
         sb.AppendLine($"  5-Min Vol:  {vol5:F6}");
         sb.AppendLine($"  15-Min Vol: {vol15:F6}");
         sb.AppendLine($"  60-Min Vol: {vol60:F6}");
         sb.AppendLine();
 
         // Panic Score Section - Color coded
-        sb.AppendLine("🚨 PANIC SCORES");
+        sb.AppendLine("đźš¨ PANIC SCORES");
         sb.Append($"  Short-Term: {shortPanicScore:F4}");
         sb.AppendLine(GetPanicScoreEmoji(shortPanicScore));
 
@@ -138,36 +138,36 @@ public class TradingIndicatorNotificationService
         sb.AppendLine();
 
         // Technical Indicators
-        sb.AppendLine("🎯 TECHNICAL INDICATORS");
+        sb.AppendLine("đźŽŻ TECHNICAL INDICATORS");
         sb.AppendLine($"  ATR:                {atr:F4}");
         sb.AppendLine($"  RSI Deviation:      {rsiDeviation:F4}");
         sb.AppendLine($"  Bollinger Dev:      {bollingerDeviation:F4}");
         sb.AppendLine();
 
         // Volume Section
-        sb.AppendLine("📦 VOLUME METRICS");
+        sb.AppendLine("đź“¦ VOLUME METRICS");
         sb.AppendLine($"  Volume Spike Ratio: {volumeSpike:F4}x");
         sb.AppendLine($"  Volume ROC:         {vroc:F4}");
         sb.AppendLine();
 
         // Trading Decision Hint
-        sb.AppendLine("💡 TRADING CONTEXT");
+        sb.AppendLine("đź’ˇ TRADING CONTEXT");
         sb.Append("  Signal: ");
         if (compositePanicScore > 1.5)
         {
-            sb.AppendLine("HIGH PANIC ⚠️ - Consider protective measures");
+            sb.AppendLine("HIGH PANIC âš ď¸Ź - Consider protective measures");
         }
         else if (compositePanicScore > 1.0)
         {
-            sb.AppendLine("ELEVATED ⚠️ - Increased market activity");
+            sb.AppendLine("ELEVATED âš ď¸Ź - Increased market activity");
         }
         else if (compositePanicScore > 0.5)
         {
-            sb.AppendLine("MODERATE ⚖️ - Normal trading conditions");
+            sb.AppendLine("MODERATE âš–ď¸Ź - Normal trading conditions");
         }
         else
         {
-            sb.AppendLine("LOW 😌 - Calm market");
+            sb.AppendLine("LOW đźŚ - Calm market");
         }
 
         return sb.ToString();
@@ -176,10 +176,10 @@ public class TradingIndicatorNotificationService
     private async Task<string> FormatSummaryMessageAsync(Dictionary<string, TradingMetrics> allMetrics)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("═════════════════════════════════════════════");
-        sb.AppendLine("📊 TRADING DASHBOARD SUMMARY");
-        sb.AppendLine($"⏰ {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
-        sb.AppendLine("═════════════════════════════════════════════");
+        sb.AppendLine("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
+        sb.AppendLine("đź“Š TRADING DASHBOARD SUMMARY");
+        sb.AppendLine($"âŹ° {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+        sb.AppendLine("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
         sb.AppendLine();
 // Fixed order: Gold, Silver, Natural Gas, Oil
         var symbolOrder = new[] { "GC=F", "SI=F", "NG=F", "CL=F" };
@@ -193,7 +193,7 @@ public class TradingIndicatorNotificationService
                 // Determine reliability (data age in minutes)
                 var dataAge = DateTime.UtcNow - metrics.Timestamp;
                 var isReliable = dataAge.TotalMinutes >= 30;
-                var reliabilityIndicator = isReliable ? "✅ RELIABLE" : "⚠️ BUILDING";
+                var reliabilityIndicator = isReliable ? "âś… RELIABLE" : "âš ď¸Ź BUILDING";
 
                 sb.AppendLine($"{commodityName} ({symbol}) [{reliabilityIndicator}]");
                 sb.AppendLine($"  Price: ${metrics.Close:F2} | Return: {metrics.LogReturn:F6}");
@@ -213,10 +213,10 @@ public class TradingIndicatorNotificationService
             var cityWeatherList = await _weatherService.GetCitiesWeatherAsync();
             if (cityWeatherList.Any())
             {
-                sb.AppendLine("🌤️ WEATHER CONTEXT");
+                sb.AppendLine("đźŚ¤ď¸Ź WEATHER CONTEXT");
                 foreach (var cityWeather in cityWeatherList)
                 {
-                    sb.AppendLine($"  {cityWeather.City}: Max {cityWeather.MaxTemp}°C, Min {cityWeather.MinTemp}°C");
+                    sb.AppendLine($"  {cityWeather.City}: Max {cityWeather.MaxTemp}Â°C, Min {cityWeather.MinTemp}Â°C");
                 }
             }
         }
@@ -226,7 +226,7 @@ public class TradingIndicatorNotificationService
         }
 
         sb.AppendLine();
-        sb.AppendLine("═════════════════════════════════════════════");
+        sb.AppendLine("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
 
         return sb.ToString();
     }
@@ -235,10 +235,10 @@ public class TradingIndicatorNotificationService
     {
         return score switch
         {
-            >= 1.5 => "🔴 CRITICAL",
-            >= 1.0 => "🟠 HIGH",
-            >= 0.5 => "🟡 MODERATE",
-            _ => "🟢 LOW"
+            >= 1.5 => "đź”´ CRITICAL",
+            >= 1.0 => "đźź  HIGH",
+            >= 0.5 => "đźźˇ MODERATE",
+            _ => "đźź˘ LOW"
         };
     }
 }
@@ -266,3 +266,4 @@ public record TradingMetrics
     public decimal? DailyHigh { get; init; }
     public decimal? DailyLow { get; init; }
 }
+

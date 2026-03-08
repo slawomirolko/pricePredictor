@@ -1,10 +1,10 @@
-using Grpc.Core;
+﻿﻿using Grpc.Core;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
-using PricePredicator.App.Finance;
-using PricePredicator.App.GoldNews;
+using PricePredictor.Api.Finance;
+using PricePredictor.Api.GoldNews;
 
-namespace PricePredicator.App.Gateway;
+namespace PricePredictor.Api.Gateway;
 
 public class GatewayRpcEndpoint : Gateway.GatewayBase
 {
@@ -87,7 +87,7 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
             throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid URL format."));
         }
 
-        _logger.LogInformation("📥 Download article request: {Url}", request.Url);
+        _logger.LogInformation("Download article request: {Url}", request.Url);
 
         try
         {
@@ -103,7 +103,7 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Error processing article: {Url}", request.Url);
+            _logger.LogError(ex, "Error processing article: {Url}", request.Url);
             throw new RpcException(new Status(StatusCode.Internal, $"Error processing article: {ex.Message}"));
         }
     }

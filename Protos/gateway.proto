@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "PricePredicator.App.Gateway";
+option csharp_namespace = "PricePredictor.Api.Gateway";
 
 package gateway;
 
@@ -68,4 +68,3 @@ message DownloadArticleReply {
   bool was_already_stored = 3;
   int32 content_length = 4;
 }
-

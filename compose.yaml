@@ -16,12 +16,12 @@
       timeout: 5s
       retries: 5
 
-  pricepredicator.app:
-    container_name: pricepredicator.app
-    image: "pricepredicator.app:latest"
+  pricepredictor.api:
+    container_name: pricepredictor.api
+    image: "pricepredictor.api:latest"
     build:
       context: .
-      dockerfile: PricePredicator.App/Dockerfile
+      dockerfile: PricePredictor.Api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;
@@ -30,6 +30,7 @@
       - GoogleNewsRss__BaseUrl=https://news.google.com/
       - GoogleNewsRss__RssPath=rss/search?q=gold+price+XAUUSD&hl=en-US&gl=US&ceid=US:en
     ports:
+      - "5000:5000"
       - "50051:50051"
     depends_on:
       postgres:

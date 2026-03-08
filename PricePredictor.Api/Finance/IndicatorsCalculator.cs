@@ -1,4 +1,4 @@
-namespace PricePredicator.App.Finance;
+﻿ namespace PricePredictor.Api.Finance;
 
 /// <summary>
 /// Indicators calculator for volatility analysis
@@ -213,3 +213,4 @@ public static class IndicatorsCalculator
                weightVroc * vroc;
     }
 }
+

@@ -1,11 +1,11 @@
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PricePredicator.App.Finance;
+using PricePredictor.Api.Finance;
 using PricePredicator.Infrastructure.Finance;
 using PricePredicator.Infrastructure.Models;
 
-namespace PricePredicator.App;
+namespace PricePredictor.Api;
 
 public class YahooFinanceBackgroundService : BackgroundService
 {
@@ -478,3 +478,4 @@ public class YahooFinanceBackgroundService : BackgroundService
         return new DailySummary(high, low);
     }
 }
+

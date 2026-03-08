@@ -1,8 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PricePredicator.Infrastructure.Data;
 using PricePredicator.Infrastructure.Models;
 
-namespace PricePredicator.App.Finance;
+namespace PricePredictor.Api.Finance;
 
 public class VolatilityRepository : IVolatilityRepository
 {
@@ -197,3 +197,4 @@ public class VolatilityRepository : IVolatilityRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
+

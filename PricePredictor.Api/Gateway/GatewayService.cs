@@ -1,9 +1,9 @@
-using System.Text.Json;
-using PricePredicator.App.News;
-using PricePredicator.App.Weather;
+﻿using System.Text.Json;
+using PricePredictor.Api.News;
+using PricePredictor.Api.Weather;
 using PricePredicator.Infrastructure.Gold;
 
-namespace PricePredicator.App.Gateway;
+namespace PricePredictor.Api.Gateway;
 
 public class GatewayService : IGatewayService
 {
@@ -77,3 +77,4 @@ public class GatewayService : IGatewayService
         return defaultValue;
     }
 }
+

@@ -1,16 +1,16 @@
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
-using PricePredicator.App.GoldNews;
+using PricePredictor.Api.GoldNews;
 using PricePredicator.Infrastructure;
 using PricePredicator.Infrastructure.Data;
 using PricePredicator.Infrastructure.GoldNews;
 
-namespace PricePredicator.App;
+namespace PricePredictor.Api;
 
 public class GoldNewsBackgroundService : BackgroundService
 {
@@ -306,3 +306,4 @@ public class GoldNewsBackgroundService : BackgroundService
             yield return e;
     }
 }
+

@@ -1,14 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
-using PricePredicator.App;
-using PricePredicator.App.Finance;
-using PricePredicator.App.Gateway;
-using PricePredicator.App.News;
-using PricePredicator.App.Weather;
+using PricePredictor.Api;
+using PricePredictor.Api.Finance;
+using PricePredictor.Api.Gateway;
+using PricePredictor.Api.Weather;
 using PricePredicator.Infrastructure;
 using PricePredicator.Infrastructure.Data;
 using PricePredicator.Infrastructure.News;
@@ -20,11 +19,23 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(options =>
 {
+    // gRPC endpoint (HTTP/2)
     options.ListenLocalhost(50051, o =>
     {
         o.Protocols = HttpProtocols.Http2;
     });
+    
+    // REST API endpoint (HTTP/1.1)
+    options.ListenLocalhost(5000, o =>
+    {
+        o.Protocols = HttpProtocols.Http1;
+    });
 });
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddGrpc();
 
 builder.Services.AddNtfyClient(builder.Configuration);
 builder.Services.AddGoldNewsClient();
@@ -32,7 +43,6 @@ builder.Services.AddOpenMeteoClient();
 builder.Services.AddStooqGoldPriceClient();
 builder.Services.AddGoogleNewsRssClient(builder.Configuration);
 builder.Services.AddYahooFinanceClient();
-builder.Services.AddGrpc();
 
 builder.Services.AddDbContextFactory<PricePredictorDbContext>(options =>
 {
@@ -72,6 +82,13 @@ var app = builder.Build();
 
 app.Services.ApplyPendingMigrations();
 
+// Configure Swagger (Development & Production for API exploration)
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseRouting();
+app.MapControllers();
 app.MapGrpcService<GatewayRpcEndpoint>();
 
 app.Run();
+

@@ -137,7 +137,7 @@ public class RssSmokeTests
             var sln = Path.Combine(dir.FullName, "PricePredictor.sln");
             if (File.Exists(sln))
             {
-                var candidate = Path.Combine(dir.FullName, "PricePredicator.App", "appsettings.json");
+                var candidate = Path.Combine(dir.FullName, "PricePredictor.Api", "appsettings.json");
                 if (!File.Exists(candidate))
                 {
                     throw new FileNotFoundException($"Found solution at '{sln}', but appsettings not found at '{candidate}'.");
@@ -149,7 +149,7 @@ public class RssSmokeTests
             dir = dir.Parent;
         }
 
-        throw new FileNotFoundException("Could not locate 'PricePredictor.sln' by walking up from test output directory. Can't resolve PricePredicator.App/appsettings.json.");
+        throw new FileNotFoundException("Could not locate 'PricePredictor.sln' by walking up from test output directory. Can't resolve PricePredictor.Api/appsettings.json.");
     }
 
     private static string TrimForLog(string s)

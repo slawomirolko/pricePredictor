@@ -1,8 +1,8 @@
-using System.Net;
+﻿using System.Net;
 using System.Xml.Linq;
 using PricePredicator.Infrastructure.News;
 
-namespace PricePredicator.App.News;
+namespace PricePredictor.Api.News;
 
 public class GoogleNewsRssService : INewsService
 {
@@ -55,3 +55,4 @@ public class GoogleNewsRssService : INewsService
         }
     }
 }
+

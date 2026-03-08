@@ -1,4 +1,4 @@
-namespace PricePredicator.App.Weather;
+﻿namespace PricePredictor.Api.Weather;
 
 public interface IWeatherService
 {

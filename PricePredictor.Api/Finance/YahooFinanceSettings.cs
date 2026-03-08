@@ -1,4 +1,4 @@
-namespace PricePredicator.App.Finance;
+﻿namespace PricePredictor.Api.Finance;
 
 public record YahooFinanceSettings
 {
@@ -61,3 +61,4 @@ public static class SymbolMapper
             _ => symbol
         };
 }
+

@@ -1,4 +1,4 @@
-namespace PricePredicator.App.News;
+﻿namespace PricePredictor.Api.News;
 
 public record NewsItem(
     string Title,
@@ -6,3 +6,4 @@ public record NewsItem(
     DateTimeOffset? PublishedAtUtc,
     string Source
 );
+

@@ -1,4 +1,4 @@
-namespace PricePredicator.App.Finance;
+﻿namespace PricePredictor.Api.Finance;
 
 public sealed record VolatilityPointDto(
     DateTime Timestamp,
