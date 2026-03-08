@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using PricePredictor.Infrastructure.Data;
-using PricePredictor.Infrastructure.Models;
+using PricePredictor.Domain.Models;
 
-namespace PricePredictor.Api.Finance;
+namespace PricePredictor.Application.Finance;
 
 public class VolatilityRepository : IVolatilityRepository
 {

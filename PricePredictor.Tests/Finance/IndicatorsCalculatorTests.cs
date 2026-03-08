@@ -1,5 +1,5 @@
 using Shouldly;
-using PricePredictor.Api.Finance;
+using PricePredictor.Application.Finance;
 using Xunit;
 
 namespace PricePredictor.Tests.Finance;

@@ -25,7 +25,7 @@ namespace PricePredictor.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.Commodity", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.Commodity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -45,7 +45,7 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.ToTable("Commodities", (string)null);
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilityDaily", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilityDaily", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -91,7 +91,7 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.ToTable("Volatilities", (string)null);
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilityGold", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilityGold", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -155,7 +155,7 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.ToTable("Volatility_Gold", (string)null);
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilityNaturalGas", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilityNaturalGas", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -219,7 +219,7 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.ToTable("Volatility_NaturalGas", (string)null);
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilityOil", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilityOil", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -283,7 +283,7 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.ToTable("Volatility_Oil", (string)null);
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilitySilver", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilitySilver", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -347,9 +347,9 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.ToTable("Volatility_Silver", (string)null);
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilityDaily", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilityDaily", b =>
                 {
-                    b.HasOne("PricePredictor.Infrastructure.Models.Commodity", "Commodity")
+                    b.HasOne("PricePredictor.Application.Models.Commodity", "Commodity")
                         .WithMany("DailyVolatilities")
                         .HasForeignKey("CommodityId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -358,9 +358,9 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.Navigation("Commodity");
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilityGold", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilityGold", b =>
                 {
-                    b.HasOne("PricePredictor.Infrastructure.Models.Commodity", "Commodity")
+                    b.HasOne("PricePredictor.Application.Models.Commodity", "Commodity")
                         .WithMany()
                         .HasForeignKey("CommodityId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -369,9 +369,9 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.Navigation("Commodity");
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilityNaturalGas", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilityNaturalGas", b =>
                 {
-                    b.HasOne("PricePredictor.Infrastructure.Models.Commodity", "Commodity")
+                    b.HasOne("PricePredictor.Application.Models.Commodity", "Commodity")
                         .WithMany()
                         .HasForeignKey("CommodityId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -380,9 +380,9 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.Navigation("Commodity");
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilityOil", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilityOil", b =>
                 {
-                    b.HasOne("PricePredictor.Infrastructure.Models.Commodity", "Commodity")
+                    b.HasOne("PricePredictor.Application.Models.Commodity", "Commodity")
                         .WithMany()
                         .HasForeignKey("CommodityId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -391,9 +391,9 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.Navigation("Commodity");
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.VolatilitySilver", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.VolatilitySilver", b =>
                 {
-                    b.HasOne("PricePredictor.Infrastructure.Models.Commodity", "Commodity")
+                    b.HasOne("PricePredictor.Application.Models.Commodity", "Commodity")
                         .WithMany()
                         .HasForeignKey("CommodityId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -402,7 +402,7 @@ namespace PricePredictor.Infrastructure.Migrations
                     b.Navigation("Commodity");
                 });
 
-            modelBuilder.Entity("PricePredictor.Infrastructure.Models.Commodity", b =>
+            modelBuilder.Entity("PricePredictor.Application.Models.Commodity", b =>
                 {
                     b.Navigation("DailyVolatilities");
                 });

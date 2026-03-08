@@ -35,6 +35,40 @@
 - ✅ Add settings sections to `appsettings.json`, `appsettings.Development.json`, and `appsettings.Test.json`
 - ✅ Wire settings in `Program.cs` with `Configure<T>(builder.Configuration.GetSection(T.SectionName))`
 
+## ARCHITECTURE LAYERS
+- ✅ **Application Layer** (`PricePredictor.Application`):
+  - Contains all service interfaces (e.g., `IWeatherService`, `IGatewayService`)
+  - Contains all service implementations (e.g., `WeatherService`, `GatewayService`)
+  - Contains all repository interfaces (e.g., `IVolatilityRepository`, `IGoldNewsRepository`)
+  - Contains application-specific DTOs and domain logic
+  - Has ONE extension method: `AddApplication(this IServiceCollection services)`
+  - This extension registers ALL application services and their interfaces
+  - Call `AddApplication()` explicitly in `Program.cs`
+  
+- ✅ **Infrastructure Layer** (`PricePredictor.Infrastructure`):
+  - Contains repository implementations (EF Core)
+  - Contains database context and migrations
+  - Contains external HTTP clients
+  - Contains infrastructure-specific models
+  - Has extension methods for infrastructure setup (e.g., `AddGoogleNewsRssClient`, `AddNtfyClient`)
+  
+- ✅ **API Layer** (`PricePredictor.Api`):
+  - Contains controllers and gRPC endpoints
+  - Contains background services (e.g., `YahooFinanceBackgroundService`)
+  - Contains `Program.cs` and startup configuration
+  - Minimal business logic - delegates to Application layer
+
+- ✅ **Domain Layer** (`PricePredictor.Domain`):
+  - Contains all domain entities/models (e.g., `Commodity`, `Volatility*`)
+  - No infrastructure concerns (no EF Core, no HTTP, no DI)
+  - Shared by Application and Infrastructure for persistence/model mapping
+
+## DEPENDENCY DIRECTION
+- ✅ API → Application
+- ✅ API → Infrastructure
+- ✅ Application defines interfaces
+- ✅ Never: Application → API or Application → Infrastructure
+
 ## WHEN TASK IS DONE
 - Say "Done" or brief summary
 - ❌ DO NOT create documentation files

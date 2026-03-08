@@ -1,4 +1,4 @@
-namespace PricePredictor.Infrastructure.Models;
+namespace PricePredictor.Domain.Models;
 
 public class Commodity
 {
@@ -6,3 +6,4 @@ public class Commodity
     public string Name { get; set; } = string.Empty;
     public List<VolatilityDaily> DailyVolatilities { get; set; } = new();
 }
+

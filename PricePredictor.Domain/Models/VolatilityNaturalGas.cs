@@ -1,5 +1,6 @@
-namespace PricePredictor.Infrastructure.Models;
+namespace PricePredictor.Domain.Models;
 
 public class VolatilityNaturalGas : VolatilityBase
 {
 }
+

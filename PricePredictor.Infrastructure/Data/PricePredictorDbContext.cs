@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PricePredictor.Infrastructure.Models;
+using PricePredictor.Domain.Models;
 
 namespace PricePredictor.Infrastructure.Data;
 

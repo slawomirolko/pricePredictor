@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredictor.Api.GoldNews;
 using PricePredictor.Infrastructure;
-using PricePredictor.Infrastructure.Data;
+using PricePredictor.Application.Data;
 using PricePredictor.Infrastructure.GoldNews;
 
 namespace PricePredictor.Api;

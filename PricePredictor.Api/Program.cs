@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
 using PricePredictor.Api;
-using PricePredictor.Api.Finance;
+using PricePredictor.Application.Finance;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Api.Weather;
 using PricePredictor.Infrastructure;

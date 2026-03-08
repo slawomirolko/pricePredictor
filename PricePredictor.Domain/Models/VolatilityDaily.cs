@@ -1,4 +1,4 @@
-namespace PricePredictor.Infrastructure.Models;
+namespace PricePredictor.Domain.Models;
 
 public class VolatilityDaily
 {
@@ -14,3 +14,4 @@ public class VolatilityDaily
     public long VolumeSum { get; set; }
     public decimal RangePct { get; set; }
 }
+

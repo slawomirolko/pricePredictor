@@ -39,11 +39,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\PricePredictor.Application\PricePredictor.Application.csproj" />
+      <ProjectReference Include="..\PricePredictor.Domain\PricePredictor.Domain.csproj" />
       <ProjectReference Include="..\PricePredictor.Infrastructure\PricePredictor.Infrastructure.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Protobuf Include="..\Protos\gateway.proto" GrpcServices="Server" />
     </ItemGroup>
 
     <ItemGroup>
@@ -53,10 +51,6 @@
       <None Update="appsettings.Development.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Volatility\" />
     </ItemGroup>
 
 </Project>

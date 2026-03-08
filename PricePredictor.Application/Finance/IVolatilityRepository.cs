@@ -1,6 +1,6 @@
-﻿using PricePredictor.Infrastructure.Models;
+﻿using PricePredictor.Domain.Models;
 
-namespace PricePredictor.Api.Finance;
+namespace PricePredictor.Application.Finance;
 
 /// <summary>
 /// Repository for storing volatility data

@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PricePredictor.Api.Finance;
+using PricePredictor.Application.Finance;
 using PricePredictor.Infrastructure.Finance;
-using PricePredictor.Infrastructure.Models;
+using PricePredictor.Domain.Models;
 
 namespace PricePredictor.Api;
 

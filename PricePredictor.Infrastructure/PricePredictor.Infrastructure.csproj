@@ -22,5 +22,9 @@
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\PricePredictor.Domain\PricePredictor.Domain.csproj" />
+    </ItemGroup>
+    
 </Project>
 

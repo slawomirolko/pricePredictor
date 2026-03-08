@@ -1,4 +1,4 @@
-namespace PricePredictor.Infrastructure.Models;
+namespace PricePredictor.Domain.Models;
 
 public abstract class VolatilityBase
 {
