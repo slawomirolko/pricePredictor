@@ -3,7 +3,6 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using PricePredictor.Application.Data;
 
 namespace PricePredictor.Infrastructure.Data;
 

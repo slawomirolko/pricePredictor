@@ -1,8 +1,7 @@
 ﻿using System.Net;
 using System.Xml.Linq;
-using PricePredictor.Infrastructure.News;
 
-namespace PricePredictor.Api.News;
+namespace PricePredictor.Application.News;
 
 public class GoogleNewsRssService : INewsService
 {

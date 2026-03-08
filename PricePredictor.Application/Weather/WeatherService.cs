@@ -1,6 +1,4 @@
-﻿using PricePredictor.Infrastructure.Weather;
-
-namespace PricePredictor.Api.Weather;
+﻿namespace PricePredictor.Application.Weather;
 
 public class WeatherService : IWeatherService
 {

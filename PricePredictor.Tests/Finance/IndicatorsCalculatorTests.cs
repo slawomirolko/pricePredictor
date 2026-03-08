@@ -1,5 +1,5 @@
-using Shouldly;
 using PricePredictor.Application.Finance;
+using Shouldly;
 using Xunit;
 
 namespace PricePredictor.Tests.Finance;
@@ -506,5 +506,3 @@ public class IndicatorsCalculatorTests
 
     #endregion
 }
-
-

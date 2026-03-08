@@ -73,5 +73,3 @@ public class VolatilityController : ControllerBase
         return Ok(latest);
     }
 }
-
-

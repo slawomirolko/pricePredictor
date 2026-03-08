@@ -1,11 +1,7 @@
-using System.Net;
-using System.Text;
-using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using PricePredictor.Api;
-using PricePredictor.Api.GoldNews;
+using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Infrastructure;
 using PricePredictor.Infrastructure.Data;
 using PricePredictor.Infrastructure.GoldNews;

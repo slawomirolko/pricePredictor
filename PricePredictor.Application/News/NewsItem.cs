@@ -1,4 +1,4 @@
-﻿namespace PricePredictor.Api.News;
+﻿namespace PricePredictor.Application.News;
 
 public record NewsItem(
     string Title,

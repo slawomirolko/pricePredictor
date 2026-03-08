@@ -1,8 +1,7 @@
 ﻿using System.Text;
-using PricePredictor.Api.Weather;
-using PricePredictor.Infrastructure;
+using PricePredictor.Application.Weather;
 
-namespace PricePredictor.Api.Finance;
+namespace PricePredictor.Application.Finance;
 
 /// <summary>
 /// Service to format and send trading indicators as notifications

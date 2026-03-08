@@ -4,6 +4,8 @@ WORKDIR /src
 
 # Copy project files
 COPY ["PricePredictor.Api/PricePredictor.Api.csproj", "PricePredictor.Api/"]
+COPY ["PricePredictor.Application/PricePredictor.Application.csproj", "PricePredictor.Application/"]
+COPY ["PricePredictor.Domain/PricePredictor.Domain.csproj", "PricePredictor.Domain/"]
 COPY ["PricePredictor.Infrastructure/PricePredictor.Infrastructure.csproj", "PricePredictor.Infrastructure/"]
 
 # Restore dependencies

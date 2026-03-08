@@ -1,13 +1,12 @@
-﻿﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
+﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
 using PricePredictor.Api;
-using PricePredictor.Application.Finance;
+using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Api.Gateway;
-using PricePredictor.Api.Weather;
+using PricePredictor.Application;
+using PricePredictor.Application.Finance;
+using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure;
 using PricePredictor.Infrastructure.Data;
 using PricePredictor.Infrastructure.News;
@@ -19,13 +18,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    // gRPC endpoint (HTTP/2)
     options.ListenLocalhost(50051, o =>
     {
         o.Protocols = HttpProtocols.Http2;
     });
     
-    // REST API endpoint (HTTP/1.1)
     options.ListenLocalhost(5000, o =>
     {
         o.Protocols = HttpProtocols.Http1;

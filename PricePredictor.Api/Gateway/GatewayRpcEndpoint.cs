@@ -1,8 +1,7 @@
-﻿﻿using Grpc.Core;
+﻿using Grpc.Core;
 using Google.Protobuf.WellKnownTypes;
-using Microsoft.Extensions.Logging;
+using PricePredictor.Application;
 using PricePredictor.Application.Finance;
-using PricePredictor.Api.GoldNews;
 
 namespace PricePredictor.Api.Gateway;
 

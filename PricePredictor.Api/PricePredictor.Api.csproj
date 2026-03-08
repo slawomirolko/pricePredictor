@@ -53,5 +53,8 @@
       </None>
     </ItemGroup>
 
-</Project>
+    <ItemGroup>
+      <Protobuf Include="..\Protos\gateway.proto" GrpcServices="Server" />
+    </ItemGroup>
 
+</Project>

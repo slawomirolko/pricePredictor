@@ -1,2 +1,2 @@
-﻿namespace PricePredictor.Api.News;
+﻿namespace PricePredictor.Application.News;
 

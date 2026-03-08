@@ -1,11 +1,9 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using PricePredictor.Application.Finance;
-using PricePredictor.Infrastructure.Finance;
 using PricePredictor.Domain.Models;
+using PricePredictor.Infrastructure.Finance;
 
-namespace PricePredictor.Api;
+namespace PricePredictor.Api.BackgroundServices;
 
 public class YahooFinanceBackgroundService : BackgroundService
 {

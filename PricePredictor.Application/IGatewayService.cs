@@ -1,4 +1,4 @@
-﻿namespace PricePredictor.Api.Gateway;
+﻿namespace PricePredictor.Application;
 
 public interface IGatewayService
 {

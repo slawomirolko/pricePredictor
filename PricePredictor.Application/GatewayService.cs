@@ -1,20 +1,18 @@
 ﻿using System.Text.Json;
-using PricePredictor.Api.News;
-using PricePredictor.Api.Weather;
-using PricePredictor.Infrastructure.Gold;
+using PricePredictor.Application.Weather;
 
-namespace PricePredictor.Api.Gateway;
+namespace PricePredictor.Application;
 
 public class GatewayService : IGatewayService
 {
     private readonly IWeatherService _weatherService;
     private readonly IGoldPriceService _goldPriceService;
-    private readonly INewsService _newsService;
+    private readonly News.INewsService _newsService;
 
     public GatewayService(
         IWeatherService weatherService,
         IGoldPriceService goldPriceService,
-        INewsService newsService)
+        News.INewsService newsService)
     {
         _weatherService = weatherService;
         _goldPriceService = goldPriceService;

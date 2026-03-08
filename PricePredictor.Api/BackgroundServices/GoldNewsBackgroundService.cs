@@ -1,16 +1,13 @@
-﻿using System.Xml.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using System.Xml.Linq;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
-using PricePredictor.Api.GoldNews;
 using PricePredictor.Infrastructure;
-using PricePredictor.Application.Data;
+using PricePredictor.Infrastructure.Data;
 using PricePredictor.Infrastructure.GoldNews;
 
-namespace PricePredictor.Api;
+namespace PricePredictor.Api.BackgroundServices;
 
 public class GoldNewsBackgroundService : BackgroundService
 {

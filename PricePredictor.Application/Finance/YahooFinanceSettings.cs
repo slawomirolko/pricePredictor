@@ -1,4 +1,4 @@
-﻿namespace PricePredictor.Api.Finance;
+﻿namespace PricePredictor.Application.Finance;
 
 public record YahooFinanceSettings
 {
