@@ -12,21 +12,19 @@ public sealed class DownloadGoldNewsArticleTests : IntegrationTest
     }
 
     [Fact]
-    public async Task DownloadGoldNewsArticle_StoresContent_WithExpectedSentence()
+    public async Task DownloadGoldNewsArticle_whenCalled_returnsOnlineArticleWithRealContent()
     {
         var url = GoldNewsTestConstants.ReutersUrl;
-        var seededContent = GoldNewsTestConstants.ArticleContent;
 
         await DeleteStoredArticleAsync(url, CancellationToken.None);
-        await SeedStoredArticleAsync(url, seededContent, CancellationToken.None);
 
         var reply = await GatewayClient.DownloadGoldNewsArticleAsync(new DownloadArticleRequest
         {
             Url = url
         });
 
-        reply.Success.ShouldBeTrue();
-        reply.WasAlreadyStored.ShouldBeTrue();
+        reply.Success.ShouldBeTrue(reply.Message);
+        reply.WasAlreadyStored.ShouldBeFalse();
 
         var content = await GetStoredArticleContentAsync(url, CancellationToken.None);
         content.ShouldNotBeNullOrWhiteSpace();
