@@ -30,6 +30,16 @@
 - ✅ All client extension methods must be called explicitly in `Program.cs` (not inside `AddAppServices`)
 - ❌ Do not introduce adapter patterns for clients
 
+## SERIALIZATION & DTOS
+- ✅ Application layer models NEVER have `System.Text.Json.Serialization` attributes
+- ✅ Create DTOs in Infrastructure layer with all serialization attributes
+- ✅ Use mappers to convert Infrastructure DTOs → Application models, mappers should be extensions blocks
+- ✅ Keep serialization concerns isolated in Infrastructure layer
+- Example pattern:
+  - Application: `WeatherForecast` (plain model)
+  - Infrastructure: `WeatherForecastResponse` (dto) (with `[JsonPropertyName]` attributes)
+  - Infrastructure: `WeatherMapper.MapToModel(dto)` to convert
+
 ## SETTINGS
 - ✅ Settings types must be sealed `record` with `init` properties
 - ✅ Each settings type must declare `public const string SectionName = "...";`

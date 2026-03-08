@@ -1,4 +1,4 @@
-namespace PricePredictor.Infrastructure.Weather;
+namespace PricePredictor.Application.Weather;
 
 public enum City
 {
@@ -13,3 +13,4 @@ public enum City
     Ottawa = 9,
     LosAngeles = 10
 }
+

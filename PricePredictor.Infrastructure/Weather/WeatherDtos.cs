@@ -2,13 +2,13 @@ using System.Text.Json.Serialization;
 
 namespace PricePredictor.Infrastructure.Weather;
 
-public class WeatherForecastResponse
+public class WeatherForecastResponseDto
 {
     [JsonPropertyName("daily")]
-    public DailyForecast? Daily { get; set; }
+    public DailyForecastDto? Daily { get; set; }
 }
 
-public class DailyForecast
+public class DailyForecastDto
 {
     [JsonPropertyName("time")]
     public string[]? Time { get; set; }
@@ -22,3 +22,4 @@ public class DailyForecast
     [JsonPropertyName("weathercode")]
     public int[]? WeatherCode { get; set; }
 }
+

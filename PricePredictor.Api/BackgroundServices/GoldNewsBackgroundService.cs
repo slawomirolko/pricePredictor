@@ -3,9 +3,9 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
-using PricePredictor.Infrastructure;
-using PricePredictor.Infrastructure.Data;
-using PricePredictor.Infrastructure.GoldNews;
+using PricePredictor.Application.Data;
+using PricePredictor.Application.Finance;
+using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 
 namespace PricePredictor.Api.BackgroundServices;
 

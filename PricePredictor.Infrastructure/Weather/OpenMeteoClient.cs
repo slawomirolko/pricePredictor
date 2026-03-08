@@ -17,6 +17,7 @@ internal class OpenMeteoClient : IOpenMeteoClient
         var (lat, lon) = CityCoordinates.GetCoordinates(city);
         var url = $"v1/forecast?latitude={lat}&longitude={lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto";
         
-        return await _http.GetFromJsonAsync<WeatherForecastResponse>(url);
+        var dto = await _http.GetFromJsonAsync<WeatherForecastResponseDto>(url);
+        return dto?.MapToModel();
     }
 }

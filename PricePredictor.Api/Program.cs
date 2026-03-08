@@ -3,12 +3,15 @@ using OllamaSharp;
 using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Application;
+using PricePredictor.Application.Data;
 using PricePredictor.Application.Finance;
+using PricePredictor.Application.Notifications;
 using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure;
 using PricePredictor.Infrastructure.Data;
 using PricePredictor.Infrastructure.News;
 using PricePredictor.Persistence;
+using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 
 // Build host
 ThreadPool.SetMinThreads(200, 200);
@@ -63,7 +66,7 @@ builder.Services.AddScoped<IGoldNewsEmbeddingRepository, GoldNewsEmbeddingReposi
 
 builder.Services.AddSingleton(sp =>
 {
-    var ntfyClient = sp.GetRequiredService<NtfyClient>();
+    var ntfyClient = sp.GetRequiredService<INtfyClient>();
     var weatherService = sp.GetRequiredService<IWeatherService>();
     var ntfySettings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NtfySettings>>().Value;
     return new TradingIndicatorNotificationService(ntfyClient, weatherService, ntfySettings.Topic);

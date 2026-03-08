@@ -2,10 +2,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using PricePredictor.Api.BackgroundServices;
-using PricePredictor.Infrastructure;
+using PricePredictor.Application.Data;
+using PricePredictor.Application.Finance;
 using PricePredictor.Infrastructure.Data;
 using PricePredictor.Infrastructure.GoldNews;
 using Xunit;
+using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 
 namespace PricePredictor.Tests.GoldNews;
 
