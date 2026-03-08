@@ -56,7 +56,7 @@ public static class ClientsExtensions
                     "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
                 client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
                 client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, deflate, br");
-                client.DefaultRequestHeaders.Add("Referer", "https://www.google.com/");
+                client.DefaultRequestHeaders.Referrer = new Uri("https://www.google.com/");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "document");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
                 client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "none");
