@@ -20,6 +20,8 @@
         <PackageReference Include="Microsoft.Extensions.Logging" />
         <PackageReference Include="Microsoft.Extensions.Options" />
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+        <PackageReference Include="Selenium.WebDriver" />
+        <PackageReference Include="Selenium.WebDriver.ChromeDriver" />
     </ItemGroup>
 
     <ItemGroup>

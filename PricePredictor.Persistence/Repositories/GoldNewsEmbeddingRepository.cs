@@ -16,6 +16,25 @@ public class GoldNewsEmbeddingRepository : IGoldNewsEmbeddingRepository
         _dbContextFactory = dbContextFactory;
     }
 
+    public async Task<string?> GetContentAsync(string url, CancellationToken cancellationToken)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var connection = dbContext.Database.GetDbConnection();
+
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT content FROM gold_news_embeddings WHERE url = @url";
+        
+        AddParameter(command, "@url", url);
+
+        var result = await command.ExecuteScalarAsync(cancellationToken);
+        return result as string;
+    }
+
     public async Task EnsureStorageAsync(int dimensions, CancellationToken cancellationToken)
     {
         // Migrations handle table and extension creation, so this is now a no-op.

@@ -36,11 +36,11 @@ public sealed class NewsService : INewsService
 
     public async Task<NewsServiceResult> DownloadAndStoreAsync(string url, CancellationToken cancellationToken)
     {
-        var exists = await _repository.ExistsAsync(url, cancellationToken);
-        if (exists)
+        var existingContent = await _repository.GetContentAsync(url, cancellationToken);
+        if (existingContent != null)
         {
             _logger.LogInformation("Article already stored: {Url}", url);
-            return NewsServiceResult.AlreadyStored();
+            return NewsServiceResult.AlreadyStored(existingContent.Length);
         }
 
         var content = await _client.FetchArticleContentAsync(url, cancellationToken);
@@ -80,11 +80,11 @@ public sealed record NewsServiceResult(
     bool WasAlreadyStored,
     int ContentLength)
 {
-    public static NewsServiceResult AlreadyStored() => new(
+    public static NewsServiceResult AlreadyStored(int contentLength) => new(
         true,
         "Article already exists in database",
         true,
-        0);
+        contentLength);
 
     public static NewsServiceResult Failed(string message, int contentLength = 0) => new(
         false,
