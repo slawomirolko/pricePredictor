@@ -89,24 +89,16 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
 
         _logger.LogInformation("Download article request: {Url}", request.Url);
 
-        try
-        {
-            var title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim();
-            var result = await _goldNewsService.DownloadAndStoreAsync(request.Url, title, context.CancellationToken);
+        var title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim();
+        var result = await _goldNewsService.DownloadAndStoreAsync(request.Url, title, context.CancellationToken);
 
-            return new DownloadArticleReply
-            {
-                Success = result.Success,
-                Message = result.Message,
-                WasAlreadyStored = result.WasAlreadyStored,
-                ContentLength = result.ContentLength
-            };
-        }
-        catch (Exception ex)
+        return new DownloadArticleReply
         {
-            _logger.LogError(ex, "Error processing article: {Url}", request.Url);
-            throw new RpcException(new Status(StatusCode.Internal, $"Error processing article: {ex.Message}"));
-        }
+            Success = result.Success,
+            Message = result.Message,
+            WasAlreadyStored = result.WasAlreadyStored,
+            ContentLength = result.ContentLength
+        };
     }
 
     private static VolatilityCommodity MapCommodity(Commodity commodity) => commodity switch
