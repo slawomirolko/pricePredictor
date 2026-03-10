@@ -1,56 +1,24 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using OllamaSharp;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using PricePredictor.Application.Data;
 using PricePredictor.Application.Finance.Interfaces;
-using System.Linq;
+using PricePredictor.Application.News;
 
 namespace PricePredictor.Infrastructure.GoldNews;
 
 public sealed class SeleniumGoldNewsClient : IGoldNewsClient
 {
     private readonly HttpClient _http;
-    private readonly IOllamaApiClient _ollama;
-    private readonly GoldNewsSettings _settings;
+    private readonly IArticleContentExtractionService _articleContentExtractionService;
     private readonly ILogger<SeleniumGoldNewsClient> _logger;
 
-    private const string ArticleExtractionPrompt = """
-                                                  You are an information extraction system.
-
-                                                  Task:
-                                                  Extract ONLY the main article body text from the provided HTML in Reuters.
-
-                                                  Important:
-                                                  - The article text may be split across multiple HTML elements (for example <p>, <div>, <span>, etc.).
-                                                  - Combine the text from these elements into one string, separating paragraphs with a single space.
-                                                  - Preserve the original reading order.
-
-                                                  Output requirements:
-                                                  - Return the result as a single plain text string suitable for embedding in code.
-                                                  - Use newline characters between paragraphs.
-                                                  - Do NOT include HTML tags.
-                                                  - Do NOT include explanations, comments, or formatting such as markdown.
-
-                                                  Rules:
-                                                  - Include ONLY the article text.
-                                                  - Ignore navigation, ads, promo bars, headers, footers, sidebars, and UI elements.
-                                                  - If the HTML does NOT contain article text, return an empty string.
-
-                                                  HTML:
-                                                  {HTML_CONTENT}
-                                                  """;
-    
     public SeleniumGoldNewsClient(
-        HttpClient http, 
-        IOllamaApiClient ollama,
-        IOptions<GoldNewsSettings> settings,
+        HttpClient http,
+        IArticleContentExtractionService articleContentExtractionService,
         ILogger<SeleniumGoldNewsClient> logger)
     {
         _http = http;
-        _ollama = ollama;
-        _settings = settings.Value;
+        _articleContentExtractionService = articleContentExtractionService;
         _logger = logger;
     }
 
@@ -69,7 +37,7 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
         return content;
     }
 
-    public async Task<string?> FetchArticleContentAsync(string articleUrl, CancellationToken cancellationToken)
+    public async Task<string?> FetchArticleContentAsync(string articleUrl, string? articleTitle, CancellationToken cancellationToken)
     {
         try
         {
@@ -90,7 +58,7 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
             options.AddAdditionalChromeOption("useAutomationExtension", false);
 
             using var driver = new ChromeDriver(options);
-            
+
             // Apply stealth scripts
             driver.ExecuteScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
             driver.ExecuteScript(@"
@@ -108,47 +76,41 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
                     return getParameter(parameter);
                 };
             ");
-            
-            // Set page load timeout
+
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+            await Task.Run(() => driver.Navigate().GoToUrl(articleUrl), cancellationToken);
 
-            // Navigate to the article
-            await Task.Run(() => driver.Navigate().GoToUrl(articleUrl));
-
-            // Wait for initial load
             await Task.Delay(10000, cancellationToken);
             _logger.LogInformation("📄 Initial Page Title: {Title}", driver.Title);
             _logger.LogDebug("📄 HTML Sample (first 2000 chars): {Sample}", driver.PageSource.Length > 2000 ? driver.PageSource[..2000] : driver.PageSource);
 
-            // Anti-bot check
-            if (driver.PageSource.Contains("captcha") || 
-                driver.PageSource.Contains("Verify you are human") || 
-                driver.Title.Contains("Access Denied") ||
-                driver.Title.Contains("Just a moment") ||
-                driver.PageSource.Contains("Please verify you are a human"))
+            if (driver.PageSource.Contains("captcha", StringComparison.OrdinalIgnoreCase) ||
+                driver.PageSource.Contains("Verify you are human", StringComparison.OrdinalIgnoreCase) ||
+                driver.Title.Contains("Access Denied", StringComparison.OrdinalIgnoreCase) ||
+                driver.Title.Contains("Just a moment", StringComparison.OrdinalIgnoreCase) ||
+                driver.PageSource.Contains("Please verify you are a human", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogWarning("⚠️ Bot detection or captcha detected on {Url}. Page title: {Title}", articleUrl, driver.Title);
-                
-                // Wait for potential auto-resolution (e.g. Cloudflare)
+
                 await Task.Delay(5000, cancellationToken);
-                
-                if (driver.Title.Contains("Just a moment") || driver.Title.Contains("Access Denied") || driver.PageSource.Contains("Please verify you are a human"))
+
+                if (driver.Title.Contains("Just a moment", StringComparison.OrdinalIgnoreCase) ||
+                    driver.Title.Contains("Access Denied", StringComparison.OrdinalIgnoreCase) ||
+                    driver.PageSource.Contains("Please verify you are a human", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("🔄 Refreshing page...");
-                    await Task.Run(() => driver.Navigate().Refresh());
+                    await Task.Run(() => driver.Navigate().Refresh(), cancellationToken);
                     await Task.Delay(5000, cancellationToken);
                     _logger.LogInformation("📄 Page Title after refresh: {Title}", driver.Title);
                 }
             }
 
-            // Wait a bit for content to load and any redirects/cookie overlays to handle themselves
             await Task.Delay(5000, cancellationToken);
 
-            // Try to find and click "Accept" button if it exists (very naive)
             try
             {
                 var buttons = driver.FindElements(By.TagName("button"));
-                var acceptButton = buttons.FirstOrDefault(b => b.Text.Contains("Accept", StringComparison.OrdinalIgnoreCase) || 
+                var acceptButton = buttons.FirstOrDefault(b => b.Text.Contains("Accept", StringComparison.OrdinalIgnoreCase) ||
                                                                b.Text.Contains("Agree", StringComparison.OrdinalIgnoreCase) ||
                                                                b.Text.Contains("Zaakceptuj", StringComparison.OrdinalIgnoreCase) ||
                                                                b.Text.Contains("Akceptuję", StringComparison.OrdinalIgnoreCase) ||
@@ -162,10 +124,12 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
                     await Task.Delay(5000, cancellationToken);
                 }
             }
-            catch { /* ignore */ }
+            catch
+            {
+                // ignore
+            }
 
             var html = driver.PageSource;
-            
             if (string.IsNullOrWhiteSpace(html))
             {
                 _logger.LogWarning("⚠️ Selenium returned empty page source");
@@ -174,21 +138,22 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
 
             _logger.LogInformation("📥 Selenium received {Bytes} bytes", html.Length);
 
-            var content = await ExtractContentWithOllamaAsync(html, cancellationToken);
-            
-            if (!string.IsNullOrWhiteSpace(content))
+            string? bodyText = null;
+            try
             {
-                _logger.LogInformation("✅ Extracted {Length} chars via Ollama", content.Length);
-                return content;
+                bodyText = driver.FindElement(By.TagName("body")).Text;
+            }
+            catch
+            {
+                // Keep null body text when body is unavailable.
             }
 
-            // Fallback: try to extract ANY text if Ollama extraction failed
-            var allText = driver.FindElement(By.TagName("body")).Text;
-            if (!string.IsNullOrWhiteSpace(allText) && allText.Length > 100)
+            var extractionTitle = string.IsNullOrWhiteSpace(articleTitle) ? driver.Title : articleTitle;
+            var content = await _articleContentExtractionService.ExtractAsync(html, bodyText, extractionTitle, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(content))
             {
-                 var result = allText.Length > 3000 ? allText[..3000] : allText;
-                 _logger.LogInformation("✅ Extracted {Length} chars via fallback Selenium", result.Length);
-                 return result;
+                _logger.LogInformation("✅ Extracted {Length} chars from article", content.Length);
+                return content;
             }
 
             _logger.LogWarning("❌ No content extracted. HTML Sample: {Sample}", html.Length > 2000 ? html[..2000] : html);
@@ -197,125 +162,6 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Selenium Exception: {Message}", ex.Message);
-            return null;
-        }
-    }
-
-    private async Task<string?> ExtractContentWithOllamaAsync(string html, CancellationToken cancellationToken)
-    {
-        try
-        {
-            _logger.LogInformation("🤖 Extracting content using Ollama ({Model})...", _settings.OllamaModel);
-
-            // Basic cleanup to reduce tokens
-            var doc = new HtmlAgilityPack.HtmlDocument();
-            doc.LoadHtml(html);
-
-            var noisySelectors = new[] 
-            { 
-                "//script", "//style", "//noscript", "//nav", "//footer", "//header"
-            };
-            foreach (var selector in noisySelectors)
-            {
-                var elements = doc.DocumentNode.SelectNodes(selector);
-                if (elements != null)
-                    foreach (var el in elements)
-                        el.ParentNode?.RemoveChild(el);
-            }
-
-            var cleanHtml = doc.DocumentNode.InnerHtml;
-            // Take a reasonable chunk of HTML to avoid context window issues
-            var htmlSample = cleanHtml.Length > 15000 ? cleanHtml[..15000] : cleanHtml;
-
-            _ollama.SelectedModel = _settings.OllamaModel;
-
-            var result = "";
-            await foreach (var response in _ollama.GenerateAsync(ArticleExtractionPrompt, null, cancellationToken))
-            {
-                result += response?.Response;
-            }
-
-            if (string.IsNullOrWhiteSpace(result) || result.Length < 100)
-            {
-                _logger.LogWarning("⚠️ Ollama returned too short or empty result.");
-                return null;
-            }
-
-            return result.Trim();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "❌ Ollama extraction failed: {Message}", ex.Message);
-            return null;
-        }
-    }
-
-    private string? ExtractParagraphs(string html)
-    {
-        try
-        {
-            var doc = new HtmlAgilityPack.HtmlDocument();
-            doc.LoadHtml(html);
-
-            var noisySelectors = new[] 
-            { 
-                "//script", "//style", "//noscript", "//div[@class*='cookie']", 
-                "//nav", "//footer", "//header", "//div[@class*='related']",
-                "//div[@class*='advertisement']", "//div[@class*='social']"
-            };
-            foreach (var selector in noisySelectors)
-            {
-                var elements = doc.DocumentNode.SelectNodes(selector);
-                if (elements != null)
-                    foreach (var el in elements)
-                        el.ParentNode?.RemoveChild(el);
-            }
-
-            var article = doc.DocumentNode.SelectSingleNode("//article") ??
-                          doc.DocumentNode.SelectSingleNode("//div[@data-testid='article']") ??
-                          doc.DocumentNode.SelectSingleNode("//div[@id*='article-body']") ??
-                          doc.DocumentNode.SelectSingleNode("//div[@class*='article-body']") ??
-                          doc.DocumentNode.SelectSingleNode("//div[@class*='story-body']") ??
-                          doc.DocumentNode.SelectSingleNode("//body");
-
-            if (article == null) return null;
-
-            var paragraphs = article.SelectNodes(".//p") ?? 
-                             article.SelectNodes(".//div[@class*='paragraph'] | .//span[@class*='paragraph']");
-
-            if (paragraphs == null || paragraphs.Count == 0) return null;
-
-            var texts = paragraphs
-                .Select(p => System.Net.WebUtility.HtmlDecode(p.InnerText?.Trim() ?? ""))
-                .Where(t => t.Length > 15)
-                .Select(t => System.Text.RegularExpressions.Regex.Replace(t, @"\s+", " ").Trim())
-                .ToList();
-
-            if (texts.Count < 3) 
-            {
-                // Fallback: Try to get any div with long text
-                var divs = article.SelectNodes(".//div");
-                if (divs != null)
-                {
-                    foreach (var div in divs)
-                    {
-                        var text = System.Net.WebUtility.HtmlDecode(div.InnerText?.Trim() ?? "");
-                        if (text.Length > 200 && !text.Contains("<") && !texts.Contains(text))
-                        {
-                            texts.Add(System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim());
-                        }
-                    }
-                }
-            }
-
-            if (texts.Count == 0) return null;
-            
-            var result = string.Join(" ", texts);
-            result = System.Text.RegularExpressions.Regex.Replace(result, @"\s+", " ").Trim();
-            return result.Length > 100 ? (result.Length > 3000 ? result[..3000] : result) : null;
-        }
-        catch
-        {
             return null;
         }
     }
