@@ -60,6 +60,7 @@ message VolatilityQueryReply {
 
 message DownloadArticleRequest {
   string url = 1;
+  string title = 2;
 }
 
 message DownloadArticleReply {

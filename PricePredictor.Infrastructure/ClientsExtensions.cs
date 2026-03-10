@@ -2,8 +2,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Extensions.Http;
-using PricePredictor.Application.Finance;
 using PricePredictor.Application.Finance.Interfaces;
+using PricePredictor.Application.News;
 using PricePredictor.Application.Notifications;
 using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure.Finance;
@@ -29,108 +29,117 @@ public static class ClientsExtensions
             );
     }
 
-    public static IServiceCollection AddNtfyClient(this IServiceCollection services, IConfiguration configuration)
+    extension(IServiceCollection services)
     {
-        ArgumentNullException.ThrowIfNull(configuration);
-        var retryPolicy = CreateSharedHttpRetryPolicy();
+        public IServiceCollection AddNtfyClient(IConfiguration configuration)
+        {
+            ArgumentNullException.ThrowIfNull(configuration);
+            var retryPolicy = CreateSharedHttpRetryPolicy();
 
-        services.AddHttpClient<INtfyClient, NtfyClient>((sp, client) =>
-            {
-                var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NtfySettings>>().Value;
-                client.BaseAddress = new Uri(settings.BaseUrl);
-            })
-            .AddPolicyHandler(retryPolicy);
+            services.AddHttpClient<INtfyClient, NtfyClient>((sp, client) =>
+                {
+                    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NtfySettings>>().Value;
+                    client.BaseAddress = new Uri(settings.BaseUrl);
+                })
+                .AddPolicyHandler(retryPolicy);
 
-        return services;
-    }
+            return services;
+        }
 
-    public static IServiceCollection AddGoldNewsClient(this IServiceCollection services)
-    {
-        var retryPolicy = CreateSharedHttpRetryPolicy();
+        public IServiceCollection AddOllamaArticleExtractionClient()
+        {
+            services.AddSingleton<IOllamaArticleExtractionClient, OllamaArticleExtractionClient>();
+            return services;
+        }
 
-        services.AddHttpClient<IGoldNewsClient, SeleniumGoldNewsClient>(client =>
-            {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd(
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                client.DefaultRequestHeaders.Accept.ParseAdd(
-                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
-                client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
-                client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, deflate, br");
-                client.DefaultRequestHeaders.Referrer = new Uri("https://www.google.com/");
-                client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "document");
-                client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
-                client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "none");
-                client.DefaultRequestHeaders.Add("Sec-Fetch-User", "?1");
-                client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
-                client.DefaultRequestHeaders.Add("DNT", "1");
-                client.DefaultRequestHeaders.Add("Connection", "keep-alive");
-                client.DefaultRequestHeaders.Add("Cookie", "consent=accepted; gdpr=accepted; cookies=accepted; cookieConsent=yes");
-            })
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-            {
-                AllowAutoRedirect = true,
-                AutomaticDecompression = System.Net.DecompressionMethods.All,
-                UseCookies = true,
-                CookieContainer = new System.Net.CookieContainer()
-            })
-            .AddPolicyHandler(retryPolicy);
+        public IServiceCollection AddGoldNewsClient()
+        {
+            var retryPolicy = CreateSharedHttpRetryPolicy();
 
-        return services;
-    }
+            services.AddHttpClient<IGoldNewsClient, SeleniumGoldNewsClient>(client =>
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    client.DefaultRequestHeaders.Accept.ParseAdd(
+                        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+                    client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
+                    client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, deflate, br");
+                    client.DefaultRequestHeaders.Referrer = new Uri("https://www.google.com/");
+                    client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "document");
+                    client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
+                    client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "none");
+                    client.DefaultRequestHeaders.Add("Sec-Fetch-User", "?1");
+                    client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
+                    client.DefaultRequestHeaders.Add("DNT", "1");
+                    client.DefaultRequestHeaders.Add("Connection", "keep-alive");
+                    client.DefaultRequestHeaders.Add("Cookie", "consent=accepted; gdpr=accepted; cookies=accepted; cookieConsent=yes");
+                })
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                {
+                    AllowAutoRedirect = true,
+                    AutomaticDecompression = System.Net.DecompressionMethods.All,
+                    UseCookies = true,
+                    CookieContainer = new System.Net.CookieContainer()
+                })
+                .AddPolicyHandler(retryPolicy);
 
-    public static IServiceCollection AddOpenMeteoClient(this IServiceCollection services)
-    {
-        var retryPolicy = CreateSharedHttpRetryPolicy();
+            return services;
+        }
 
-        services.AddHttpClient<IOpenMeteoClient, OpenMeteoClient>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.open-meteo.com/");
-            })
-            .AddPolicyHandler(retryPolicy);
+        public IServiceCollection AddOpenMeteoClient()
+        {
+            var retryPolicy = CreateSharedHttpRetryPolicy();
 
-        return services;
-    }
+            services.AddHttpClient<IOpenMeteoClient, OpenMeteoClient>(client =>
+                {
+                    client.BaseAddress = new Uri("https://api.open-meteo.com/");
+                })
+                .AddPolicyHandler(retryPolicy);
 
-    public static IServiceCollection AddStooqGoldPriceClient(this IServiceCollection services)
-    {
-        var retryPolicy = CreateSharedHttpRetryPolicy();
+            return services;
+        }
 
-        services.AddHttpClient<IGoldPriceService, StooqGoldPriceService>(client =>
-            {
-                client.BaseAddress = new Uri("https://stooq.com/");
-            })
-            .AddPolicyHandler(retryPolicy);
+        public IServiceCollection AddStooqGoldPriceClient()
+        {
+            var retryPolicy = CreateSharedHttpRetryPolicy();
 
-        return services;
-    }
+            services.AddHttpClient<IGoldPriceService, StooqGoldPriceService>(client =>
+                {
+                    client.BaseAddress = new Uri("https://stooq.com/");
+                })
+                .AddPolicyHandler(retryPolicy);
 
-    public static IServiceCollection AddGoogleNewsRssClient(this IServiceCollection services, IConfiguration configuration)
-    {
-        ArgumentNullException.ThrowIfNull(configuration);
-        var retryPolicy = CreateSharedHttpRetryPolicy();
+            return services;
+        }
 
-        services.AddHttpClient<IGoogleNewsRssClient, GoogleNewsRssClient>((sp, client) =>
-            {
-                var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoogleNewsRssSettings>>().Value;
-                client.BaseAddress = new Uri(settings.BaseUrl);
-            })
-            .AddPolicyHandler(retryPolicy);
+        public IServiceCollection AddGoogleNewsRssClient(IConfiguration configuration)
+        {
+            ArgumentNullException.ThrowIfNull(configuration);
+            var retryPolicy = CreateSharedHttpRetryPolicy();
 
-        return services;
-    }
+            services.AddHttpClient<IGoogleNewsRssClient, GoogleNewsRssClient>((sp, client) =>
+                {
+                    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoogleNewsRssSettings>>().Value;
+                    client.BaseAddress = new Uri(settings.BaseUrl);
+                })
+                .AddPolicyHandler(retryPolicy);
 
-    public static IServiceCollection AddYahooFinanceClient(this IServiceCollection services)
-    {
-        var retryPolicy = CreateSharedHttpRetryPolicy();
+            return services;
+        }
 
-        services.AddHttpClient<YahooFinanceClient>(client =>
-            {
-                client.BaseAddress = new Uri("https://query1.finance.yahoo.com/");
-                client.DefaultRequestHeaders.UserAgent.ParseAdd(
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36");
-            })
-            .AddPolicyHandler(retryPolicy);
+        public IServiceCollection AddYahooFinanceClient()
+        {
+            var retryPolicy = CreateSharedHttpRetryPolicy();
 
-        return services;
+            services.AddHttpClient<YahooFinanceClient>(client =>
+                {
+                    client.BaseAddress = new Uri("https://query1.finance.yahoo.com/");
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36");
+                })
+                .AddPolicyHandler(retryPolicy);
+
+            return services;
+        }
     }
 }

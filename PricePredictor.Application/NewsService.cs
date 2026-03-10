@@ -1,4 +1,4 @@
-﻿﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredictor.Application.Data;
@@ -9,7 +9,7 @@ namespace PricePredictor.Application;
 
 public interface INewsService
 {
-    Task<NewsServiceResult> DownloadAndStoreAsync(string url, CancellationToken cancellationToken);
+    Task<NewsServiceResult> DownloadAndStoreAsync(string url, string? title, CancellationToken cancellationToken);
 }
 
 public sealed class NewsService : INewsService

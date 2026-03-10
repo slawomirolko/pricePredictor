@@ -22,7 +22,7 @@ builder.WebHost.ConfigureKestrel(options =>
     {
         o.Protocols = HttpProtocols.Http2;
     });
-    
+
     options.ListenLocalhost(5000, o =>
     {
         o.Protocols = HttpProtocols.Http1;
@@ -34,8 +34,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddGrpc();
 
+builder.Services.AddApplication();
+
 // Infrastructure: External adapters and clients
 builder.Services.AddNtfyClient(builder.Configuration);
+builder.Services.AddOllamaArticleExtractionClient();
 builder.Services.AddGoldNewsClient();
 builder.Services.AddOpenMeteoClient();
 builder.Services.AddStooqGoldPriceClient();

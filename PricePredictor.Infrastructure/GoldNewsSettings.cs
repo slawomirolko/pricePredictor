@@ -11,5 +11,5 @@ public sealed record GoldNewsSettings
 
     public int EmbeddingDimensions { get; init; } = 3072;
     public string OllamaUrl { get; init; } = string.Empty;
-    public string OllamaModel { get; init; } = "phi3";
+    public string OllamaModel { get; init; } = string.Empty;
 }

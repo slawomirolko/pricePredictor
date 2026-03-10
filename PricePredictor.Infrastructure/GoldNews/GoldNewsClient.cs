@@ -31,7 +31,7 @@ public sealed class GoldNewsClient : IGoldNewsClient
         return content;
     }
 
-    public async Task<string?> FetchArticleContentAsync(string articleUrl, CancellationToken cancellationToken)
+    public async Task<string?> FetchArticleContentAsync(string articleUrl, string? articleTitle, CancellationToken cancellationToken)
     {
         try
         {
@@ -226,4 +226,3 @@ public sealed class GoldNewsClient : IGoldNewsClient
         return s.Length <= 400 ? s : s[..400] + "...";
     }
 }
-

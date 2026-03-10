@@ -91,7 +91,8 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
 
         try
         {
-            var result = await _goldNewsService.DownloadAndStoreAsync(request.Url, context.CancellationToken);
+            var title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim();
+            var result = await _goldNewsService.DownloadAndStoreAsync(request.Url, title, context.CancellationToken);
 
             return new DownloadArticleReply
             {
