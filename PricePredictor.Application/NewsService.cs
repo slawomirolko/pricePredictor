@@ -34,7 +34,7 @@ public sealed class NewsService : INewsService
         _logger = logger;
     }
 
-    public async Task<NewsServiceResult> DownloadAndStoreAsync(string url, CancellationToken cancellationToken)
+    public async Task<NewsServiceResult> DownloadAndStoreAsync(string url, string? title, CancellationToken cancellationToken)
     {
         var existingContent = await _repository.GetContentAsync(url, cancellationToken);
         if (existingContent != null)
@@ -43,7 +43,7 @@ public sealed class NewsService : INewsService
             return NewsServiceResult.AlreadyStored(existingContent.Length);
         }
 
-        var content = await _client.FetchArticleContentAsync(url, cancellationToken);
+        var content = await _client.FetchArticleContentAsync(url, title, cancellationToken);
         if (string.IsNullOrWhiteSpace(content))
         {
             _logger.LogWarning("Failed to extract content from: {Url}", url);
