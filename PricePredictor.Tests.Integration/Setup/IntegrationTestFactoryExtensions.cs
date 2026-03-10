@@ -54,15 +54,18 @@ internal static class IntegrationTestFactoryExtensions
                 services.AddOpenMeteoClient();
                 services.AddStooqGoldPriceClient();
                 services.AddGoogleNewsRssClient(context.Configuration);
+                services.AddOllamaArticleExtractionClient();
+
                 services.Configure<GoldNewsSettings>(context.Configuration.GetSection(GoldNewsSettings.SectionName));
 
                 services.AddSingleton<OllamaSharp.IOllamaApiClient>(sp =>
                 {
-                    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoldNewsSettings>>().Value;
+                    var settings = sp.GetRequiredService<IOptions<GoldNewsSettings>>().Value;
                     return new OllamaSharp.OllamaApiClient(new Uri(settings.OllamaUrl));
                 });
 
                 // Register Application services
+                services.AddApplication();
                 services.AddScoped<INewsService, NewsService>();
                 services.AddScoped<PricePredictor.Application.News.INewsService, Application.News.GoogleNewsRssService>();
                 services.AddScoped<Application.Weather.IWeatherService, Application.Weather.WeatherService>();
