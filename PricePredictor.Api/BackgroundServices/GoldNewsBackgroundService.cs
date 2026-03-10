@@ -122,7 +122,7 @@ public class GoldNewsBackgroundService : BackgroundService
                             // OPTIONALLY try to enhance with article content (non-blocking)
                             try
                             {
-                                var articleContent = await _client.FetchArticleContentAsync(normalizedLink, stoppingToken);
+                                var articleContent = await _client.FetchArticleContentAsync(normalizedLink, normalizedTitle, stoppingToken);
                                 if (!string.IsNullOrWhiteSpace(articleContent))
                                 {
                                     // Only append if we got meaningful article content
