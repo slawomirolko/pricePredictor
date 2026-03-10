@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <UserSecretsId>817923e6-520f-43eb-809a-58caabb0d925</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
