@@ -34,6 +34,13 @@
 - ✅ Keep HTTP client extension methods in the Infrastructure project (`PricePredicator.Infrastructure/ClientsExtensions.cs`)
 - ✅ All client extension methods must be called explicitly in `Program.cs` (not inside `AddAppServices`)
 - ❌ Do not introduce adapter patterns for clients
+- ✅ **CRITICAL: HTTP client methods MUST THROW exceptions on failure, NEVER return null**
+  - ❌ Do NOT silently catch HTTP errors and return null
+  - ❌ Do NOT swallow HttpRequestException or other transient failures
+  - ✅ Let exceptions propagate to caller so failures are visible
+  - ✅ Add diagnostic context to exceptions (model name, chunk count, prompt size, etc.)
+  - Example: If Ollama returns 404 or empty response, throw `InvalidOperationException` with full context
+  - Rationale: Silent `null` returns hide bugs; explicit exceptions force caller to handle failures visibly
 
 ## SERIALIZATION & DTOS
 - ✅ Application layer models NEVER have `System.Text.Json.Serialization` attributes
