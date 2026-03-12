@@ -18,7 +18,7 @@ internal static class IntegrationTestFactoryExtensions
     {
         public IWebHostBuilder ConfigureTestAppConfiguration(string connectionString)
         {
-            return builder.ConfigureAppConfiguration((_, config) =>
+            return builder.ConfigureAppConfiguration((context, config) =>
             {
                 var testSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.Test.json");
                 config.AddJsonFile(testSettingsPath, optional: false);
@@ -26,6 +26,11 @@ internal static class IntegrationTestFactoryExtensions
                 {
                     ["ConnectionStrings:DefaultConnection"] = connectionString
                 });
+
+                if (context.HostingEnvironment.IsDevelopment())
+                {
+                    config.AddUserSecrets<Program>(optional: true);
+                }
             });
         }
 
@@ -58,18 +63,15 @@ internal static class IntegrationTestFactoryExtensions
 
                 services.Configure<GoldNewsSettings>(context.Configuration.GetSection(GoldNewsSettings.SectionName));
 
-                services.AddSingleton<OllamaSharp.IOllamaApiClient>(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<GoldNewsSettings>>().Value;
-                    return new OllamaSharp.OllamaApiClient(new Uri(settings.OllamaUrl));
-                });
-
                 // Register Application services
                 services.AddApplication();
                 services.AddScoped<INewsService, NewsService>();
                 services.AddScoped<PricePredictor.Application.News.INewsService, Application.News.GoogleNewsRssService>();
                 services.AddScoped<Application.Weather.IWeatherService, Application.Weather.WeatherService>();
                 services.AddScoped<PricePredictor.Application.IGatewayService, GatewayService>();
+
+                // Ensure GoldNewsSettings from Application namespace is also configured
+                services.Configure<PricePredictor.Application.Data.GoldNewsSettings>(context.Configuration.GetSection(GoldNewsSettings.SectionName));
             });
         }
 

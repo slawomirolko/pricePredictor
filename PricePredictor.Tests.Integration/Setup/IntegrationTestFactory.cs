@@ -8,28 +8,18 @@ namespace PricePredictor.Tests.Integration.Setup;
 public class IntegrationTestFactory : WebApplicationFactory<Program>
 {
     private readonly string _connectionString;
-    private readonly bool _useCloud;
 
-    public IntegrationTestFactory(string connectionString, bool useCloud = false)
+    public IntegrationTestFactory(string connectionString)
     {
         _connectionString = connectionString;
-        _useCloud = useCloud;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder
-            .UseEnvironment("Test")
+            .UseEnvironment("Development")
             .ConfigureTestAppConfiguration(_connectionString)
             .ConfigureTestServices(_connectionString)
             .ConfigureTestLogging();
-
-        builder.ConfigureServices(services =>
-        {
-            services.PostConfigure<GoldNewsSettings>(options =>
-            {
-                options.UseCloud = _useCloud;
-            });
-        });
     }
 }

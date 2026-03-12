@@ -29,11 +29,9 @@ public abstract class IntegrationTest : IAsyncLifetime
     protected IntegrationTestFactory Factory => _factory ?? throw new InvalidOperationException("Factory not initialized.");
     protected PricePredictor.Api.Gateway.Gateway.GatewayClient GatewayClient { get; private set; } = null!;
 
-    public virtual bool UseCloud => false;
-
     public Task InitializeAsync()
     {
-        _factory = new IntegrationTestFactory(_postgres.ConnectionString, UseCloud);
+        _factory = new IntegrationTestFactory(_postgres.ConnectionString);
 
         var client = _factory.CreateDefaultClient();
         client.DefaultRequestVersion = HttpVersion.Version20;

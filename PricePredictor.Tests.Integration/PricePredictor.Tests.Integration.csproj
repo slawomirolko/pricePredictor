@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <UserSecretsId>06d373e9-0d06-4b40-873c-5d900594b071</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -27,11 +27,25 @@ public sealed class ArticleContentExtractionService : IArticleContentExtractionS
             return NormalizeFallback(fallbackText);
         }
 
-        var reducedText = ExtractParagraphs(html);
-        var payload = string.IsNullOrWhiteSpace(reducedText) ? html : reducedText;
+        var paragraphText = ExtractParagraphs(html);
+
+        // Only call Ollama with clean paragraph text — never with raw HTML
+        var payload = !string.IsNullOrWhiteSpace(paragraphText)
+            ? paragraphText
+            : NormalizeFallback(fallbackText);
+
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            _logger.LogWarning("No paragraph divs found and no fallback body text available. Skipping LLM call.");
+            return null;
+        }
+
+        _logger.LogInformation("Sending {Length} chars to Ollama (source: {Source})",
+            payload.Length,
+            !string.IsNullOrWhiteSpace(paragraphText) ? "paragraph divs" : "Selenium body text");
 
         var llmResult = await _extractionClient.ExtractMainContentAsync(
-            ArticleExtractionPrompts.ArticleExtractionPrompt,
+            ArticlePreparingEmbeddingPrompts.BuildEmbeddingPrompt(payload),
             payload,
             articleTitle,
             cancellationToken);
@@ -64,68 +78,20 @@ public sealed class ArticleContentExtractionService : IArticleContentExtractionS
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
-            var noisySelectors = new[]
-            {
-                "//script", "//style", "//noscript", "//div[@class*='cookie']",
-                "//nav", "//footer", "//header", "//div[@class*='related']",
-                "//div[@class*='advertisement']", "//div[@class*='social']"
-            };
+            // Extract divs with data-testid="paragraph-*" pattern
+            var paragraphDivs = doc.DocumentNode.SelectNodes("//div[starts-with(@data-testid, 'paragraph-')]");
 
-            foreach (var selector in noisySelectors)
-            {
-                var elements = doc.DocumentNode.SelectNodes(selector);
-                if (elements == null)
-                {
-                    continue;
-                }
-
-                foreach (var element in elements)
-                {
-                    element.ParentNode?.RemoveChild(element);
-                }
-            }
-
-            var article = doc.DocumentNode.SelectSingleNode("//article") ??
-                          doc.DocumentNode.SelectSingleNode("//div[@data-testid='article']") ??
-                          doc.DocumentNode.SelectSingleNode("//div[@id*='article-body']") ??
-                          doc.DocumentNode.SelectSingleNode("//div[@class*='article-body']") ??
-                          doc.DocumentNode.SelectSingleNode("//div[@class*='story-body']") ??
-                          doc.DocumentNode.SelectSingleNode("//body");
-
-            if (article == null)
+            if (paragraphDivs == null || paragraphDivs.Count == 0)
             {
                 return null;
             }
 
-            var paragraphs = article.SelectNodes(".//p") ??
-                             article.SelectNodes(".//div[@class*='paragraph'] | .//span[@class*='paragraph']");
-
-            if (paragraphs == null || paragraphs.Count == 0)
-            {
-                return null;
-            }
-
-            var texts = paragraphs
-                .Select(paragraph => System.Net.WebUtility.HtmlDecode(paragraph.InnerText?.Trim() ?? string.Empty))
+            var texts = paragraphDivs
+                .Select(div => System.Net.WebUtility.HtmlDecode(div.InnerText?.Trim() ?? string.Empty))
                 .Where(text => text.Length > 15)
                 .Select(text => Regex.Replace(text, @"\s+", " ").Trim())
                 .ToList();
 
-            if (texts.Count < 3)
-            {
-                var divs = article.SelectNodes(".//div");
-                if (divs != null)
-                {
-                    foreach (var div in divs)
-                    {
-                        var text = System.Net.WebUtility.HtmlDecode(div.InnerText?.Trim() ?? string.Empty);
-                        if (text.Length > 200 && !text.Contains("<", StringComparison.Ordinal) && !texts.Contains(text))
-                        {
-                            texts.Add(Regex.Replace(text, @"\s+", " ").Trim());
-                        }
-                    }
-                }
-            }
 
             if (texts.Count == 0)
             {

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredictor.Application.Data;
@@ -23,7 +24,7 @@ public sealed class NewsService : INewsService
     public NewsService(
         IGoldNewsClient client,
         IGoldNewsEmbeddingRepository repository,
-        IOllamaApiClient ollama,
+        [FromKeyedServices("LocalOllama")] IOllamaApiClient ollama,
         IOptions<GoldNewsSettings> settings,
         ILogger<NewsService> logger)
     {
@@ -32,6 +33,7 @@ public sealed class NewsService : INewsService
         _ollama = ollama;
         _settings = settings.Value;
         _logger = logger;
+        _ollama.SelectedModel = _settings.LocalOllamaModel;
     }
 
     public async Task<NewsServiceResult> DownloadAndStoreAsync(string url, string? title, CancellationToken cancellationToken)
@@ -52,7 +54,6 @@ public sealed class NewsService : INewsService
 
         _logger.LogInformation("Extracted {Length} characters from article", content.Length);
 
-        _ollama.SelectedModel = _settings.OllamaModel;
         var embeddingResponse = await _ollama.EmbedAsync(content, cancellationToken);
 
         if (embeddingResponse.Embeddings.Count == 0)

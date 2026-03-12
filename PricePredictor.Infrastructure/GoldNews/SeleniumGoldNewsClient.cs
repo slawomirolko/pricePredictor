@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using PricePredictor.Application.Finance.Interfaces;
@@ -10,15 +11,18 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
 {
     private readonly HttpClient _http;
     private readonly IArticleContentExtractionService _articleContentExtractionService;
+    private readonly GoldNewsSettings _settings;
     private readonly ILogger<SeleniumGoldNewsClient> _logger;
 
     public SeleniumGoldNewsClient(
         HttpClient http,
         IArticleContentExtractionService articleContentExtractionService,
+        IOptions<GoldNewsSettings> settings,
         ILogger<SeleniumGoldNewsClient> logger)
     {
         _http = http;
         _articleContentExtractionService = articleContentExtractionService;
+        _settings = settings.Value;
         _logger = logger;
     }
 
@@ -44,8 +48,11 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
             _logger.LogInformation("🌐 Fetching article via Selenium: {Url}", articleUrl);
 
             var options = new ChromeOptions();
-            // options.AddArgument("--headless=new");
-            // options.AddArgument("--disable-gpu");
+            if (_settings.Headless)
+            {
+                options.AddArgument("--headless=new");
+            }
+            options.AddArgument("--disable-gpu");
             options.AddArgument("--no-sandbox");
             options.AddArgument("--disable-dev-shm-usage");
             options.AddArgument("--window-size=1920,1080");
@@ -58,27 +65,28 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
             options.AddAdditionalChromeOption("useAutomationExtension", false);
 
             using var driver = new ChromeDriver(options);
-
-            // Apply stealth scripts
-            driver.ExecuteScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
-            driver.ExecuteScript(@"
-                // Pass the WebGL Test
-                const getParameter = WebGLRenderingContext.prototype.getParameter;
-                WebGLRenderingContext.prototype.getParameter = function(parameter) {
-                    // UNMASKED_VENDOR_WEBGL
-                    if (parameter === 37445) {
-                        return 'Intel Open Source Technology Center';
-                    }
-                    // UNMASKED_RENDERER_WEBGL
-                    if (parameter === 37446) {
-                        return 'Mesa DRI Intel(R) HD Graphics 520 (Skylake GT2)';
-                    }
-                    return getParameter(parameter);
-                };
-            ");
+            _logger.LogInformation("✅ ChromeDriver started successfully");
 
             driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
             await Task.Run(() => driver.Navigate().GoToUrl(articleUrl), cancellationToken);
+
+            // Apply stealth scripts AFTER page load so they run in the correct context
+            try
+            {
+                driver.ExecuteScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+                driver.ExecuteScript(@"
+                    const getParameter = WebGLRenderingContext.prototype.getParameter;
+                    WebGLRenderingContext.prototype.getParameter = function(parameter) {
+                        if (parameter === 37445) return 'Intel Open Source Technology Center';
+                        if (parameter === 37446) return 'Mesa DRI Intel(R) HD Graphics 520 (Skylake GT2)';
+                        return getParameter(parameter);
+                    };
+                ");
+            }
+            catch
+            {
+                // Stealth scripts are best-effort; ignore failures
+            }
 
             await Task.Delay(10000, cancellationToken);
             _logger.LogInformation("📄 Initial Page Title: {Title}", driver.Title);
@@ -100,7 +108,7 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
                 {
                     _logger.LogInformation("🔄 Refreshing page...");
                     await Task.Run(() => driver.Navigate().Refresh(), cancellationToken);
-                    await Task.Delay(5000, cancellationToken);
+                    await Task.Delay(10000, cancellationToken);
                     _logger.LogInformation("📄 Page Title after refresh: {Title}", driver.Title);
                 }
             }
@@ -129,7 +137,9 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
                 // ignore
             }
 
-            var html = driver.PageSource;
+            var html = driver.ExecuteScript("return document.documentElement.outerHTML;") as string
+                       ?? driver.PageSource;
+
             if (string.IsNullOrWhiteSpace(html))
             {
                 _logger.LogWarning("⚠️ Selenium returned empty page source");

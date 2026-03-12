@@ -48,12 +48,6 @@ builder.Services.AddYahooFinanceClient();
 // Persistence: Database and repository setup
 builder.Services.AddPersistence(builder.Configuration);
 
-builder.Services.AddSingleton<IOllamaApiClient>(sp =>
-{
-    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoldNewsSettings>>().Value;
-    return new OllamaApiClient(new Uri(settings.OllamaUrl));
-});
-
 builder.Services.AddSingleton<IGatewayService, GatewayService>();
 builder.Services.AddSingleton<IWeatherService, WeatherService>();
 

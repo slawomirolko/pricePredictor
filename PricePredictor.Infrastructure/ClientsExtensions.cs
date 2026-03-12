@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using OllamaSharp;
 using Polly;
 using Polly.Extensions.Http;
 using PricePredictor.Application.Finance.Interfaces;
@@ -46,11 +48,35 @@ public static class ClientsExtensions
             return services;
         }
 
-        public IServiceCollection AddOllamaArticleExtractionClient()
+    public IServiceCollection AddOllamaArticleExtractionClient()
+    {
+        services.AddKeyedSingleton<IOllamaApiClient>("LocalOllama", (sp, _) =>
         {
-            services.AddSingleton<IOllamaArticleExtractionClient, OllamaArticleExtractionClient>();
-            return services;
-        }
+            var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoldNewsSettings>>().Value;
+            return new OllamaApiClient(new Uri(settings.LocalOllamaUrl));
+        });
+
+        services.AddHttpClient<IOllamaCloudHttpClient, OllamaCloudHttpClient>((sp, client) =>
+        {
+            var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoldNewsSettings>>().Value;
+            client.BaseAddress = new Uri(settings.CloudOllamaUrl);
+            if (!string.IsNullOrWhiteSpace(settings.CloudOllamaApiKey))
+            {
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", settings.CloudOllamaApiKey);
+            }
+        });
+
+        services.AddSingleton<IOllamaArticleExtractionClient>(sp =>
+        {
+            var localOllama = sp.GetRequiredKeyedService<IOllamaApiClient>("LocalOllama");
+            var cloudClient = sp.GetRequiredService<IOllamaCloudHttpClient>();
+            var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoldNewsSettings>>();
+            var logger = sp.GetRequiredService<ILogger<ArticleExtractionClient>>();
+            return new ArticleExtractionClient(localOllama, cloudClient, settings, logger);
+        });
+
+        return services;
+    }
 
         public IServiceCollection AddGoldNewsClient()
         {
