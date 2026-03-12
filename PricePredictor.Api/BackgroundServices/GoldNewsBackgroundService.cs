@@ -4,7 +4,6 @@ using System.Xml.Linq;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
 using PricePredictor.Application.Data;
-using PricePredictor.Application.Finance;
 using PricePredictor.Application.Finance.Interfaces;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 
@@ -51,7 +50,7 @@ public class GoldNewsBackgroundService : BackgroundService
         ILogger<GoldNewsBackgroundService> logger,
         IGoldNewsClient client,
         IGoldNewsEmbeddingRepository embeddingRepository,
-        IOllamaApiClient ollama,
+        [FromKeyedServices("LocalOllama")] IOllamaApiClient ollama,
         IOptions<GoldNewsSettings> settings)
     {
         _logger = logger;
@@ -59,7 +58,7 @@ public class GoldNewsBackgroundService : BackgroundService
         _embeddingRepository = embeddingRepository;
         _ollama = ollama;
         _settings = settings.Value;
-        _ollama.SelectedModel = _settings.OllamaModel;
+        _ollama.SelectedModel = _settings.LocalOllamaModel;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
