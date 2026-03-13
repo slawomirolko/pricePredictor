@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PricePredictor.Application.Models;
+using AppModels = PricePredictor.Application.Models;
 
 namespace PricePredictor.Persistence;
 
@@ -9,18 +10,18 @@ public class PricePredictorDbContext : DbContext
     {
     }
 
-    public DbSet<VolatilityGold> VolatilityGold { get; set; } = null!;
-    public DbSet<VolatilitySilver> VolatilitySilver { get; set; } = null!;
-    public DbSet<VolatilityNaturalGas> VolatilityNaturalGas { get; set; } = null!;
-    public DbSet<VolatilityOil> VolatilityOil { get; set; } = null!;
-    public DbSet<Commodity> Commodities { get; set; } = null!;
-    public DbSet<VolatilityDaily> Volatilities { get; set; } = null!;
+    public DbSet<AppModels.VolatilityGold> VolatilityGold { get; set; } = null!;
+    public DbSet<AppModels.VolatilitySilver> VolatilitySilver { get; set; } = null!;
+    public DbSet<AppModels.VolatilityNaturalGas> VolatilityNaturalGas { get; set; } = null!;
+    public DbSet<AppModels.VolatilityOil> VolatilityOil { get; set; } = null!;
+    public DbSet<AppModels.Commodity> Commodities { get; set; } = null!;
+    public DbSet<AppModels.VolatilityDaily> Volatilities { get; set; } = null!;
+    public DbSet<AppModels.ArticleLink> ArticleLinks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // Configure VolatilityGold
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(PricePredictorDbContext).Assembly);
         modelBuilder.Entity<VolatilityGold>(entity =>
         {
             entity.ToTable("Volatility_Gold");
@@ -121,4 +122,3 @@ public class PricePredictorDbContext : DbContext
         });
     }
 }
-

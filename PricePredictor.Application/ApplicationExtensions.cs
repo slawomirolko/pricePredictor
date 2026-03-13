@@ -8,6 +8,7 @@ public static class ApplicationExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddSingleton<IArticleContentExtractionService, ArticleContentExtractionService>();
+        services.AddScoped<IArticleService, ArticleService>();
         return services;
     }
 }

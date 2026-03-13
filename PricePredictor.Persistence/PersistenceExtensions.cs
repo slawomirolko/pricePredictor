@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PricePredictor.Application.Data;
 using PricePredictor.Application.Finance.Interfaces;
+using PricePredictor.Application.News;
 using PricePredictor.Persistence.Repositories;
 
 namespace PricePredictor.Persistence;
@@ -35,6 +36,7 @@ public static class PersistenceExtensions
         
         services.AddScoped<IVolatilityRepository, VolatilityRepository>();
         services.AddScoped<IGoldNewsEmbeddingRepository, GoldNewsEmbeddingRepository>();
+        services.AddScoped<IArticleRepository, ArticleRepository>();
 
         return services;
     }

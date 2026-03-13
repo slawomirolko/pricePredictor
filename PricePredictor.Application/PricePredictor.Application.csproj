@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="OllamaSharp" />
     <PackageReference Include="HtmlAgilityPack" />
+    <PackageReference Include="Selenium.WebDriver" />
   </ItemGroup>
 
 </Project>
