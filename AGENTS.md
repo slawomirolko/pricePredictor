@@ -169,6 +169,13 @@
 - ✅ Generate new IDs with `Guid.CreateVersion7()`
 
 ## APPLICATION MODELS
+- ✅ Static factory methods in models must return `ErrorOr<TModel>` (for example `ErrorOr<ArticleLink>`)
+- ❌ Do not throw exceptions for validation/domain errors from model factory methods; return `ErrorOr` errors instead
+
+## ERROR HANDLING (APPLICATION LAYERS)
+- ✅ Use `ErrorOr<T>` to return expected/domain/application errors in Application layer services and domain logic
+- ❌ Do not use exceptions for normal business-rule failures in Application layer
+- ✅ Reserve exceptions for truly exceptional/technical failures (e.g. infrastructure outage, unexpected runtime faults)
 - ✅ All models in `PricePredictor.Application` must set values only via static factory methods
 - ❌ Do not expose public setters or public constructors for creating mutable state
 - ✅ Prefer private constructors + static `Create(...)`/`From(...)` methods that enforce invariants
