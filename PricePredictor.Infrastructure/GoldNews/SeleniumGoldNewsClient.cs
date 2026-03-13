@@ -1,7 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Application.News;
 
@@ -11,24 +9,26 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
 {
     private readonly HttpClient _http;
     private readonly IArticleContentExtractionService _articleContentExtractionService;
+    private readonly ISeleniumFlowBuilderFactory _seleniumFlowBuilderFactory;
     private readonly GoldNewsSettings _settings;
     private readonly ILogger<SeleniumGoldNewsClient> _logger;
 
     public SeleniumGoldNewsClient(
         HttpClient http,
         IArticleContentExtractionService articleContentExtractionService,
+        ISeleniumFlowBuilderFactory seleniumFlowBuilderFactory,
         IOptions<GoldNewsSettings> settings,
         ILogger<SeleniumGoldNewsClient> logger)
     {
         _http = http;
         _articleContentExtractionService = articleContentExtractionService;
+        _seleniumFlowBuilderFactory = seleniumFlowBuilderFactory;
         _settings = settings.Value;
         _logger = logger;
     }
 
     public async Task<string> GetRssXmlAsync(string rssUrl, CancellationToken cancellationToken)
     {
-        // RSS is usually fine with HttpClient
         using var response = await _http.GetAsync(rssUrl, cancellationToken);
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -45,134 +45,163 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
     {
         try
         {
-            _logger.LogInformation("🌐 Fetching article via Selenium: {Url}", articleUrl);
+            _logger.LogInformation("Fetching article via Selenium flow: {Url}", articleUrl);
 
-            var options = new ChromeOptions();
-            if (_settings.Headless)
+            using var seleniumFlow = _seleniumFlowBuilderFactory.Create(_settings.Headless);
+
+            var navigationResult = await OpenArticleAsync(seleniumFlow, articleUrl, cancellationToken);
+            if (!navigationResult.IsSuccess)
             {
-                options.AddArgument("--headless=new");
-            }
-            options.AddArgument("--disable-gpu");
-            options.AddArgument("--no-sandbox");
-            options.AddArgument("--disable-dev-shm-usage");
-            options.AddArgument("--window-size=1920,1080");
-            options.AddArgument("--lang=en-US");
-            options.AddArgument("--disable-blink-features=AutomationControlled");
-            options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-
-            // Avoid detection
-            options.AddExcludedArgument("enable-automation");
-            options.AddAdditionalChromeOption("useAutomationExtension", false);
-
-            using var driver = new ChromeDriver(options);
-            _logger.LogInformation("✅ ChromeDriver started successfully");
-
-            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
-            await Task.Run(() => driver.Navigate().GoToUrl(articleUrl), cancellationToken);
-
-            // Apply stealth scripts AFTER page load so they run in the correct context
-            try
-            {
-                driver.ExecuteScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
-                driver.ExecuteScript(@"
-                    const getParameter = WebGLRenderingContext.prototype.getParameter;
-                    WebGLRenderingContext.prototype.getParameter = function(parameter) {
-                        if (parameter === 37445) return 'Intel Open Source Technology Center';
-                        if (parameter === 37446) return 'Mesa DRI Intel(R) HD Graphics 520 (Skylake GT2)';
-                        return getParameter(parameter);
-                    };
-                ");
-            }
-            catch
-            {
-                // Stealth scripts are best-effort; ignore failures
-            }
-
-            await Task.Delay(10000, cancellationToken);
-            _logger.LogInformation("📄 Initial Page Title: {Title}", driver.Title);
-            _logger.LogDebug("📄 HTML Sample (first 2000 chars): {Sample}", driver.PageSource.Length > 2000 ? driver.PageSource[..2000] : driver.PageSource);
-
-            if (driver.PageSource.Contains("captcha", StringComparison.OrdinalIgnoreCase) ||
-                driver.PageSource.Contains("Verify you are human", StringComparison.OrdinalIgnoreCase) ||
-                driver.Title.Contains("Access Denied", StringComparison.OrdinalIgnoreCase) ||
-                driver.Title.Contains("Just a moment", StringComparison.OrdinalIgnoreCase) ||
-                driver.PageSource.Contains("Please verify you are a human", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogWarning("⚠️ Bot detection or captcha detected on {Url}. Page title: {Title}", articleUrl, driver.Title);
-
-                await Task.Delay(5000, cancellationToken);
-
-                if (driver.Title.Contains("Just a moment", StringComparison.OrdinalIgnoreCase) ||
-                    driver.Title.Contains("Access Denied", StringComparison.OrdinalIgnoreCase) ||
-                    driver.PageSource.Contains("Please verify you are a human", StringComparison.OrdinalIgnoreCase))
-                {
-                    _logger.LogInformation("🔄 Refreshing page...");
-                    await Task.Run(() => driver.Navigate().Refresh(), cancellationToken);
-                    await Task.Delay(10000, cancellationToken);
-                    _logger.LogInformation("📄 Page Title after refresh: {Title}", driver.Title);
-                }
-            }
-
-            await Task.Delay(5000, cancellationToken);
-
-            try
-            {
-                var buttons = driver.FindElements(By.TagName("button"));
-                var acceptButton = buttons.FirstOrDefault(b => b.Text.Contains("Accept", StringComparison.OrdinalIgnoreCase) ||
-                                                               b.Text.Contains("Agree", StringComparison.OrdinalIgnoreCase) ||
-                                                               b.Text.Contains("Zaakceptuj", StringComparison.OrdinalIgnoreCase) ||
-                                                               b.Text.Contains("Akceptuję", StringComparison.OrdinalIgnoreCase) ||
-                                                               b.Text.Contains("Approve", StringComparison.OrdinalIgnoreCase) ||
-                                                               b.Text.Contains("Allow All", StringComparison.OrdinalIgnoreCase) ||
-                                                               b.Text.Contains("Zgadzam się", StringComparison.OrdinalIgnoreCase));
-                if (acceptButton != null && acceptButton.Displayed)
-                {
-                    _logger.LogInformation("🖱️ Clicking cookie button: {Text}", acceptButton.Text);
-                    acceptButton.Click();
-                    await Task.Delay(5000, cancellationToken);
-                }
-            }
-            catch
-            {
-                // ignore
-            }
-
-            var html = driver.ExecuteScript("return document.documentElement.outerHTML;") as string
-                       ?? driver.PageSource;
-
-            if (string.IsNullOrWhiteSpace(html))
-            {
-                _logger.LogWarning("⚠️ Selenium returned empty page source");
+                _logger.LogWarning("{Error}", navigationResult.Error);
                 return null;
             }
 
-            _logger.LogInformation("📥 Selenium received {Bytes} bytes", html.Length);
-
-            string? bodyText = null;
-            try
+            var htmlResult = ReadHtml(seleniumFlow);
+            if (!htmlResult.IsSuccess)
             {
-                bodyText = driver.FindElement(By.TagName("body")).Text;
-            }
-            catch
-            {
-                // Keep null body text when body is unavailable.
+                _logger.LogWarning("{Error}", htmlResult.Error);
+                return null;
             }
 
-            var extractionTitle = string.IsNullOrWhiteSpace(articleTitle) ? driver.Title : articleTitle;
-            var content = await _articleContentExtractionService.ExtractAsync(html, bodyText, extractionTitle, cancellationToken);
-            if (!string.IsNullOrWhiteSpace(content))
+            var contentResult = await ExtractContentAsync(seleniumFlow, htmlResult.Value, articleTitle, cancellationToken);
+            if (!contentResult.IsSuccess)
             {
-                _logger.LogInformation("✅ Extracted {Length} chars from article", content.Length);
-                return content;
+                _logger.LogWarning("{Error}", contentResult.Error);
+                return null;
             }
 
-            _logger.LogWarning("❌ No content extracted. HTML Sample: {Sample}", html.Length > 2000 ? html[..2000] : html);
-            return null;
+            _logger.LogInformation("Extracted {Length} chars from article", contentResult.Value.Length);
+            return contentResult.Value;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Selenium Exception: {Message}", ex.Message);
+            _logger.LogError(ex, "Selenium flow exception: {Message}", ex.Message);
             return null;
         }
+    }
+
+    private async Task<FlowResult<bool>> OpenArticleAsync(
+        ISeleniumFlowBuilder seleniumFlow,
+        string articleUrl,
+        CancellationToken cancellationToken)
+    {
+        var openResult = await seleniumFlow.OpenAsync(articleUrl, cancellationToken);
+        if (openResult.IsError)
+        {
+            return FlowResult<bool>.Fail(openResult.FirstError.Description);
+        }
+
+        var waitAfterOpenResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+        if (waitAfterOpenResult.IsError)
+        {
+            return FlowResult<bool>.Fail(waitAfterOpenResult.FirstError.Description);
+        }
+
+        _logger.LogInformation("Initial page title: {Title}", seleniumFlow.Title);
+
+        var blockedResult = seleniumFlow.IsBlockedPage();
+        if (blockedResult.IsError)
+        {
+            return FlowResult<bool>.Fail(blockedResult.FirstError.Description);
+        }
+
+        if (blockedResult.Value)
+        {
+            _logger.LogWarning("Bot detection or captcha detected on {Url}", articleUrl);
+            var waitBlockedResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+            if (waitBlockedResult.IsError)
+            {
+                return FlowResult<bool>.Fail(waitBlockedResult.FirstError.Description);
+            }
+
+            blockedResult = seleniumFlow.IsBlockedPage();
+            if (blockedResult.IsError)
+            {
+                return FlowResult<bool>.Fail(blockedResult.FirstError.Description);
+            }
+
+            if (blockedResult.Value)
+            {
+                _logger.LogInformation("Refreshing page");
+                var refreshResult = await seleniumFlow.RefreshAsync(cancellationToken);
+                if (refreshResult.IsError)
+                {
+                    return FlowResult<bool>.Fail(refreshResult.FirstError.Description);
+                }
+
+                var waitAfterRefreshResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+                if (waitAfterRefreshResult.IsError)
+                {
+                    return FlowResult<bool>.Fail(waitAfterRefreshResult.FirstError.Description);
+                }
+
+                _logger.LogInformation("Page title after refresh: {Title}", seleniumFlow.Title);
+            }
+        }
+
+        var waitBeforeConsentResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+        if (waitBeforeConsentResult.IsError)
+        {
+            return FlowResult<bool>.Fail(waitBeforeConsentResult.FirstError.Description);
+        }
+
+        var consentResult = await seleniumFlow.AcceptConsentAsync(cancellationToken);
+        if (consentResult.IsError)
+        {
+            return FlowResult<bool>.Fail(consentResult.FirstError.Description);
+        }
+
+        return FlowResult<bool>.Success(true);
+    }
+
+    private FlowResult<string> ReadHtml(ISeleniumFlowBuilder seleniumFlow)
+    {
+        var htmlResult = seleniumFlow.GetHtml();
+        if (htmlResult.IsError)
+        {
+            return FlowResult<string>.Fail(htmlResult.FirstError.Description);
+        }
+
+        if (string.IsNullOrWhiteSpace(htmlResult.Value))
+        {
+            return FlowResult<string>.Fail("Selenium flow returned empty page source");
+        }
+
+        _logger.LogInformation("Selenium flow received {Bytes} bytes", htmlResult.Value.Length);
+        return FlowResult<string>.Success(htmlResult.Value);
+    }
+
+    private async Task<FlowResult<string>> ExtractContentAsync(
+        ISeleniumFlowBuilder seleniumFlow,
+        string html,
+        string? articleTitle,
+        CancellationToken cancellationToken)
+    {
+        var bodyTextResult = seleniumFlow.GetBodyText();
+        if (bodyTextResult.IsError)
+        {
+            return FlowResult<string>.Fail(bodyTextResult.FirstError.Description);
+        }
+
+        var extractionTitle = string.IsNullOrWhiteSpace(articleTitle) ? seleniumFlow.Title : articleTitle;
+
+        var content = await _articleContentExtractionService.ExtractAsync(
+            html,
+            bodyTextResult.Value,
+            extractionTitle,
+            cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return FlowResult<string>.Fail("No content extracted");
+        }
+
+        return FlowResult<string>.Success(content);
+    }
+
+    private readonly record struct FlowResult<T>(bool IsSuccess, T Value, string? Error)
+    {
+        public static FlowResult<T> Success(T value) => new(true, value, null);
+        public static FlowResult<T> Fail(string error) => new(false, default!, error);
     }
 }

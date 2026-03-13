@@ -7,7 +7,7 @@ namespace PricePredictor.Infrastructure.GoldNews;
 
 public interface IOllamaCloudHttpClient
 {
-    Task<string?> ChatAsync(string model, string systemPrompt, string userPrompt, CancellationToken cancellationToken);
+    Task<string> ChatAsync(string model, string systemPrompt, string userPrompt, CancellationToken cancellationToken);
 }
 
 public sealed class OllamaCloudHttpClient : IOllamaCloudHttpClient
@@ -26,7 +26,7 @@ public sealed class OllamaCloudHttpClient : IOllamaCloudHttpClient
         _logger = logger;
     }
 
-    public async Task<string?> ChatAsync(string model, string systemPrompt, string userPrompt, CancellationToken cancellationToken)
+    public async Task<string> ChatAsync(string model, string systemPrompt, string userPrompt, CancellationToken cancellationToken)
     {
         var request = new OllamaChatRequest
         {
@@ -39,7 +39,7 @@ public sealed class OllamaCloudHttpClient : IOllamaCloudHttpClient
             Stream = false
         };
         
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://ollama.com/api/chat");
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/api/chat");
         httpRequest.Content = JsonContent.Create(request);
 
         if (!string.IsNullOrWhiteSpace(_settings.CloudOllamaApiKey))
@@ -60,12 +60,16 @@ public sealed class OllamaCloudHttpClient : IOllamaCloudHttpClient
         {
             if (messageObj.TryGetPropertyValue("content", out var contentNode))
             {
-                return contentNode?.ToString();
+                var content = contentNode?.ToString();
+                if (!string.IsNullOrWhiteSpace(content))
+                {
+                    return content;
+                }
             }
         }
 
-        // Fallback or handle unexpected shapes
-        return json?.ToJsonString();
+        throw new InvalidOperationException(
+            $"Ollama Cloud returned no message content. Model={model}, PromptLength={userPrompt.Length}, Response={json?.ToJsonString()}");
     }
 
     private sealed class OllamaChatRequest

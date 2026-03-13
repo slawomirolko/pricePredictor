@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="13.1.1" />
     <PackageVersion Include="CommunityToolkit.Aspire.OllamaSharp" Version="13.1.1" />
+    <PackageVersion Include="ErrorOr" Version="2.1.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
     <PackageVersion Include="Google.Protobuf" Version="3.33.5" />

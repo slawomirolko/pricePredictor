@@ -1,16 +1,14 @@
 using System.Data;
 using System.Data.Common;
 using System.Net;
-using System.Net.Http;
 using Grpc.Net.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using PricePredictor.Infrastructure;
 using PricePredictor.Persistence;
 using PricePredictor.Application.Data;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
-using PricePredictor.Persistence;
+using PricePredictor.Application.Models;
 
 namespace PricePredictor.Tests.Integration.Setup;
 
@@ -96,6 +94,34 @@ public abstract class IntegrationTest : IAsyncLifetime
         var embedding = new float[settings.EmbeddingDimensions];
 
         await repository.UpsertAsync(url, content, embedding, settings.EmbeddingDimensions, cancellationToken);
+    }
+
+    protected async Task DeleteStoredArticleLinksBySourceAsync(string source, CancellationToken cancellationToken)
+    {
+        using var scope = Factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
+
+        var connection = dbContext.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM \"ArticleLinks\" WHERE \"Source\" = @source";
+        AddParameter(command, "@source", source);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    protected async Task<IReadOnlyList<ArticleLink>> GetStoredArticleLinksBySourceAsync(string source, CancellationToken cancellationToken)
+    {
+        using var scope = Factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
+        return await dbContext.ArticleLinks
+            .AsNoTracking()
+            .Where(x => x.Source == source)
+            .OrderByDescending(x => x.PublishedAtUtc)
+            .ToListAsync(cancellationToken);
     }
 
     private static void AddParameter(DbCommand command, string name, object value)

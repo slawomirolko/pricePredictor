@@ -21,10 +21,16 @@ internal static class IntegrationTestFactoryExtensions
             return builder.ConfigureAppConfiguration((context, config) =>
             {
                 var testSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.Test.json");
+                var cloudApiKey = Environment.GetEnvironmentVariable("OLLAMA_CLOUD_API_KEY")
+                                  ?? Environment.GetEnvironmentVariable("OLLAMA_API_KEY");
+
                 config.AddJsonFile(testSettingsPath, optional: false);
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["ConnectionStrings:DefaultConnection"] = connectionString
+                    ["ConnectionStrings:DefaultConnection"] = connectionString,
+                    ["GoldNews:UseCloud"] = "true",
+                    ["GoldNews:CloudOllamaUrl"] = "https://ollama.com",
+                    ["GoldNews:CloudOllamaApiKey"] = cloudApiKey
                 });
 
                 if (context.HostingEnvironment.IsDevelopment())
@@ -48,11 +54,8 @@ internal static class IntegrationTestFactoryExtensions
                 services.AddDbContextFactory<PricePredictorDbContext>(options =>
                     options.UseNpgsql(connectionString));
 
-                // Register repositories
-                services.AddScoped<Application.Data.IGoldNewsEmbeddingRepository, 
-                    Persistence.Repositories.GoldNewsEmbeddingRepository>();
-                services.AddScoped<PricePredictor.Application.Finance.Interfaces.IVolatilityRepository, 
-                    PricePredictor.Persistence.Repositories.VolatilityRepository>();
+                // Register persistence repositories
+                services.AddPersistence(context.Configuration);
 
                 // Register infrastructure clients and settings
                 services.AddGoldNewsClient();

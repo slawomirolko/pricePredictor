@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OllamaSharp;
@@ -9,6 +10,19 @@ namespace PricePredictor.Infrastructure.GoldNews;
 
 public sealed class ArticleExtractionClient : IOllamaArticleExtractionClient
 {
+    private const string TradingAssessmentSystemPrompt = """
+                                                         You are a commodities trading impact classifier.
+                                                         Decide if a news article URL is likely useful for short-term trading decisions because it may move prices of OIL, NATURAL GAS, GOLD, or SILVER.
+
+                                                         Return ONLY strict JSON:
+                                                         {"isTradeUseful":true|false,"impactedAssets":["oil"|"natural_gas"|"gold"|"silver"],"reason":"max 30 words"}
+
+                                                         Rules:
+                                                         - true only if the link strongly suggests macro, geopolitical, supply/demand, policy, sanctions, conflict, inventory, production, central bank, inflation, or major risk events.
+                                                         - false for generic market noise, lifestyle, opinion-only, or unrelated topics.
+                                                         - If uncertain, return false.
+                                                         """;
+
     private readonly IOllamaApiClient _localOllama;
     private readonly IOllamaCloudHttpClient _cloudOllama;
     private readonly GoldNewsSettings _settings;
@@ -89,6 +103,45 @@ public sealed class ArticleExtractionClient : IOllamaArticleExtractionClient
         return result.ToString().Trim();
     }
 
+    public async Task<bool> AssessTradingUsefulnessAsync(
+        string articleLink,
+        string source,
+        DateTime publishedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(articleLink))
+        {
+            throw new ArgumentException("Article link cannot be empty.", nameof(articleLink));
+        }
+
+        var model = _settings.CloudOllamaModel;
+        var userPrompt = $"""
+                          Assess this URL:
+                          URL: {articleLink}
+                          Source: {source}
+                          PublishedAtUtc: {publishedAtUtc:O}
+                          """;
+
+        _logger.LogInformation(
+            "Assessing trading usefulness using Ollama Cloud model {Model} for link {Link}",
+            model,
+            articleLink);
+
+        var response = await _cloudOllama.ChatAsync(
+            model,
+            TradingAssessmentSystemPrompt,
+            userPrompt,
+            cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(response))
+        {
+            throw new InvalidOperationException(
+                $"Ollama Cloud returned an empty trading assessment response. Model={model}, Link={articleLink}.");
+        }
+
+        return ParseTradeUsefulness(response, articleLink, model);
+    }
+
     private static string? ExtractChunkText(object? response)
     {
         if (response == null)
@@ -121,5 +174,32 @@ public sealed class ArticleExtractionClient : IOllamaArticleExtractionClient
         }
 
         return null;
+    }
+
+    private static bool ParseTradeUsefulness(string response, string articleLink, string model)
+    {
+        try
+        {
+            using var json = JsonDocument.Parse(response);
+            if (json.RootElement.TryGetProperty("isTradeUseful", out var value))
+            {
+                return value.ValueKind switch
+                {
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    _ => throw new InvalidOperationException(
+                        $"Ollama Cloud returned invalid isTradeUseful type. Model={model}, Link={articleLink}, Response={response}")
+                };
+            }
+
+            throw new InvalidOperationException(
+                $"Ollama Cloud response is missing isTradeUseful. Model={model}, Link={articleLink}, Response={response}");
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException(
+                $"Ollama Cloud returned non-JSON trading assessment. Model={model}, Link={articleLink}, Response={response}",
+                ex);
+        }
     }
 }

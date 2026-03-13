@@ -1,285 +1,332 @@
 using Microsoft.Extensions.Logging;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 using PricePredictor.Application.Models;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace PricePredictor.Application.News;
 
-/// <summary>
-/// Selenium-based service that scrapes news sources to extract article links with dates.
-/// Uses anti-bot techniques from SeleniumGoldNewsClient.
-/// </summary>
 internal sealed class ArticleService : IArticleService
 {
+    private const string Source = "reuters";
     private readonly ILogger<ArticleService> _logger;
     private readonly IArticleRepository _repository;
     private readonly IOllamaArticleExtractionClient _ollamaClient;
-    private const string Source = "reuters";
+    private readonly ISeleniumFlowBuilderFactory _seleniumFlowBuilderFactory;
 
     public ArticleService(
         ILogger<ArticleService> logger,
         IArticleRepository repository,
-        IOllamaArticleExtractionClient ollamaClient)
+        IOllamaArticleExtractionClient ollamaClient,
+        ISeleniumFlowBuilderFactory seleniumFlowBuilderFactory)
     {
         _logger = logger;
         _repository = repository;
         _ollamaClient = ollamaClient;
+        _seleniumFlowBuilderFactory = seleniumFlowBuilderFactory;
     }
 
     public async Task<IReadOnlyList<ArticleLink>> SyncArticleLinksAsync(CancellationToken cancellationToken)
     {
         const string newsUrl = "https://www.reuters.com";
-        _logger.LogInformation("🌐 Starting article extraction from {Url}", newsUrl);
+        _logger.LogInformation("Starting article extraction from {Url}", newsUrl);
 
-        var options = new ChromeOptions();
-        options.AddArgument("--disable-gpu");
-        options.AddArgument("--no-sandbox");
-        options.AddArgument("--disable-dev-shm-usage");
-        options.AddArgument("--window-size=1920,1080");
-        options.AddArgument("--lang=en-US");
-        options.AddArgument("--disable-blink-features=AutomationControlled");
-        options.AddArgument(
-            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-
-        options.AddExcludedArgument("enable-automation");
-        options.AddAdditionalChromeOption("useAutomationExtension", false);
-
-        using var driver = new ChromeDriver(options);
-        driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+        using var seleniumFlow = _seleniumFlowBuilderFactory.Create(headless: false);
 
         try
         {
-            _logger.LogInformation("Navigating to homepage...");
-            driver.Navigate().GoToUrl(newsUrl);
-
-            // Apply stealth scripts
-            ApplyStealthScripts(driver);
-
-            // Wait for JS-heavy page
-            _logger.LogInformation("⏳ Waiting 10s for page to render...");
-            await Task.Delay(10_000, cancellationToken);
-
-            _logger.LogInformation("Page title: {Title}", driver.Title);
-
-            // Handle Cloudflare/bot detection
-            if (IsBlockedPage(driver))
+            var navigationResult = await NavigateAsync(seleniumFlow, newsUrl, cancellationToken);
+            if (!navigationResult.IsSuccess)
             {
-                _logger.LogWarning("⚠️ Bot detection detected. Refreshing...");
-                await Task.Delay(5_000, cancellationToken);
-
-                if (IsBlockedPage(driver))
-                {
-                    driver.Navigate().Refresh();
-                    _logger.LogInformation("Refreshed. Waiting 10s more...");
-                    await Task.Delay(10_000, cancellationToken);
-                }
+                throw new InvalidOperationException(navigationResult.Error);
             }
 
-            // Accept cookies
-            await Task.Delay(5_000, cancellationToken);
-            TryAcceptConsentBanner(driver);
-            await Task.Delay(3_000, cancellationToken);
-
-            var pageUri = new Uri(driver.Url);
-
-            // Get full DOM via JS
-            var html = (((IJavaScriptExecutor)driver).ExecuteScript("return document.documentElement.outerHTML;") as string)
-                       ?? driver.PageSource;
-
-            _logger.LogInformation("📥 Page source: {Bytes} bytes", html.Length);
-
-            // Collect links from live DOM
-            var allLinks = driver.FindElements(By.TagName("a"));
-            _logger.LogInformation("🔍 Total <a> tags found: {Count}", allLinks.Count);
-
-            var articleLinks = allLinks
-                .Select(a =>
-                {
-                    try { return a.GetAttribute("href"); }
-                    catch { return null; }
-                })
-                .Select(href => NormalizeToAbsoluteUrl(pageUri, href))
-                .Where(IsArticleLink)
-                .Distinct(StringComparer.Ordinal)
-                .OrderBy(x => x, StringComparer.Ordinal)
-                .ToList();
-
-            // Fallback: regex scan HTML
-            if (articleLinks.Count == 0)
+            var linksResult = CollectArticleLinks(seleniumFlow);
+            if (!linksResult.IsSuccess)
             {
-                _logger.LogInformation("Falling back to HTML regex scan...");
-                articleLinks = ExtractLinksFromHtml(pageUri, html)
-                    .Where(IsArticleLink)
-                    .Distinct(StringComparer.Ordinal)
-                    .OrderBy(x => x, StringComparer.Ordinal)
-                    .ToList();
+                throw new InvalidOperationException(linksResult.Error);
             }
 
-            _logger.LogInformation("✅ Found {Count} article links", articleLinks.Count);
-
-            // Extract date from each link and save to database
-            var savedLinks = new List<ArticleLink>();
-            foreach (var link in articleLinks)
-            {
-                if (string.IsNullOrWhiteSpace(link)) continue;
-
-                var dateMatch = Regex.Match(link, @"(\d{4})-(\d{2})-(\d{2})");
-                if (dateMatch.Success)
-                {
-                    if (DateTime.TryParseExact(dateMatch.Groups[1].Value + "-" + dateMatch.Groups[2].Value + "-" + dateMatch.Groups[3].Value,
-                        "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.AssumeUniversal, out var publishedDate))
-                    {
-                        var isTradeUseful = await _ollamaClient.AssessTradingUsefulnessAsync(
-                            articleLink: link,
-                            source: Source,
-                            publishedAtUtc: publishedDate,
-                            cancellationToken: cancellationToken);
-
-                        var articleLink = ArticleLink.Create(
-                            url: link,
-                            publishedAtUtc: publishedDate,
-                            source: Source,
-                            extractedAtUtc: DateTime.UtcNow,
-                            isTradeUseful: isTradeUseful);
-
-                        await _repository.SaveArticleLinkAsync(articleLink, cancellationToken);
-                        savedLinks.Add(articleLink);
-                        _logger.LogInformation("💾 Saved: {Url} (IsTradeUseful={IsTradeUseful})", link, isTradeUseful);
-                    }
-                }
-            }
-
-            _logger.LogInformation("✅ Saved {Count} article links to database", savedLinks.Count);
-            return savedLinks;
+            _logger.LogInformation("Found {Count} article links", linksResult.Value.Count);
+            return await PersistArticleLinksAsync(linksResult.Value, cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Article extraction failed");
+            _logger.LogError(ex, "Article extraction failed");
             throw;
         }
-        finally
-        {
-            try { driver.Quit(); } catch { /* ignore */ }
-            driver.Dispose();
-        }
     }
 
-    // ─── helpers ───────────────────────────────────────────────────────────
-
-    private static void ApplyStealthScripts(IWebDriver driver)
+    private async Task<FlowResult<bool>> NavigateAsync(
+        ISeleniumFlowBuilder seleniumFlow,
+        string newsUrl,
+        CancellationToken cancellationToken)
     {
-        try
+        _logger.LogInformation("Navigating to homepage");
+        var openResult = await seleniumFlow.OpenAsync(newsUrl, cancellationToken);
+        if (openResult.IsError)
         {
-            ((IJavaScriptExecutor)driver).ExecuteScript(
-                "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+            return FlowResult<bool>.Fail(openResult.FirstError.Description);
+        }
 
-            ((IJavaScriptExecutor)driver).ExecuteScript(@"
-                const getParameter = WebGLRenderingContext.prototype.getParameter;
-                WebGLRenderingContext.prototype.getParameter = function(parameter) {
-                    if (parameter === 37445) return 'Intel Open Source Technology Center';
-                    if (parameter === 37446) return 'Mesa DRI Intel(R) HD Graphics 520 (Skylake GT2)';
-                    return getParameter(parameter);
-                };
-            ");
-        }
-        catch
+        var waitAfterOpenResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+        if (waitAfterOpenResult.IsError)
         {
-            // Best-effort
+            return FlowResult<bool>.Fail(waitAfterOpenResult.FirstError.Description);
         }
+
+        _logger.LogInformation("Page title: {Title}", seleniumFlow.Title);
+
+        var blockedResult = seleniumFlow.IsBlockedPage();
+        if (blockedResult.IsError)
+        {
+            return FlowResult<bool>.Fail(blockedResult.FirstError.Description);
+        }
+
+        if (blockedResult.Value)
+        {
+            _logger.LogWarning("Bot detection detected");
+            var waitBlockedResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+            if (waitBlockedResult.IsError)
+            {
+                return FlowResult<bool>.Fail(waitBlockedResult.FirstError.Description);
+            }
+
+            blockedResult = seleniumFlow.IsBlockedPage();
+            if (blockedResult.IsError)
+            {
+                return FlowResult<bool>.Fail(blockedResult.FirstError.Description);
+            }
+
+            if (blockedResult.Value)
+            {
+                var refreshResult = await seleniumFlow.RefreshAsync(cancellationToken);
+                if (refreshResult.IsError)
+                {
+                    return FlowResult<bool>.Fail(refreshResult.FirstError.Description);
+                }
+
+                _logger.LogInformation("Page refreshed");
+
+                var waitAfterRefreshResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+                if (waitAfterRefreshResult.IsError)
+                {
+                    return FlowResult<bool>.Fail(waitAfterRefreshResult.FirstError.Description);
+                }
+            }
+        }
+
+        var waitBeforeConsentResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
+        if (waitBeforeConsentResult.IsError)
+        {
+            return FlowResult<bool>.Fail(waitBeforeConsentResult.FirstError.Description);
+        }
+
+        var consentResult = await seleniumFlow.AcceptConsentAsync(cancellationToken);
+        if (consentResult.IsError)
+        {
+            return FlowResult<bool>.Fail(consentResult.FirstError.Description);
+        }
+
+        var waitAfterConsentResult = await seleniumFlow.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+        if (waitAfterConsentResult.IsError)
+        {
+            return FlowResult<bool>.Fail(waitAfterConsentResult.FirstError.Description);
+        }
+
+        return FlowResult<bool>.Success(true);
     }
 
-    private static bool IsBlockedPage(IWebDriver driver)
+    private FlowResult<List<string>> CollectArticleLinks(ISeleniumFlowBuilder seleniumFlow)
     {
-        try
+        var pageUri = new Uri(seleniumFlow.CurrentUrl);
+        var htmlResult = seleniumFlow.GetHtml();
+        if (htmlResult.IsError)
         {
-            return driver.PageSource.Contains("captcha", StringComparison.OrdinalIgnoreCase)
-                || driver.PageSource.Contains("Verify you are human", StringComparison.OrdinalIgnoreCase)
-                || driver.PageSource.Contains("Please verify you are a human", StringComparison.OrdinalIgnoreCase)
-                || driver.Title.Contains("Access Denied", StringComparison.OrdinalIgnoreCase)
-                || driver.Title.Contains("Just a moment", StringComparison.OrdinalIgnoreCase);
+            return FlowResult<List<string>>.Fail(htmlResult.FirstError.Description);
         }
-        catch { return false; }
-    }
 
-    private static void TryAcceptConsentBanner(IWebDriver driver)
-    {
-        try
+        _logger.LogInformation("Page source size: {Bytes} bytes", htmlResult.Value.Length);
+
+        var allLinksResult = seleniumFlow.GetElements(By.TagName("a"));
+        if (allLinksResult.IsError)
         {
-            var buttons = driver.FindElements(By.TagName("button"));
-            var acceptButton = buttons.FirstOrDefault(b =>
+            return FlowResult<List<string>>.Fail(allLinksResult.FirstError.Description);
+        }
+
+        _logger.LogInformation("Total <a> tags found: {Count}", allLinksResult.Value.Count);
+
+        var articleLinks = allLinksResult.Value
+            .Select(linkElement =>
             {
                 try
                 {
-                    var text = b.Text;
-                    return text.Contains("Accept", StringComparison.OrdinalIgnoreCase)
-                        || text.Contains("Agree", StringComparison.OrdinalIgnoreCase)
-                        || text.Contains("Allow All", StringComparison.OrdinalIgnoreCase)
-                        || text.Contains("Zaakceptuj", StringComparison.OrdinalIgnoreCase)
-                        || text.Contains("Akceptuję", StringComparison.OrdinalIgnoreCase)
-                        || text.Contains("Approve", StringComparison.OrdinalIgnoreCase)
-                        || text.Contains("Zgadzam się", StringComparison.OrdinalIgnoreCase)
-                        || text.Contains("Got it", StringComparison.OrdinalIgnoreCase);
+                    return linkElement.GetAttribute("href");
                 }
-                catch { return false; }
-            });
+                catch
+                {
+                    return null;
+                }
+            })
+            .Select(href => NormalizeToAbsoluteUrl(pageUri, href))
+            .Where(IsArticleLink)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToList();
 
-            if (acceptButton?.Displayed == true)
-            {
-                acceptButton.Click();
-                Task.Delay(5_000).Wait();
-            }
-        }
-        catch
+        if (articleLinks.Count == 0)
         {
-            // Optional
+            _logger.LogInformation("Running html fallback scan");
+            articleLinks = ExtractLinksFromHtml(pageUri, htmlResult.Value)
+                .Where(IsArticleLink)
+                .OfType<string>()
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToList();
         }
+
+        return FlowResult<List<string>>.Success(articleLinks);
+    }
+
+    private async Task<IReadOnlyList<ArticleLink>> PersistArticleLinksAsync(
+        IReadOnlyList<string> articleLinks,
+        CancellationToken cancellationToken)
+    {
+        var savedLinks = new List<ArticleLink>();
+        foreach (var link in articleLinks)
+        {
+            var dateResult = ParsePublishedDate(link);
+            if (!dateResult.IsSuccess)
+            {
+                continue;
+            }
+
+            var isTradeUseful = await _ollamaClient.AssessTradingUsefulnessAsync(
+                articleLink: link,
+                source: Source,
+                publishedAtUtc: dateResult.Value,
+                cancellationToken: cancellationToken);
+
+            var articleLink = ArticleLink.Create(
+                url: link,
+                publishedAtUtc: dateResult.Value,
+                source: Source,
+                extractedAtUtc: DateTime.UtcNow,
+                isTradeUseful: isTradeUseful);
+
+            await _repository.SaveArticleLinkAsync(articleLink, cancellationToken);
+            savedLinks.Add(articleLink);
+            _logger.LogInformation("Saved: {Url} (IsTradeUseful={IsTradeUseful})", link, isTradeUseful);
+        }
+
+        _logger.LogInformation("Saved {Count} article links to database", savedLinks.Count);
+        return savedLinks;
+    }
+
+    private static FlowResult<DateTime> ParsePublishedDate(string link)
+    {
+        if (string.IsNullOrWhiteSpace(link))
+        {
+            return FlowResult<DateTime>.Fail("Link is empty.");
+        }
+
+        var dateMatch = Regex.Match(link, @"(\d{4})-(\d{2})-(\d{2})");
+        if (!dateMatch.Success)
+        {
+            return FlowResult<DateTime>.Fail("No date segment in link.");
+        }
+
+        var dateValue = $"{dateMatch.Groups[1].Value}-{dateMatch.Groups[2].Value}-{dateMatch.Groups[3].Value}";
+        if (!DateTime.TryParseExact(
+                dateValue,
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal,
+                out var publishedDate))
+        {
+            return FlowResult<DateTime>.Fail("Invalid date format in link.");
+        }
+
+        return FlowResult<DateTime>.Success(publishedDate);
     }
 
     private static string? NormalizeToAbsoluteUrl(Uri pageUri, string? href)
     {
-        if (string.IsNullOrWhiteSpace(href)) return null;
-        if (Uri.TryCreate(href, UriKind.Absolute, out var absolute)) return absolute.AbsoluteUri;
-        if (!href.StartsWith('/')) return null;
+        if (string.IsNullOrWhiteSpace(href))
+        {
+            return null;
+        }
+
+        if (Uri.TryCreate(href, UriKind.Absolute, out var absolute))
+        {
+            return absolute.AbsoluteUri;
+        }
+
+        if (!href.StartsWith('/'))
+        {
+            return null;
+        }
+
         return new Uri(pageUri, href).AbsoluteUri;
     }
 
     private static IReadOnlyList<string> ExtractLinksFromHtml(Uri pageUri, string html)
     {
-        if (string.IsNullOrWhiteSpace(html)) return Array.Empty<string>();
+        if (string.IsNullOrWhiteSpace(html))
+        {
+            return Array.Empty<string>();
+        }
 
         var results = new HashSet<string>(StringComparer.Ordinal);
 
-        foreach (Match m in Regex.Matches(html, "href=\"(?<u>[^\"]+)\"", RegexOptions.IgnoreCase))
+        foreach (Match match in Regex.Matches(html, "href=\"(?<u>[^\"]+)\"", RegexOptions.IgnoreCase))
         {
-            var normalized = NormalizeToAbsoluteUrl(pageUri, m.Groups["u"].Value);
-            if (normalized != null) results.Add(normalized);
+            var normalized = NormalizeToAbsoluteUrl(pageUri, match.Groups["u"].Value);
+            if (normalized != null)
+            {
+                results.Add(normalized);
+            }
         }
 
-        foreach (Match m in Regex.Matches(html, @"https://www\.reuters\.com/[A-Za-z0-9/_\-\.?=&%]+", RegexOptions.IgnoreCase))
-            results.Add(m.Value);
+        foreach (Match match in Regex.Matches(html, @"https://www\.reuters\.com/[A-Za-z0-9/_\-\.?=&%]+", RegexOptions.IgnoreCase))
+        {
+            results.Add(match.Value);
+        }
 
         return results.ToArray();
     }
 
     private static bool IsArticleLink(string? href)
     {
-        if (string.IsNullOrWhiteSpace(href)) return false;
-        if (!Uri.TryCreate(href, UriKind.Absolute, out var uri)) return false;
+        if (string.IsNullOrWhiteSpace(href))
+        {
+            return false;
+        }
+
+        if (!Uri.TryCreate(href, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
 
         if (!uri.Host.Equals("www.reuters.com", StringComparison.OrdinalIgnoreCase)
             && !uri.Host.Equals("reuters.com", StringComparison.OrdinalIgnoreCase))
+        {
             return false;
+        }
 
-        // Must contain a date in YYYY-MM-DD format
         if (!Regex.IsMatch(uri.AbsolutePath, @"\d{4}-\d{2}-\d{2}", RegexOptions.IgnoreCase))
+        {
             return false;
+        }
 
         var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length < 2) return false;
-        if (string.IsNullOrWhiteSpace(segments[^1])) return false;
+        return segments.Length >= 2 && !string.IsNullOrWhiteSpace(segments[^1]);
+    }
 
-        return true;
+    private readonly record struct FlowResult<T>(bool IsSuccess, T Value, string? Error)
+    {
+        public static FlowResult<T> Success(T value) => new(true, value, null);
+        public static FlowResult<T> Fail(string error) => new(false, default!, error);
     }
 }
-
