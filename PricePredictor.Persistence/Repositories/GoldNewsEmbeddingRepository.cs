@@ -93,7 +93,7 @@ DO UPDATE SET
     created_at_utc = EXCLUDED.created_at_utc;
 ";
 
-        AddParameter(command, "@id", Guid.NewGuid());
+        AddParameter(command, "@id", Guid.CreateVersion7());
         AddParameter(command, "@url", url);
         AddParameter(command, "@content", content);
         AddParameter(command, "@embedding", ToVectorLiteral(embedding));
