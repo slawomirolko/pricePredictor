@@ -14,14 +14,17 @@ internal sealed class ArticleService : IArticleService
 {
     private readonly ILogger<ArticleService> _logger;
     private readonly IArticleRepository _repository;
+    private readonly IOllamaArticleExtractionClient _ollamaClient;
     private const string Source = "reuters";
 
     public ArticleService(
         ILogger<ArticleService> logger,
-        IArticleRepository repository)
+        IArticleRepository repository,
+        IOllamaArticleExtractionClient ollamaClient)
     {
         _logger = logger;
         _repository = repository;
+        _ollamaClient = ollamaClient;
     }
 
     public async Task<IReadOnlyList<ArticleLink>> SyncArticleLinksAsync(CancellationToken cancellationToken)
@@ -127,16 +130,22 @@ internal sealed class ArticleService : IArticleService
                     if (DateTime.TryParseExact(dateMatch.Groups[1].Value + "-" + dateMatch.Groups[2].Value + "-" + dateMatch.Groups[3].Value,
                         "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.AssumeUniversal, out var publishedDate))
                     {
+                        var isTradeUseful = await _ollamaClient.AssessTradingUsefulnessAsync(
+                            articleLink: link,
+                            source: Source,
+                            publishedAtUtc: publishedDate,
+                            cancellationToken: cancellationToken);
+
                         var articleLink = ArticleLink.Create(
                             url: link,
                             publishedAtUtc: publishedDate,
                             source: Source,
                             extractedAtUtc: DateTime.UtcNow,
-                            isTradeUseful: false);
+                            isTradeUseful: isTradeUseful);
 
                         await _repository.SaveArticleLinkAsync(articleLink, cancellationToken);
                         savedLinks.Add(articleLink);
-                        _logger.LogInformation("💾 Saved: {Url}", link);
+                        _logger.LogInformation("💾 Saved: {Url} (IsTradeUseful={IsTradeUseful})", link, isTradeUseful);
                     }
                 }
             }
