@@ -1,10 +1,5 @@
 # Copilot Instructions for PricePredictor
 
-## APPLICATION MODELS
-- ✅ All models in `PricePredictor.Application` must set values only via static factory methods
-- ❌ Do not expose public setters or public constructors for creating mutable state
-- ✅ Prefer private constructors + static `Create(...)`/`From(...)` methods that enforce invariants
-
 ## NO MARKDOWN GENERATION
 - ❌ DO NOT create markdown files automatically
 - ❌ DO NOT write documentation files
@@ -150,7 +145,7 @@
 - ✅ API → Application
 - ✅ API → Infrastructure
 - ✅ Application defines interfaces
-- ✅ Never: Application → API or Application → Infrastructure
+- ❌ Never: Application → API or Application → Infrastructure
 
 ## TEMP FILE CLEANUP
 - ✅ Remove all temporary `.txt` and `.log` files created for the task before finishing
@@ -172,3 +167,8 @@
 - ✅ All IDs (except enums) must use `Guid` generated as GUIDv7
 - ❌ Do not introduce new `int` or legacy random `Guid` IDs for entities/models
 - ✅ Generate new IDs with `Guid.CreateVersion7()`
+
+## APPLICATION MODELS
+- ✅ All models in `PricePredictor.Application` must set values only via static factory methods
+- ❌ Do not expose public setters or public constructors for creating mutable state
+- ✅ Prefer private constructors + static `Create(...)`/`From(...)` methods that enforce invariants
