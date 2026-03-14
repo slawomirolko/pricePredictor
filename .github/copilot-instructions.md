@@ -4,6 +4,12 @@
 - ✅ Static factory methods in models must return `ErrorOr<TModel>` (for example `ErrorOr<ArticleLink>`)
 - ❌ Do not throw exceptions for validation/domain errors from model factory methods; return `ErrorOr` errors instead
 
+## PROMPT CENTRALIZATION
+- ✅ Store all prompt text used in `.cs` files in `PricePredictor.Application/PromptHelper.cs`
+- ✅ Reuse prompt constants/builders from `PromptHelper` instead of duplicating prompt strings in services/clients
+- ✅ Keep `NormalizeForEmbedding` in `PromptHelper` and call it from other classes
+- ❌ Do not declare prompt literals in other `.cs` files unless explicitly requested
+
 ## ERROR HANDLING (APPLICATION LAYERS)
 - ✅ Use `ErrorOr<T>` to return expected/domain/application errors in Application layer services and domain logic
 - ❌ Do not use exceptions for normal business-rule failures in Application layer

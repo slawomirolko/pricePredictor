@@ -45,7 +45,7 @@ public sealed class ArticleContentExtractionService : IArticleContentExtractionS
             !string.IsNullOrWhiteSpace(paragraphText) ? "paragraph divs" : "Selenium body text");
 
         var llmResult = await _extractionClient.ExtractMainContentAsync(
-            ArticlePreparingEmbeddingPrompts.BuildEmbeddingPrompt(payload),
+            PromptHelper.BuildArticleExtractionSystemPrompt(payload),
             payload,
             articleTitle,
             cancellationToken);

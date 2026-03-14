@@ -17,6 +17,7 @@ public class PricePredictorDbContext : DbContext
     public DbSet<AppModels.Commodity> Commodities { get; set; } = null!;
     public DbSet<AppModels.VolatilityDaily> Volatilities { get; set; } = null!;
     public DbSet<AppModels.ArticleLink> ArticleLinks { get; set; } = null!;
+    public DbSet<AppModels.Article> Articles { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -12,49 +12,43 @@ public sealed class ArticleLink
     private ArticleLink(
         Guid id,
         string url,
-        DateTime publishedAtUtc,
+        DateTime readAt,
         string source,
-        DateTime? extractedAtUtc,
-        bool isTradeUseful)
+        bool isProcessed)
     {
         Id = id;
         Url = url;
-        PublishedAtUtc = DateTime.SpecifyKind(publishedAtUtc, DateTimeKind.Utc);
+        ReadAt = DateTime.SpecifyKind(readAt, DateTimeKind.Utc);
         Source = source;
-        ExtractedAtUtc = extractedAtUtc;
-        IsTradeUseful = isTradeUseful;
+        IsProcessed = isProcessed;
     }
 
     public Guid Id { get; private set; }
     public string Url { get; private set; } = string.Empty;
-    public DateTime PublishedAtUtc { get; private set; }
+    public DateTime ReadAt { get; private set; }
     public string Source { get; private set; } = string.Empty;
-    public DateTime? ExtractedAtUtc { get; private set; }
-    public bool IsTradeUseful { get; private set; }
+    public bool IsProcessed { get; private set; }
 
     public static ArticleLink Create(
         string url,
-        DateTime publishedAtUtc,
+        DateTime readAt,
         string source,
-        DateTime? extractedAtUtc = null,
-        bool isTradeUseful = false)
+        bool isProcessed = false)
     {
         return CreateFrom(
             Guid.CreateVersion7(),
             url,
-            publishedAtUtc,
+            readAt,
             source,
-            extractedAtUtc,
-            isTradeUseful);
+            isProcessed);
     }
 
     public static ArticleLink CreateFrom(
         Guid id,
         string url,
-        DateTime publishedAtUtc,
+        DateTime readAt,
         string source,
-        DateTime? extractedAtUtc,
-        bool isTradeUseful)
+        bool isProcessed)
     {
         if (id == Guid.Empty)
         {
@@ -74,9 +68,8 @@ public sealed class ArticleLink
         return new ArticleLink(
             id,
             url,
-            publishedAtUtc,
+            readAt,
             source,
-            extractedAtUtc,
-            isTradeUseful);
+            isProcessed);
     }
 }

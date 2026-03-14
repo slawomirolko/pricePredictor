@@ -6,6 +6,12 @@
 - ❌ DO NOT create README, SUMMARY, or INDEX files
 - ✅ Only create markdown if explicitly requested: "create a file called X.md"
 
+## PROMPT CENTRALIZATION
+- ✅ Store all prompt text used in `.cs` files in `PricePredictor.Application/PromptHelper.cs`
+- ✅ Reuse prompt constants/builders from `PromptHelper` instead of duplicating prompt strings in services/clients
+- ✅ Keep `NormalizeForEmbedding` in `PromptHelper` and call it from other classes
+- ❌ Do not declare prompt literals in other `.cs` files unless explicitly requested
+
 ## FOCUS ON CODE ONLY
 - ✅ Modify code files (.cs, .csproj, .json, .xml, etc.)
 - ✅ Create executable scripts (.ps1, .bat)

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using PricePredictor.Application;
 using PricePredictor.Application.Finance;
 using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Application.Models;

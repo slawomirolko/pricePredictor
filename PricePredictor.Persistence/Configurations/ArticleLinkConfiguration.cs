@@ -14,10 +14,9 @@ public sealed class ArticleLinkConfiguration : IEntityTypeConfiguration<ArticleL
         builder.ToTable("ArticleLinks");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Url).IsRequired();
-        builder.Property(e => e.PublishedAtUtc).IsRequired();
+        builder.Property(e => e.ReadAt).IsRequired();
         builder.Property(e => e.Source).IsRequired();
-        builder.Property(e => e.ExtractedAtUtc).IsRequired(false);
-        builder.Property(e => e.IsTradeUseful).IsRequired();
+        builder.Property(e => e.IsProcessed).IsRequired();
         builder.HasIndex(e => e.Url).IsUnique();
     }
 }

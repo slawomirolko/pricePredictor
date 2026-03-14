@@ -13,7 +13,7 @@ public sealed class SyncReutersArticleLinksTests : IntegrationTest
     }
 
     [Fact]
-    public async Task SyncReutersArticleLinks_whenExecuted_storesTradeUsefulnessValues()
+    public async Task SyncReutersArticleLinks_whenExecuted_storesArticleLinks()
     {
         using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
@@ -28,11 +28,10 @@ public sealed class SyncReutersArticleLinksTests : IntegrationTest
         var storedLinks = await GetStoredArticleLinksBySourceAsync("reuters", cancellation.Token);
         storedLinks.Count.ShouldBe(extractedLinks.Count);
 
-        var extractedTradeUsefulnessByUrl = extractedLinks.ToDictionary(x => x.Url, x => x.IsTradeUseful);
+        var extractedUrlSet = extractedLinks.Select(x => x.Url).ToHashSet();
         foreach (var storedLink in storedLinks)
         {
-            extractedTradeUsefulnessByUrl.ContainsKey(storedLink.Url).ShouldBeTrue();
-            storedLink.IsTradeUseful.ShouldBe(extractedTradeUsefulnessByUrl[storedLink.Url]);
+            extractedUrlSet.Contains(storedLink.Url).ShouldBeTrue();
         }
     }
 }

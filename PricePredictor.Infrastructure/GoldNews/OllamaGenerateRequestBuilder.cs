@@ -1,4 +1,6 @@
 using OllamaSharp.Models;
+using PricePredictor.Application;
+using PricePredictor.Application.News;
 
 namespace PricePredictor.Infrastructure.GoldNews;
 
@@ -25,7 +27,7 @@ public sealed class OllamaGenerateRequestBuilder
 
     public OllamaGenerateRequestBuilder WithUserHtmlContent(string htmlContent)
     {
-        _userPrompt = $"HTML_CONTENT:\n{htmlContent}";
+        _userPrompt = $"{PromptHelper.HtmlContentLabelPrefix}{htmlContent}";
         return this;
     }
 
@@ -49,4 +51,3 @@ public sealed class OllamaGenerateRequestBuilder
         };
     }
 }
-

@@ -11,18 +11,15 @@ internal sealed class ArticleService : IArticleService
     private const string Source = "reuters";
     private readonly ILogger<ArticleService> _logger;
     private readonly IArticleRepository _repository;
-    private readonly IOllamaArticleExtractionClient _ollamaClient;
     private readonly ISeleniumFlowBuilderFactory _seleniumFlowBuilderFactory;
 
     public ArticleService(
         ILogger<ArticleService> logger,
         IArticleRepository repository,
-        IOllamaArticleExtractionClient ollamaClient,
         ISeleniumFlowBuilderFactory seleniumFlowBuilderFactory)
     {
         _logger = logger;
         _repository = repository;
-        _ollamaClient = ollamaClient;
         _seleniumFlowBuilderFactory = seleniumFlowBuilderFactory;
     }
 
@@ -202,22 +199,14 @@ internal sealed class ArticleService : IArticleService
                 continue;
             }
 
-            var isTradeUseful = await _ollamaClient.AssessTradingUsefulnessAsync(
-                articleLink: link,
-                source: Source,
-                publishedAtUtc: dateResult.Value,
-                cancellationToken: cancellationToken);
-
             var articleLink = ArticleLink.Create(
                 url: link,
-                publishedAtUtc: dateResult.Value,
-                source: Source,
-                extractedAtUtc: DateTime.UtcNow,
-                isTradeUseful: isTradeUseful);
+                readAt: dateResult.Value,
+                source: Source);
 
             await _repository.SaveArticleLinkAsync(articleLink, cancellationToken);
             savedLinks.Add(articleLink);
-            _logger.LogInformation("Saved: {Url} (IsTradeUseful={IsTradeUseful})", link, isTradeUseful);
+            _logger.LogInformation("Saved: {Url}", link);
         }
 
         _logger.LogInformation("Saved {Count} article links to database", savedLinks.Count);

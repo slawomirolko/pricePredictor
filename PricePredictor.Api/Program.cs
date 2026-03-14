@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
-using OllamaSharp;
 using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Application;
@@ -65,7 +64,8 @@ builder.Services.AddSingleton(sp =>
     return new TradingIndicatorNotificationService(ntfyClient, weatherService, ntfySettings.Topic);
 });
 
-builder.Services.AddHostedService<GoldNewsBackgroundService>();
+builder.Services.AddHostedService<ArticlesFinderHostedService>();
+builder.Services.AddHostedService<ArticlesReaderHostedService>();
 builder.Services.AddHostedService<YahooFinanceBackgroundService>();
 var app = builder.Build();
 

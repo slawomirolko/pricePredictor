@@ -37,6 +37,7 @@ public static class PersistenceExtensions
         services.AddScoped<IVolatilityRepository, VolatilityRepository>();
         services.AddScoped<IGoldNewsEmbeddingRepository, GoldNewsEmbeddingRepository>();
         services.AddScoped<IArticleRepository, ArticleRepository>();
+        services.AddScoped<IArticleReaderRepository, ArticleReaderRepository>();
 
         return services;
     }

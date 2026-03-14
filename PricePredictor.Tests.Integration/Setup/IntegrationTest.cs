@@ -120,7 +120,7 @@ public abstract class IntegrationTest : IAsyncLifetime
         return await dbContext.ArticleLinks
             .AsNoTracking()
             .Where(x => x.Source == source)
-            .OrderByDescending(x => x.PublishedAtUtc)
+            .OrderByDescending(x => x.ReadAt)
             .ToListAsync(cancellationToken);
     }
 

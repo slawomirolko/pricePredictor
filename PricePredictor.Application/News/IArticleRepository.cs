@@ -16,6 +16,9 @@ public interface IArticleRepository
     /// Gets all saved article links.
     /// </summary>
     Task<IReadOnlyList<ArticleLink>> GetAllLinksAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Marks links as processed when a related scanned article already exists.
+    /// </summary>
+    Task<int> MarkProcessedFromScannedArticlesAsync(CancellationToken cancellationToken);
 }
-
-
