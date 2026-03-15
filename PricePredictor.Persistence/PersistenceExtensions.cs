@@ -34,7 +34,9 @@ public static class PersistenceExtensions
                 $"Missing required configuration '{PersistenceDefaultConnectionSettings.SectionName}:ConnectionString'.");
         }
 
-        services.AddDbContext<PricePredictorDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddDbContext<PricePredictorDbContext>(
+            options => options.UseNpgsql(connectionString),
+            optionsLifetime: ServiceLifetime.Singleton);
         services.AddDbContextFactory<PricePredictorDbContext>(options => options.UseNpgsql(connectionString));
 
         services.AddScoped<IVolatilityRepository, VolatilityBaseRepository>();
@@ -67,9 +69,7 @@ public static class PersistenceExtensions
             try
             {
                 using var scope = services.CreateScope();
-                using var dbContext = scope.ServiceProvider
-                    .GetRequiredService<IDbContextFactory<PricePredictorDbContext>>()
-                    .CreateDbContext();
+                var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
                 var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
 
                 if (pendingMigrations.Count > 0)

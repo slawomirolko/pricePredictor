@@ -22,6 +22,21 @@ internal sealed class ArticleLinksRepository : AppNews.IArticleReaderRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<AppModels.ArticleLink>> GetLinksByIdsAsync(
+        IReadOnlyCollection<Guid> articleLinkIds,
+        CancellationToken cancellationToken)
+    {
+        if (articleLinkIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await _context.ArticleLinks
+            .Where(e => articleLinkIds.Contains(e.Id))
+            .OrderBy(e => e.ReadAt)
+            .ToListAsync(cancellationToken);
+    }
+
     // TODO to remove in next refactoring
     public async Task MarkLinkAsProcessedAsync(Guid articleLinkId, CancellationToken cancellationToken)
     {

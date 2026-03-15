@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PricePredictor.Tests.News;
+namespace PricePredictor.Tests.Integration.News;
 
 /// <summary>
 /// Live Selenium test (VISIBLE browser) that opens https://www.reuters.com and reads article links.
@@ -257,6 +257,3 @@ public sealed class ReutersSeleniumLiveTests : IDisposable
         _driver.Dispose();
     }
 }
-
-
-

@@ -13,6 +13,13 @@ public interface IArticleReaderRepository
     Task<IReadOnlyList<ArticleLink>> GetUnprocessedLinksAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// Returns ArticleLinks matching the provided IDs.
+    /// </summary>
+    Task<IReadOnlyList<ArticleLink>> GetLinksByIdsAsync(
+        IReadOnlyCollection<Guid> articleLinkIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Marks an ArticleLink as processed.
     /// </summary>
     Task MarkLinkAsProcessedAsync(Guid articleLinkId, CancellationToken cancellationToken);

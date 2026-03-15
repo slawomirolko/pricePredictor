@@ -59,18 +59,42 @@ public sealed class ArticlesReaderHostedService : BackgroundService
         var seleniumFactory = scope.ServiceProvider.GetRequiredService<ISeleniumFlowBuilderFactory>();
 
         var unprocessedLinks = await unitOfWork.ArticleLinks.GetUnprocessedLinksAsync(stoppingToken);
+        var unknownTradingUsefulnessLinkIds = await unitOfWork.Articles
+            .GetArticleLinkIdsWithUnknownTradingUsefulnessAsync(stoppingToken);
+        var usefulTradingMissingSummaryLinkIds = await unitOfWork.Articles
+            .GetArticleLinkIdsWithUsefulTradingMissingSummaryAsync(stoppingToken);
 
-        if (unprocessedLinks.Count == 0)
+        var allCandidateLinkIds = unprocessedLinks
+            .Select(link => link.Id)
+            .Concat(unknownTradingUsefulnessLinkIds)
+            .Concat(usefulTradingMissingSummaryLinkIds)
+            .Distinct()
+            .ToArray();
+
+        if (allCandidateLinkIds.Length == 0)
         {
-            _logger.LogInformation("No unprocessed article links found.");
+            _logger.LogInformation("No article links requiring processing found.");
             return;
         }
 
-        _logger.LogInformation("Processing {Count} unprocessed article links.", unprocessedLinks.Count);
+        var linksToProcess = await unitOfWork.ArticleLinks.GetLinksByIdsAsync(allCandidateLinkIds, stoppingToken);
+
+        if (linksToProcess.Count == 0)
+        {
+            _logger.LogInformation("No article links found for the candidate IDs.");
+            return;
+        }
+
+        _logger.LogInformation(
+            "Processing {Count} article links (Unprocessed={UnprocessedCount}, UnknownUsefulness={UnknownUsefulnessCount}, UsefulMissingSummary={UsefulMissingSummaryCount}).",
+            linksToProcess.Count,
+            unprocessedLinks.Count,
+            unknownTradingUsefulnessLinkIds.Count,
+            usefulTradingMissingSummaryLinkIds.Count);
 
         using var selenium = seleniumFactory.Create(headless: false);
 
-        foreach (var link in unprocessedLinks)
+        foreach (var link in linksToProcess)
         {
             if (stoppingToken.IsCancellationRequested)
             {

@@ -50,11 +50,7 @@ internal static class IntegrationTestFactoryExtensions
                 services.RemoveAll<IHostedService>();
                 services.RemoveAll<IGatewayService>();
 
-                // Register DbContext factory instead of direct DbContext
-                services.AddDbContextFactory<PricePredictorDbContext>(options =>
-                    options.UseNpgsql(connectionString));
-
-                // Register persistence repositories
+                // Register persistence repositories and EF setup
                 services.AddPersistence(context.Configuration);
 
                 // Register infrastructure clients and settings

@@ -37,6 +37,9 @@ public class PostgresContainerFixture : IAsyncLifetime
 
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddDbContext<PricePredictorDbContext>(
+            options => options.UseNpgsql(ConnectionString),
+            optionsLifetime: ServiceLifetime.Singleton);
         services.AddDbContextFactory<PricePredictorDbContext>(options =>
             options.UseNpgsql(ConnectionString));
 

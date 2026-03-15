@@ -15,4 +15,8 @@ public interface IArticleScanRepository
     Task<IReadOnlySet<Guid>> GetScannedArticleLinkIdsAsync(
         IReadOnlyCollection<Guid> articleLinkIds,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlySet<Guid>> GetArticleLinkIdsWithUnknownTradingUsefulnessAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlySet<Guid>> GetArticleLinkIdsWithUsefulTradingMissingSummaryAsync(CancellationToken cancellationToken);
 }

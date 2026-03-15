@@ -26,6 +26,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Shouldly" />
+    <PackageReference Include="Selenium.WebDriver" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,4 +50,3 @@
   </ItemGroup>
 
 </Project>
-

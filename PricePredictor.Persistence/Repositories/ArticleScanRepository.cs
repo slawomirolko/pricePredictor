@@ -59,4 +59,28 @@ internal sealed class ArticlesRepository : AppNews.IArticleScanRepository
 
         return ids.ToHashSet();
     }
+
+    public async Task<IReadOnlySet<Guid>> GetArticleLinkIdsWithUnknownTradingUsefulnessAsync(CancellationToken cancellationToken)
+    {
+        var ids = await _context.Articles
+            .AsNoTracking()
+            .Where(x => x.IsTradingUseful == null)
+            .Select(x => x.ArticleLinkId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return ids.ToHashSet();
+    }
+
+    public async Task<IReadOnlySet<Guid>> GetArticleLinkIdsWithUsefulTradingMissingSummaryAsync(CancellationToken cancellationToken)
+    {
+        var ids = await _context.Articles
+            .AsNoTracking()
+            .Where(x => x.IsTradingUseful == true && string.IsNullOrWhiteSpace(x.Summary))
+            .Select(x => x.ArticleLinkId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return ids.ToHashSet();
+    }
 }
