@@ -19,5 +19,6 @@ public sealed record GoldNewsSettings
     public string? CloudOllamaApiKey { get; init; }
     public bool UseCloud { get; set; } = true;
     public bool Headless { get; init; } = true;
-    public int ArticlesReaderInterval { get; init; } = 1;
+    public int ArticlesReaderMinDelaySeconds { get; init; } = 20;
+    public int ArticlesReaderMaxDelaySeconds { get; init; } = 30;
 }

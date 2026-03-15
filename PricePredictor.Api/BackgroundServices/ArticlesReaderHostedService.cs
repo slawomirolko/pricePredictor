@@ -41,13 +41,26 @@ public sealed class ArticlesReaderHostedService : BackgroundService
                 _logger.LogError(ex, "Error during article reading cycle");
             }
 
-            var intervalMinutes = _settings.ArticlesReaderInterval <= 0 ? 1 : _settings.ArticlesReaderInterval;
-            var interval = TimeSpan.FromMinutes(intervalMinutes);
+            var interval = CalculateWaitingTime();
             _logger.LogInformation("Articles reader sleeping for {Interval}", interval);
             await Task.Delay(interval, stoppingToken);
         }
 
         _logger.LogInformation("Articles reader background service stopping.");
+    }
+
+    private TimeSpan CalculateWaitingTime()
+    {
+        var minDelaySeconds = _settings.ArticlesReaderMinDelaySeconds <= 0 ? 20 : _settings.ArticlesReaderMinDelaySeconds;
+        var maxDelaySeconds = _settings.ArticlesReaderMaxDelaySeconds <= 0 ? 30 : _settings.ArticlesReaderMaxDelaySeconds;
+        if (minDelaySeconds > maxDelaySeconds)
+        {
+            (minDelaySeconds, maxDelaySeconds) = (maxDelaySeconds, minDelaySeconds);
+        }
+
+        var delaySeconds = Random.Shared.Next(minDelaySeconds, maxDelaySeconds + 1);
+        var interval = TimeSpan.FromSeconds(delaySeconds);
+        return interval;
     }
 
     private async Task ProcessUnprocessedLinksAsync(CancellationToken stoppingToken)
