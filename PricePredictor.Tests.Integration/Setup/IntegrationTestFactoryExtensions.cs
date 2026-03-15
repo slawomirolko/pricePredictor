@@ -27,7 +27,7 @@ internal static class IntegrationTestFactoryExtensions
                 config.AddJsonFile(testSettingsPath, optional: false);
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["ConnectionStrings:DefaultConnection"] = connectionString,
+                    ["PersistenceDefaultConnection:ConnectionString"] = connectionString,
                     ["GoldNews:UseCloud"] = "true",
                     ["GoldNews:CloudOllamaUrl"] = "https://ollama.com",
                     ["GoldNews:CloudOllamaApiKey"] = cloudApiKey

@@ -130,6 +130,12 @@
 - ✅ Add settings sections to `appsettings.json`, `appsettings.Development.json`, and `appsettings.Test.json`
 - ✅ Wire settings in `Program.cs` with `Configure<T>(builder.Configuration.GetSection(T.SectionName))`
 
+## CONNECTION STRINGS
+- ✅ All connection strings must be loaded from configuration (`appsettings*.json`) or user secrets/environment secrets
+- ❌ Do not hardcode any connection string value in code
+- ✅ Each connection string must have its own dedicated settings type/section, following the same settings pattern as clients (`sealed record`, `SectionName`, `Configure<T>(GetSection(...))`)
+- ✅ Apply this rule to all connection strings across the entire solution
+
 ## ARCHITECTURE LAYERS
 - ✅ **Application Layer** (`PricePredictor.Application`):
   - Contains all service interfaces (e.g., `IWeatherService`, `IGatewayService`)

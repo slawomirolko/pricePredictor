@@ -6,17 +6,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 namespace PricePredictor.Persistence.Migrations;
 
 [DbContext(typeof(PricePredictorDbContext))]
-[Migration("20260314223000_EnsureGoldNewsEmbeddingArticleUpsert")]
-public partial class EnsureGoldNewsEmbeddingArticleUpsert : Migration
+[Migration("20260315103000_EnsureGoldNewsEmbeddingArticleIdUniqueIndex")]
+public partial class EnsureGoldNewsEmbeddingArticleIdUniqueIndex : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.Sql(@"
-ALTER TABLE IF EXISTS gold_news_embeddings
-    ADD COLUMN IF NOT EXISTS article_id uuid,
-    ADD COLUMN IF NOT EXISTS read_at_utc timestamptz,
-    ADD COLUMN IF NOT EXISTS summary text;");
-
         migrationBuilder.Sql(@"
 WITH ranked AS (
     SELECT ctid,
@@ -30,6 +24,7 @@ WHERE g.ctid = r.ctid
   AND r.rn > 1;");
 
         migrationBuilder.Sql(@"
+DROP INDEX IF EXISTS ix_gold_news_embeddings_article_id;
 CREATE UNIQUE INDEX IF NOT EXISTS ix_gold_news_embeddings_article_id
 ON gold_news_embeddings (article_id);");
     }

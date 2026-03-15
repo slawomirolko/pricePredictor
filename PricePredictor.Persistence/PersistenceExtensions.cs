@@ -26,8 +26,13 @@ public static class PersistenceExtensions
     /// </remarks>
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration["ConnectionStrings:DefaultConnection"] ??
-                               "Server=localhost;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;";
+        var connectionString = configuration[$"{PersistenceDefaultConnectionSettings.SectionName}:ConnectionString"];
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                $"Missing required configuration '{PersistenceDefaultConnectionSettings.SectionName}:ConnectionString'.");
+        }
 
         services.AddDbContext<PricePredictorDbContext>(options => options.UseNpgsql(connectionString));
         services.AddDbContextFactory<PricePredictorDbContext>(options => options.UseNpgsql(connectionString));
