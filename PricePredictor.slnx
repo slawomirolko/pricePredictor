@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yaml" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Protos/">
+    <File Path="Protos/gateway.proto" />
+  </Folder>
+  <Project Path="PricePredictor.Api/PricePredictor.Api.csproj" />
+  <Project Path="PricePredictor.Application/PricePredictor.Application.csproj" />
+  <Project Path="PricePredictor.Infrastructure/PricePredictor.Infrastructure.csproj" />
+  <Project Path="PricePredictor.Persistence/PricePredictor.Persistence.csproj" />
+  <Project Path="PricePredictor.Tests.Integration/PricePredictor.Tests.Integration.csproj" />
+  <Project Path="PricePredictor.Tests/PricePredictor.Tests.csproj" />
+</Solution>
+

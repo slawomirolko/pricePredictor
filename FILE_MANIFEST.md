@@ -3,63 +3,63 @@
 ## Infrastructure Project Files
 
 ### Project Configuration
-- `PricePredicator.Infrastructure/PricePredicator.Infrastructure.csproj`
+- `PricePredictor.Infrastructure/PricePredictor.Infrastructure.csproj`
 
 ### Database Context
-- `PricePredicator.Infrastructure/Data/PricePredictorDbContext.cs`
-- `PricePredicator.Infrastructure/Data/PricePredictorDbContextFactory.cs`
+- `PricePredictor.Infrastructure/Data/PricePredictorDbContext.cs`
+- `PricePredictor.Infrastructure/Data/PricePredictorDbContextFactory.cs`
 
 ### Entity Models
-- `PricePredicator.Infrastructure/Models/VolatilityGold.cs`
-- `PricePredicator.Infrastructure/Models/VolatilitySilver.cs`
-- `PricePredicator.Infrastructure/Models/VolatilityNaturalGas.cs`
-- `PricePredicator.Infrastructure/Models/VolatilityOil.cs`
+- `PricePredictor.Infrastructure/Models/VolatilityGold.cs`
+- `PricePredictor.Infrastructure/Models/VolatilitySilver.cs`
+- `PricePredictor.Infrastructure/Models/VolatilityNaturalGas.cs`
+- `PricePredictor.Infrastructure/Models/VolatilityOil.cs`
 
 ### EF Core Migrations
-- `PricePredicator.Infrastructure/Migrations/20260303000000_InitialCreate.cs`
-- `PricePredicator.Infrastructure/Migrations/20260303000001_InitialCreate.Designer.cs`
-- `PricePredicator.Infrastructure/Migrations/PricePredictorDbContextModelSnapshot.cs`
+- `PricePredictor.Infrastructure/Migrations/20260303000000_InitialCreate.cs`
+- `PricePredictor.Infrastructure/Migrations/20260303000001_InitialCreate.Designer.cs`
+- `PricePredictor.Infrastructure/Migrations/PricePredictorDbContextModelSnapshot.cs`
 
 ---
 
 ## App Project Files
 
 ### Project Configuration (Updated)
-- `PricePredicator.App/PricePredicator.App.csproj` ⚙️ **UPDATED**
+- `PricePredictor.App/PricePredictor.App.csproj` ⚙️ **UPDATED**
 
 ### Finance Module - HTTP Client
-- `PricePredicator.App/Finance/YahooFinanceClient.cs` ✨ **NEW**
+- `PricePredictor.App/Finance/YahooFinanceClient.cs` ✨ **NEW**
 
 ### Finance Module - Data Models
-- `PricePredicator.App/Finance/YahooFinanceModels.cs` ✨ **NEW**
-- `PricePredicator.App/Finance/CandlePoint.cs` (in YahooFinanceModels.cs)
+- `PricePredictor.App/Finance/YahooFinanceModels.cs` ✨ **NEW**
+- `PricePredictor.App/Finance/CandlePoint.cs` (in YahooFinanceModels.cs)
 
 ### Finance Module - Configuration
-- `PricePredicator.App/Finance/YahooFinanceSettings.cs` ✨ **NEW**
+- `PricePredictor.App/Finance/YahooFinanceSettings.cs` ✨ **NEW**
 
 ### Finance Module - Calculations
-- `PricePredicator.App/Finance/IndicatorsCalculator.cs` ✨ **NEW**
+- `PricePredictor.App/Finance/IndicatorsCalculator.cs` ✨ **NEW**
 
 ### Finance Module - Data Access
-- `PricePredicator.App/Finance/IVolatilityRepository.cs` ✨ **NEW**
-- `PricePredicator.App/Finance/VolatilityRepository.cs` ✨ **NEW**
+- `PricePredictor.App/Finance/IVolatilityRepository.cs` ✨ **NEW**
+- `PricePredictor.App/Finance/VolatilityRepository.cs` ✨ **NEW**
 
 ### Hosted Service
-- `PricePredicator.App/YahooFinanceBackgroundService.cs` ✨ **NEW**
+- `PricePredictor.App/YahooFinanceBackgroundService.cs` ✨ **NEW**
 
 ### Configuration & Startup (Updated)
-- `PricePredicator.App/Program.cs` ⚙️ **UPDATED**
-- `PricePredicator.App/appsettings.json` ⚙️ **UPDATED**
+- `PricePredictor.App/Program.cs` ⚙️ **UPDATED**
+- `PricePredictor.App/appsettings.json` ⚙️ **UPDATED**
 
 ---
 
 ## Test Project Files
 
 ### Test Implementation
-- `PricePredicator.Tests/Finance/IndicatorsCalculatorTests.cs` ✨ **NEW**
+- `PricePredictor.Tests/Finance/IndicatorsCalculatorTests.cs` ✨ **NEW**
 
 ### Project Configuration (Updated)
-- `PricePredicator.Tests/PricePredicator.Tests.csproj` ⚙️ **UPDATED**
+- `PricePredictor.Tests/PricePredictor.Tests.csproj` ⚙️ **UPDATED**
 
 ---
 
@@ -121,11 +121,11 @@ Deployment:    ✅ READY
 1. `YAHOO_FINANCE_README.md` (architecture and formulas)
 2. `IMPLEMENTATION_SUMMARY.md` (technical decisions)
 3. Code files in order:
-   - `PricePredicator.App/Finance/YahooFinanceModels.cs` (data structures)
-   - `PricePredicator.App/Finance/YahooFinanceClient.cs` (HTTP)
-   - `PricePredicator.App/Finance/IndicatorsCalculator.cs` (math)
-   - `PricePredicator.App/YahooFinanceBackgroundService.cs` (main loop)
-   - `PricePredicator.Tests/Finance/IndicatorsCalculatorTests.cs` (tests)
+   - `PricePredictor.App/Finance/YahooFinanceModels.cs` (data structures)
+   - `PricePredictor.App/Finance/YahooFinanceClient.cs` (HTTP)
+   - `PricePredictor.App/Finance/IndicatorsCalculator.cs` (math)
+   - `PricePredictor.App/YahooFinanceBackgroundService.cs` (main loop)
+   - `PricePredictor.Tests/Finance/IndicatorsCalculatorTests.cs` (tests)
 
 ---
 
@@ -165,7 +165,7 @@ Total Tests:                        ~12 KB
 → `IndicatorsCalculator.cs` (source code)
 
 **Run the tests:**
-→ `dotnet test PricePredicator.Tests`
+→ `dotnet test PricePredictor.Tests`
 
 **Check database schema:**
 → `YAHOO_FINANCE_README.md` (Database Schema section)
@@ -206,7 +206,7 @@ Before deploying, verify:
 - [ ] Read `00_START_HERE.md`
 - [ ] Reviewed `QUICKSTART.md`
 - [ ] Ran `dotnet build` (success)
-- [ ] Ran `dotnet test PricePredicator.Tests` (22/22 passed)
+- [ ] Ran `dotnet test PricePredictor.Tests` (22/22 passed)
 - [ ] PostgreSQL available on localhost:5432
 - [ ] `appsettings.json` connection string updated
 - [ ] `compose.yaml` configured for your environment
@@ -236,3 +236,4 @@ Before deploying, verify:
 **Created:** March 3, 2026  
 **Status:** ✅ COMPLETE  
 **Ready for:** Production Deployment
+

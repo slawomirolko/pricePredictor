@@ -1,0 +1,2 @@
+﻿namespace PricePredictor.Application.News;
+

@@ -1,0 +1,101 @@
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using OllamaSharp;
+using PricePredictor.Application.Data;
+using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
+
+namespace PricePredictor.Application;
+
+public interface INewsService
+{
+    Task<NewsServiceResult> DownloadAndStoreAsync(string url, string? title, CancellationToken cancellationToken);
+}
+
+public sealed class NewsService : INewsService
+{
+    private readonly IGoldNewsClient _client;
+    private readonly IGoldNewsEmbeddingRepository _repository;
+    private readonly IOllamaApiClient _ollama;
+    private readonly GoldNewsSettings _settings;
+    private readonly ILogger<NewsService> _logger;
+
+    public NewsService(
+        IGoldNewsClient client,
+        IGoldNewsEmbeddingRepository repository,
+        [FromKeyedServices("LocalOllama")] IOllamaApiClient ollama,
+        IOptions<GoldNewsSettings> settings,
+        ILogger<NewsService> logger)
+    {
+        _client = client;
+        _repository = repository;
+        _ollama = ollama;
+        _settings = settings.Value;
+        _logger = logger;
+        _ollama.SelectedModel = _settings.LocalOllamaModel;
+    }
+
+    public async Task<NewsServiceResult> DownloadAndStoreAsync(string url, string? title, CancellationToken cancellationToken)
+    {
+        var existingContent = await _repository.GetContentAsync(url, cancellationToken);
+        if (existingContent != null)
+        {
+            _logger.LogInformation("Article already stored: {Url}", url);
+            return NewsServiceResult.AlreadyStored(existingContent.Length);
+        }
+
+        var content = await _client.FetchArticleContentAsync(url, title, cancellationToken);
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            _logger.LogWarning("Failed to extract content from: {Url}", url);
+            return NewsServiceResult.Failed("Failed to extract article content");
+        }
+
+        _logger.LogInformation("Extracted {Length} characters from article", content.Length);
+
+        var embeddingResponse = await _ollama.EmbedAsync(content, cancellationToken);
+
+        if (embeddingResponse.Embeddings.Count == 0)
+        {
+            _logger.LogError("Failed to generate embedding for: {Url}", url);
+            return NewsServiceResult.Failed("Failed to generate embedding", content.Length);
+        }
+
+        await _repository.UpsertAsync(
+            url,
+            content,
+            embeddingResponse.Embeddings[0],
+            _settings.EmbeddingDimensions,
+            cancellationToken);
+
+        _logger.LogInformation("Stored article: {Url}", url);
+
+        return NewsServiceResult.Stored(content.Length);
+    }
+}
+
+public sealed record NewsServiceResult(
+    bool Success,
+    string Message,
+    bool WasAlreadyStored,
+    int ContentLength)
+{
+    public static NewsServiceResult AlreadyStored(int contentLength) => new(
+        true,
+        "Article already exists in database",
+        true,
+        contentLength);
+
+    public static NewsServiceResult Failed(string message, int contentLength = 0) => new(
+        false,
+        message,
+        false,
+        contentLength);
+
+    public static NewsServiceResult Stored(int contentLength) => new(
+        true,
+        "Article downloaded and stored successfully",
+        false,
+        contentLength);
+}
