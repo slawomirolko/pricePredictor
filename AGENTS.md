@@ -1,5 +1,18 @@
 # Copilot Instructions for PricePredictor
 
+## PERSISTENCE REPOSITORY RULES
+- ✅ Each repository must operate on a single table only
+- ✅ Repository implementation names must come from the table name they operate on
+- ✅ Exception: if resources share a common abstract parent, use the parent name and that repository may operate on all child tables
+- ✅ Prefer EF Core LINQ queries/updates for repository logic
+- ❌ Do not call `ExecuteSqlInterpolatedAsync` unless the user explicitly asks for raw SQL in that change request
+- ✅ Cross-table use cases must be orchestrated via a Unit of Work or application service, not by a single repository
+
+## UNIT OF WORK
+- ✅ Use Unit of Work to coordinate multiple repositories and dbvector operations in one application flow
+- ✅ Unit of Work must expose `SaveChangesAsync(CancellationToken)` with DbContext-equivalent behavior
+- ✅ Repositories participating in Unit of Work should stage tracked changes and let Unit of Work commit them
+
 ## NO MARKDOWN GENERATION
 - ❌ DO NOT create markdown files automatically
 - ❌ DO NOT write documentation files
@@ -176,6 +189,8 @@
 
 ## APPLICATION MODELS
 - ✅ Static factory methods in models must return `ErrorOr<TModel>` (for example `ErrorOr<ArticleLink>`)
+- ✅ If a business model property changes, add/update a domain method on the model to perform that change (DDD style)
+- ✅ Persist model state changes by saving through Unit of Work (`SaveChangesAsync`) instead of ad-hoc setters or direct mutation outside the model
 - ❌ Do not throw exceptions for validation/domain errors from model factory methods; return `ErrorOr` errors instead
 
 ## ERROR HANDLING (APPLICATION LAYERS)
