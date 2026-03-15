@@ -199,18 +199,37 @@ internal sealed class ArticleService : IArticleService
                 continue;
             }
 
+            var readTimeUtc = DateTime.UtcNow;
+            var readAt = ComposeReadAt(dateResult.Value, readTimeUtc);
+
             var articleLink = ArticleLink.Create(
                 url: link,
-                readAt: dateResult.Value,
+                readAt: readAt,
                 source: Source);
 
             await _repository.SaveArticleLinkAsync(articleLink, cancellationToken);
             savedLinks.Add(articleLink);
-            _logger.LogInformation("Saved: {Url}", link);
+            _logger.LogInformation("Saved: {Url} (ReadAt={ReadAt:O})", link, readAt);
         }
 
         _logger.LogInformation("Saved {Count} article links to database", savedLinks.Count);
         return savedLinks;
+    }
+
+    private static DateTime ComposeReadAt(DateTime publishedDateUtc, DateTime readTimeUtc)
+    {
+        var publishedDate = DateTime.SpecifyKind(publishedDateUtc.Date, DateTimeKind.Utc);
+        var readTime = DateTime.SpecifyKind(readTimeUtc, DateTimeKind.Utc);
+
+        return new DateTime(
+            publishedDate.Year,
+            publishedDate.Month,
+            publishedDate.Day,
+            readTime.Hour,
+            readTime.Minute,
+            readTime.Second,
+            readTime.Millisecond,
+            DateTimeKind.Utc);
     }
 
     private static FlowResult<DateTime> ParsePublishedDate(string link)
@@ -231,13 +250,13 @@ internal sealed class ArticleService : IArticleService
                 dateValue,
                 "yyyy-MM-dd",
                 CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal,
+                DateTimeStyles.None,
                 out var publishedDate))
         {
             return FlowResult<DateTime>.Fail("Invalid date format in link.");
         }
 
-        return FlowResult<DateTime>.Success(publishedDate);
+        return FlowResult<DateTime>.Success(DateTime.SpecifyKind(publishedDate.Date, DateTimeKind.Utc));
     }
 
     private static string? NormalizeToAbsoluteUrl(Uri pageUri, string? href)
