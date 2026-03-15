@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,34 +11,37 @@ namespace PricePredictor.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "ArticleLinks",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Url = table.Column<string>(type: "text", nullable: false),
-                    PublishedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Source = table.Column<string>(type: "text", nullable: false),
-                    ExtractedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    IsTradeUseful = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ArticleLinks", x => x.Id);
-                });
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                          AND table_name = 'ArticleLinks') THEN
+                        CREATE TABLE ""ArticleLinks"" (
+                            ""Id"" uuid NOT NULL,
+                            ""Url"" text NOT NULL,
+                            ""PublishedAtUtc"" timestamp with time zone NOT NULL,
+                            ""Source"" text NOT NULL,
+                            ""ExtractedAtUtc"" timestamp with time zone NULL,
+                            ""IsTradeUseful"" boolean NOT NULL,
+                            CONSTRAINT ""PK_ArticleLinks"" PRIMARY KEY (""Id"")
+                        );
+                    END IF;
+                END
+                $$;");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ArticleLinks_Url",
-                table: "ArticleLinks",
-                column: "Url",
-                unique: true);
+            migrationBuilder.Sql(@"
+                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_ArticleLinks_Url""
+                ON ""ArticleLinks"" (""Url"");");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ArticleLinks");
+            migrationBuilder.Sql(@"
+                DROP TABLE IF EXISTS ""ArticleLinks"";");
         }
     }
 }

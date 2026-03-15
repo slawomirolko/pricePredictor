@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+﻿﻿using Microsoft.Extensions.Options;
 using PricePredictor.Application;
 using PricePredictor.Application.Finance;
 using PricePredictor.Application.Finance.Interfaces;
@@ -200,84 +200,76 @@ public class YahooFinanceBackgroundService : BackgroundService
                 case "GLD":
                 case "XAUUSD=X":
                 case "GC=F":
-                    var goldEntity = new VolatilityGold
-                    {
-                        CommodityId = 1, // Gold
-                        Timestamp = candle.Timestamp,
-                        Open = candle.Open,
-                        High = candle.High,
-                        Low = candle.Low,
-                        Close = candle.Close,
-                        Volume = candle.Volume,
-                        LogarithmicReturn = logReturn,
-                        RollingVol5 = vol5,
-                        RollingVol15 = vol15,
-                        RollingVol60 = vol60,
-                        ShortPanicScore = shortPanicScore,
-                        LongPanicScore = longPanicScore
-                    };
+                    var goldEntity = VolatilityGold.Create(
+                        commodityId: 1,
+                        timestamp: candle.Timestamp,
+                        open: candle.Open,
+                        high: candle.High,
+                        low: candle.Low,
+                        close: candle.Close,
+                        volume: candle.Volume,
+                        logarithmicReturn: logReturn,
+                        rollingVol5: vol5,
+                        rollingVol15: vol15,
+                        rollingVol60: vol60,
+                        shortPanicScore: shortPanicScore,
+                        longPanicScore: longPanicScore);
                     await _repository.AddVolatilityGoldAsync(goldEntity, cancellationToken);
                     break;
 
                 case "SLV":
                 case "XAGUSD=X":
                 case "SI=F":
-                    var silverEntity = new VolatilitySilver
-                    {
-                        CommodityId = 2, // Silver
-                        Timestamp = candle.Timestamp,
-                        Open = candle.Open,
-                        High = candle.High,
-                        Low = candle.Low,
-                        Close = candle.Close,
-                        Volume = candle.Volume,
-                        LogarithmicReturn = logReturn,
-                        RollingVol5 = vol5,
-                        RollingVol15 = vol15,
-                        RollingVol60 = vol60,
-                        ShortPanicScore = shortPanicScore,
-                        LongPanicScore = longPanicScore
-                    };
+                    var silverEntity = VolatilitySilver.Create(
+                        commodityId: 2,
+                        timestamp: candle.Timestamp,
+                        open: candle.Open,
+                        high: candle.High,
+                        low: candle.Low,
+                        close: candle.Close,
+                        volume: candle.Volume,
+                        logarithmicReturn: logReturn,
+                        rollingVol5: vol5,
+                        rollingVol15: vol15,
+                        rollingVol60: vol60,
+                        shortPanicScore: shortPanicScore,
+                        longPanicScore: longPanicScore);
                     await _repository.AddVolatilitySilverAsync(silverEntity, cancellationToken);
                     break;
 
                 case "NG=F":
-                    var ngEntity = new VolatilityNaturalGas
-                    {
-                        CommodityId = 3, // NaturalGas
-                        Timestamp = candle.Timestamp,
-                        Open = candle.Open,
-                        High = candle.High,
-                        Low = candle.Low,
-                        Close = candle.Close,
-                        Volume = candle.Volume,
-                        LogarithmicReturn = logReturn,
-                        RollingVol5 = vol5,
-                        RollingVol15 = vol15,
-                        RollingVol60 = vol60,
-                        ShortPanicScore = shortPanicScore,
-                        LongPanicScore = longPanicScore
-                    };
+                    var ngEntity = VolatilityNaturalGas.Create(
+                        commodityId: 3,
+                        timestamp: candle.Timestamp,
+                        open: candle.Open,
+                        high: candle.High,
+                        low: candle.Low,
+                        close: candle.Close,
+                        volume: candle.Volume,
+                        logarithmicReturn: logReturn,
+                        rollingVol5: vol5,
+                        rollingVol15: vol15,
+                        rollingVol60: vol60,
+                        shortPanicScore: shortPanicScore,
+                        longPanicScore: longPanicScore);
                     await _repository.AddVolatilityNaturalGasAsync(ngEntity, cancellationToken);
                     break;
 
                 case "CL=F":
-                    var clEntity = new VolatilityOil
-                    {
-                        CommodityId = 4, // Oil
-                        Timestamp = candle.Timestamp,
-                        Open = candle.Open,
-                        High = candle.High,
-                        Low = candle.Low,
-                        Close = candle.Close,
-                        Volume = candle.Volume,
-                        LogarithmicReturn = logReturn,
-                        RollingVol5 = vol5,
-                        RollingVol15 = vol15,
-                        RollingVol60 = vol60,
-                        ShortPanicScore = shortPanicScore,
-                        LongPanicScore = longPanicScore
-                    };
+                    var clEntity = VolatilityOil.Create(
+                        commodityId: 4,
+                        timestamp: candle.Timestamp,
+                        open: candle.Open,
+                        high: candle.High,
+                        low: candle.Low,
+                        close: candle.Close,
+                        volume: candle.Volume,
+                        logarithmicReturn: logReturn,
+                        rollingVol5: vol5,
+                        rollingVol15: vol15,
+                        rollingVol60: vol60,
+                        shortPanicScore: shortPanicScore,
+                        longPanicScore: longPanicScore);
                     await _repository.AddVolatilityOilAsync(clEntity, cancellationToken);
                     break;
             }
@@ -451,18 +443,15 @@ public class YahooFinanceBackgroundService : BackgroundService
             rangePct = close >= open ? baseRange : -baseRange;
         }
 
-        var daily = new VolatilityDaily
-        {
-            Id = Guid.CreateVersion7(),
-            Day = day,
-            Open = open,
-            Close = close,
-            High = high,
-            Low = low,
-            Avg = avg,
-            VolumeSum = volumeSum,
-            RangePct = rangePct
-        };
+        var daily = VolatilityDaily.Create(
+            day: day,
+            open: open,
+            close: close,
+            high: high,
+            low: low,
+            avg: avg,
+            volumeSum: volumeSum,
+            rangePct: rangePct);
 
         var commodity = symbol switch
         {

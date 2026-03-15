@@ -5,11 +5,11 @@ using PricePredictor.Application.Models;
 
 namespace PricePredictor.Persistence.Repositories;
 
-public class VolatilityRepository : IVolatilityRepository
+public class VolatilityBaseRepository : IVolatilityRepository
 {
     private readonly IDbContextFactory<PricePredictorDbContext> _dbContextFactory;
 
-    public VolatilityRepository(IDbContextFactory<PricePredictorDbContext> dbContextFactory)
+    public VolatilityBaseRepository(IDbContextFactory<PricePredictorDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }
@@ -168,7 +168,7 @@ public class VolatilityRepository : IVolatilityRepository
 
         if (commodityEntity == null)
         {
-            commodityEntity = new Commodity { Name = commodity.Name };
+            commodityEntity = Commodity.Create(commodity.Name);
             await dbContext.Commodities.AddAsync(commodityEntity, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
@@ -178,21 +178,12 @@ public class VolatilityRepository : IVolatilityRepository
 
         if (existing == null)
         {
-            if (entity.Id == Guid.Empty)
-                entity.Id = Guid.CreateVersion7();
-
-            entity.CommodityId = commodityEntity.Id;
+            entity.BindCommodity(commodityEntity.Id);
             await dbContext.Volatilities.AddAsync(entity, cancellationToken);
         }
         else
         {
-            existing.Open = entity.Open;
-            existing.Close = entity.Close;
-            existing.High = entity.High;
-            existing.Low = entity.Low;
-            existing.Avg = entity.Avg;
-            existing.VolumeSum = entity.VolumeSum;
-            existing.RangePct = entity.RangePct;
+            existing.UpdateFrom(entity);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

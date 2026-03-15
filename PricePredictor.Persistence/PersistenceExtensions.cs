@@ -19,25 +19,24 @@ public static class PersistenceExtensions
     /// </summary>
     /// <remarks>
     /// This includes:
-    /// - DbContext factory for database operations
+    /// - DbContext registrations for scoped and factory-based access
     /// - Repository implementations for data access
-    /// 
+    ///
     /// Must be called after AddApplication() and before calling repository services.
     /// </remarks>
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add DbContext factory
-        services.AddDbContextFactory<PricePredictorDbContext>(options =>
-        {
-            var connectionString = configuration["ConnectionStrings:DefaultConnection"] ??
-                                   "Server=localhost;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;";
-            options.UseNpgsql(connectionString);
-        });
-        
-        services.AddScoped<IVolatilityRepository, VolatilityRepository>();
-        services.AddScoped<IGoldNewsEmbeddingRepository, GoldNewsEmbeddingRepository>();
-        services.AddScoped<IArticleRepository, ArticleRepository>();
-        services.AddScoped<IArticleReaderRepository, ArticleReaderRepository>();
+        var connectionString = configuration["ConnectionStrings:DefaultConnection"] ??
+                               "Server=localhost;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;";
+
+        services.AddDbContext<PricePredictorDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddDbContextFactory<PricePredictorDbContext>(options => options.UseNpgsql(connectionString));
+
+        services.AddScoped<IVolatilityRepository, VolatilityBaseRepository>();
+        services.AddScoped<IGoldNewsEmbeddingRepository, GoldNewsEmbeddingsRepository>();
+        services.AddScoped<IArticleReaderRepository, ArticleLinksRepository>();
+        services.AddScoped<IArticleScanRepository, ArticlesRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }
@@ -50,7 +49,7 @@ public static class PersistenceExtensions
     /// - Checks for pending migrations
     /// - Applies them if any exist
     /// - Retries up to 10 times with delays to handle database startup race conditions
-    /// 
+    ///
     /// Should be called after app.Build() in Program.cs.
     /// </remarks>
     public static void ApplyPendingMigrations(this IServiceProvider services)
@@ -63,7 +62,9 @@ public static class PersistenceExtensions
             try
             {
                 using var scope = services.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
+                using var dbContext = scope.ServiceProvider
+                    .GetRequiredService<IDbContextFactory<PricePredictorDbContext>>()
+                    .CreateDbContext();
                 var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
 
                 if (pendingMigrations.Count > 0)

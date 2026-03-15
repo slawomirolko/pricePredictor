@@ -18,9 +18,9 @@ Rules:
 - false for generic market noise, lifestyle, opinion-only, or unrelated topics.
 - If uncertain, return false.";
 
-    public const string SummarizeSystemPrompt = @"You are a concise trading news summarizer.
-Summarize the article in 500 characters or fewer. Focus only on information relevant to commodities trading (gold, silver, oil, natural gas).
-Return ONLY the summary text.";
+    public const string SummarizeSystemPrompt = @"You summarize articles into very short summaries.
+Write a clear summary of the article using no more than 400 characters.
+Return only the summary text with no additional commentary.";
 
     public const string EmbeddingPreparationPrompt = @"Your task is to transform the input text into a semantically rich, normalized representation optimized for vector embeddings.
 Instructions:
@@ -33,8 +33,8 @@ Instructions:
     public static string BuildArticleExtractionSystemPrompt(string inputText)
     {
         return EmbeddingPreparationPrompt
-            + "\n\nText:\n"
-            + inputText;
+               + "\n\nText:\n"
+               + inputText;
     }
 
     public static string NormalizeForEmbedding(string text)

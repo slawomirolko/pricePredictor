@@ -1,3 +1,5 @@
+using ErrorOr;
+
 namespace PricePredictor.Application.Models;
 
 /// <summary>
@@ -13,47 +15,52 @@ public sealed class Article
         Guid id,
         Guid articleLinkId,
         bool? isTradingUseful,
-        DateTime scannedAtUtc)
+        DateTime scannedAtUtc,
+        string? summary)
     {
         Id = id;
         ArticleLinkId = articleLinkId;
         IsTradingUseful = isTradingUseful;
         ScannedAtUtc = DateTime.SpecifyKind(scannedAtUtc, DateTimeKind.Utc);
+        Summary = summary;
     }
 
     public Guid Id { get; private set; }
     public Guid ArticleLinkId { get; private set; }
     public bool? IsTradingUseful { get; private set; }
     public DateTime ScannedAtUtc { get; private set; }
+    public string? Summary { get; private set; }
 
-    public static Article Create(
+    public static ErrorOr<Article> Create(
         Guid articleLinkId,
         bool? isTradingUseful,
-        DateTime scannedAtUtc)
+        DateTime scannedAtUtc,
+        string? summary = null,
+        Guid? id = null)
     {
-        return CreateFrom(
-            Guid.CreateVersion7(),
-            articleLinkId,
-            isTradingUseful,
-            scannedAtUtc);
-    }
+        var resolvedId = id ?? Guid.CreateVersion7();
 
-    public static Article CreateFrom(
-        Guid id,
-        Guid articleLinkId,
-        bool? isTradingUseful,
-        DateTime scannedAtUtc)
-    {
-        if (id == Guid.Empty)
+        if (resolvedId == Guid.Empty)
         {
-            throw new ArgumentException("Article id cannot be empty.", nameof(id));
+            return Error.Unexpected(
+                code: "Article.Id.Empty",
+                description: "Article id cannot be empty.");
         }
 
         if (articleLinkId == Guid.Empty)
         {
-            throw new ArgumentException("Article link id cannot be empty.", nameof(articleLinkId));
+            return Error.Unexpected(
+                code: "Article.ArticleLinkId.Empty",
+                description: "Article link id cannot be empty.");
         }
 
-        return new Article(id, articleLinkId, isTradingUseful, scannedAtUtc);
+        return new Article(resolvedId, articleLinkId, isTradingUseful, scannedAtUtc, summary);
+    }
+
+    public void UpdateScan(bool? isTradingUseful, DateTime scannedAtUtc, string? summary)
+    {
+        IsTradingUseful = isTradingUseful;
+        ScannedAtUtc = DateTime.SpecifyKind(scannedAtUtc, DateTimeKind.Utc);
+        Summary = summary;
     }
 }

@@ -3,7 +3,7 @@ using PricePredictor.Application.Models;
 namespace PricePredictor.Application.News;
 
 /// <summary>
-/// Repository for reading unprocessed article links and persisting processed articles.
+/// Repository for reading and updating article links.
 /// </summary>
 public interface IArticleReaderRepository
 {
@@ -13,13 +13,12 @@ public interface IArticleReaderRepository
     Task<IReadOnlyList<ArticleLink>> GetUnprocessedLinksAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Persists a fully processed article.
-    /// </summary>
-    Task SaveArticleAsync(Article article, CancellationToken cancellationToken);
-
-    /// <summary>
     /// Marks an ArticleLink as processed.
     /// </summary>
     Task MarkLinkAsProcessedAsync(Guid articleLinkId, CancellationToken cancellationToken);
-}
 
+    /// <summary>
+    /// Saves an ArticleLink.
+    /// </summary>
+    Task SaveArticleLinkAsync(ArticleLink link, CancellationToken cancellationToken);
+}

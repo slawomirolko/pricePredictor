@@ -1,8 +1,9 @@
 ﻿using System.Text;
+using PricePredictor.Application.Finance;
 using PricePredictor.Application.Notifications;
 using PricePredictor.Application.Weather;
 
-namespace PricePredictor.Application.Finance;
+namespace PricePredictor.Application;
 
 /// <summary>
 /// Service to format and send trading indicators as notifications
@@ -87,6 +88,24 @@ public class TradingIndicatorNotificationService
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to send summary notification: {ex.Message}");
+        }
+    }
+
+    public async Task SendArticleSummaryNotificationAsync(
+        string source,
+        string url,
+        DateTime readAt,
+        string summary,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var message = FormatArticleSummaryMessage(source, url, readAt, summary);
+            await _ntfyClient.SendAsync(_topic, message, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to send article summary notification for {url}: {ex.Message}");
         }
     }
 
@@ -232,6 +251,18 @@ public class TradingIndicatorNotificationService
         sb.AppendLine();
         sb.AppendLine("═════════════════════════════════════════════");
 
+        return sb.ToString();
+    }
+
+    private static string FormatArticleSummaryMessage(string source, string url, DateTime readAt, string summary)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("📰 TRADING-USEFUL ARTICLE");
+        sb.AppendLine($"Source: {source}");
+        sb.AppendLine($"ReadAt: {readAt:yyyy-MM-dd HH:mm:ss} UTC");
+        sb.AppendLine($"Url: {url}");
+        sb.AppendLine();
+        sb.AppendLine(summary);
         return sb.ToString();
     }
 

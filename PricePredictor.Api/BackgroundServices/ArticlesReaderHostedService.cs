@@ -53,13 +53,12 @@ public sealed class ArticlesReaderHostedService : BackgroundService
     private async Task ProcessUnprocessedLinksAsync(CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IArticleReaderRepository>();
-        var embeddingRepository = scope.ServiceProvider.GetRequiredService<IGoldNewsEmbeddingRepository>();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var extractionClient = scope.ServiceProvider.GetRequiredService<IOllamaArticleExtractionClient>();
         var extractionService = scope.ServiceProvider.GetRequiredService<IArticleContentExtractionService>();
         var seleniumFactory = scope.ServiceProvider.GetRequiredService<ISeleniumFlowBuilderFactory>();
 
-        var unprocessedLinks = await repository.GetUnprocessedLinksAsync(stoppingToken);
+        var unprocessedLinks = await unitOfWork.ArticleLinks.GetUnprocessedLinksAsync(stoppingToken);
 
         if (unprocessedLinks.Count == 0)
         {
@@ -69,7 +68,7 @@ public sealed class ArticlesReaderHostedService : BackgroundService
 
         _logger.LogInformation("Processing {Count} unprocessed article links.", unprocessedLinks.Count);
 
-        using var selenium = seleniumFactory.Create(headless: _settings.Headless);
+        using var selenium = seleniumFactory.Create(headless: false);
 
         foreach (var link in unprocessedLinks)
         {
@@ -81,8 +80,7 @@ public sealed class ArticlesReaderHostedService : BackgroundService
             await ProcessLinkAsync(
                 link,
                 selenium,
-                repository,
-                embeddingRepository,
+                unitOfWork,
                 extractionClient,
                 extractionService,
                 _settings.EmbeddingDimensions,
@@ -93,8 +91,7 @@ public sealed class ArticlesReaderHostedService : BackgroundService
     private async Task ProcessLinkAsync(
         ArticleLink link,
         ISeleniumFlowBuilder selenium,
-        IArticleReaderRepository repository,
-        IGoldNewsEmbeddingRepository embeddingRepository,
+        IUnitOfWork unitOfWork,
         IOllamaArticleExtractionClient extractionClient,
         IArticleContentExtractionService extractionService,
         int embeddingDimensions,
@@ -108,24 +105,35 @@ public sealed class ArticlesReaderHostedService : BackgroundService
 
             if (string.IsNullOrWhiteSpace(content))
             {
-                _logger.LogWarning("No content extracted for {Url}. Marking as processed.", link.Url);
-                var emptyArticle = Article.Create(link.Id, isTradingUseful: null, scannedAtUtc: DateTime.UtcNow);
-                await repository.SaveArticleAsync(emptyArticle, stoppingToken);
-                await repository.MarkLinkAsProcessedAsync(link.Id, stoppingToken);
+                _logger.LogWarning("No content extracted for {Url}. Leaving link unprocessed for retry.", link.Url);
                 return;
             }
 
             var isTradingUseful = await extractionClient.AssessTradingUsefulnessAsync(content, stoppingToken);
             _logger.LogInformation("Trading usefulness for {Url}: {IsUseful}", link.Url, isTradingUseful);
 
-            var article = Article.Create(link.Id, isTradingUseful, scannedAtUtc: DateTime.UtcNow);
-            await repository.SaveArticleAsync(article, stoppingToken);
-
+            string? summary = null;
             if (isTradingUseful)
             {
-                var summary = await extractionClient.SummarizeAsync(content, stoppingToken);
+                summary = await extractionClient.SummarizeAsync(content, stoppingToken);
                 _logger.LogInformation("Summary generated for {Url} ({Length} chars)", link.Url, summary.Length);
+            }
 
+            var articleResult = Article.Create(link.Id, isTradingUseful, scannedAtUtc: DateTime.UtcNow, summary: summary);
+            if (articleResult.IsError)
+            {
+                _logger.LogWarning(
+                    "Skipping link {Url}: failed to create Article model. Errors: {Errors}",
+                    link.Url,
+                    string.Join("; ", articleResult.Errors.Select(error => error.Description)));
+                return;
+            }
+
+            var article = articleResult.Value;
+            var saved = await unitOfWork.Articles.SaveArticleAsync(article, stoppingToken);
+
+            if (isTradingUseful && summary is not null)
+            {
                 var embedding = await extractionClient.EmbedAsync(summary, stoppingToken);
 
                 await StoreEmbeddingAsync(
@@ -134,7 +142,7 @@ public sealed class ArticlesReaderHostedService : BackgroundService
                     summary,
                     embedding,
                     embeddingDimensions,
-                    embeddingRepository,
+                    unitOfWork,
                     stoppingToken);
 
                 await _notificationService.SendArticleSummaryNotificationAsync(
@@ -145,8 +153,18 @@ public sealed class ArticlesReaderHostedService : BackgroundService
                     cancellationToken: stoppingToken);
             }
 
-            await repository.MarkLinkAsProcessedAsync(link.Id, stoppingToken);
-            _logger.LogInformation("Finished processing {Url}", link.Url);
+            if (saved && article.IsTradingUseful is not null)
+            {
+                link.MarkProcessed();
+                await unitOfWork.SaveChangesAsync(stoppingToken);
+                _logger.LogInformation("Finished processing {Url}", link.Url);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Link {Url} not marked as processed: saved={Saved}, IsTradingUseful={IsTradingUseful}",
+                    link.Url, saved, article.IsTradingUseful);
+            }
         }
         catch (Exception ex)
         {
@@ -166,7 +184,39 @@ public sealed class ArticlesReaderHostedService : BackgroundService
             return null;
         }
 
-        await selenium.WaitAsync(TimeSpan.FromSeconds(5), stoppingToken);
+        var waitAfterOpenResult = await selenium.WaitAsync(TimeSpan.FromSeconds(10), stoppingToken);
+        if (waitAfterOpenResult.IsError)
+        {
+            return null;
+        }
+
+        var blockedResult = selenium.IsBlockedPage();
+        if (!blockedResult.IsError && blockedResult.Value)
+        {
+            var refreshResult = await selenium.RefreshAsync(stoppingToken);
+            if (refreshResult.IsError)
+            {
+                return null;
+            }
+
+            var waitAfterRefreshResult = await selenium.WaitAsync(TimeSpan.FromSeconds(8), stoppingToken);
+            if (waitAfterRefreshResult.IsError)
+            {
+                return null;
+            }
+        }
+
+        var consentResult = await selenium.AcceptConsentAsync(stoppingToken);
+        if (consentResult.IsError)
+        {
+            return null;
+        }
+
+        var waitAfterConsentResult = await selenium.WaitAsync(TimeSpan.FromSeconds(3), stoppingToken);
+        if (waitAfterConsentResult.IsError)
+        {
+            return null;
+        }
 
         var htmlResult = selenium.GetHtml();
         if (htmlResult.IsError)
@@ -177,7 +227,29 @@ public sealed class ArticlesReaderHostedService : BackgroundService
         var bodyResult = selenium.GetBodyText();
         var fallback = bodyResult.IsError ? null : bodyResult.Value;
 
-        return await extractionService.ExtractAsync(htmlResult.Value, fallback, null, stoppingToken);
+        var extracted = await extractionService.ExtractAsync(htmlResult.Value, fallback, selenium.Title, stoppingToken);
+        if (!string.IsNullOrWhiteSpace(extracted))
+        {
+            return extracted;
+        }
+
+        // Retry once after a short wait - Reuters pages can hydrate paragraphs asynchronously.
+        var waitBeforeRetryResult = await selenium.WaitAsync(TimeSpan.FromSeconds(4), stoppingToken);
+        if (waitBeforeRetryResult.IsError)
+        {
+            return null;
+        }
+
+        var htmlRetryResult = selenium.GetHtml();
+        if (htmlRetryResult.IsError)
+        {
+            return null;
+        }
+
+        var bodyRetryResult = selenium.GetBodyText();
+        var fallbackRetry = bodyRetryResult.IsError ? fallback : bodyRetryResult.Value;
+
+        return await extractionService.ExtractAsync(htmlRetryResult.Value, fallbackRetry, selenium.Title, stoppingToken);
     }
 
     private async Task StoreEmbeddingAsync(
@@ -186,12 +258,12 @@ public sealed class ArticlesReaderHostedService : BackgroundService
         string summary,
         IReadOnlyList<float> embedding,
         int dimensions,
-        IGoldNewsEmbeddingRepository embeddingRepository,
+        IUnitOfWork unitOfWork,
         CancellationToken stoppingToken)
     {
         try
         {
-            await embeddingRepository.UpsertArticleAsync(
+            await unitOfWork.Embeddings.UpsertArticleAsync(
                 articleId: articleId,
                 readAtUtc: readAt,
                 summary: summary,
@@ -207,4 +279,3 @@ public sealed class ArticlesReaderHostedService : BackgroundService
         }
     }
 }
-

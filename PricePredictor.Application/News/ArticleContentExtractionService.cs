@@ -78,20 +78,23 @@ public sealed class ArticleContentExtractionService : IArticleContentExtractionS
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
-            // Extract divs with data-testid="paragraph-*" pattern
-            var paragraphDivs = doc.DocumentNode.SelectNodes("//div[starts-with(@data-testid, 'paragraph-')]");
+            // Reuters usually uses data-testid paragraph nodes, but this can vary by template.
+            var paragraphNodes = doc.DocumentNode.SelectNodes("//*[starts-with(@data-testid, 'paragraph-')]")
+                ?? doc.DocumentNode.SelectNodes("//article//p")
+                ?? doc.DocumentNode.SelectNodes("//main//p");
 
-            if (paragraphDivs == null || paragraphDivs.Count == 0)
+            if (paragraphNodes == null || paragraphNodes.Count == 0)
             {
                 return null;
             }
 
-            var texts = paragraphDivs
-                .Select(div => System.Net.WebUtility.HtmlDecode(div.InnerText?.Trim() ?? string.Empty))
+            var texts = paragraphNodes
+                .Select(node => System.Net.WebUtility.HtmlDecode(node.InnerText?.Trim() ?? string.Empty))
                 .Where(text => text.Length > 15)
                 .Select(text => Regex.Replace(text, @"\s+", " ").Trim())
+                .Where(text => !text.Contains("Purchase Licensing Rights", StringComparison.OrdinalIgnoreCase))
+                .Where(text => !text.Contains("Advertisement", StringComparison.OrdinalIgnoreCase))
                 .ToList();
-
 
             if (texts.Count == 0)
             {

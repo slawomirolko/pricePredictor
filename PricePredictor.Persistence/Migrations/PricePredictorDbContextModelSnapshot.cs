@@ -22,19 +22,42 @@ namespace PricePredictor.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("PricePredictor.Application.Models.Article", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ArticleLinkId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("IsTradingUseful")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ScannedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Summary")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleLinkId")
+                        .IsUnique();
+
+                    b.ToTable("Articles", (string)null);
+                });
+
             modelBuilder.Entity("PricePredictor.Application.Models.ArticleLink", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("ExtractedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsTradeUseful")
+                    b.Property<bool>("IsProcessed")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("PublishedAtUtc")
+                    b.Property<DateTime>("ReadAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Source")
@@ -373,6 +396,15 @@ namespace PricePredictor.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Volatility_Silver", (string)null);
+                });
+
+            modelBuilder.Entity("PricePredictor.Application.Models.Article", b =>
+                {
+                    b.HasOne("PricePredictor.Application.Models.ArticleLink", null)
+                        .WithOne()
+                        .HasForeignKey("PricePredictor.Application.Models.Article", "ArticleLinkId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PricePredictor.Application.Models.VolatilityDaily", b =>

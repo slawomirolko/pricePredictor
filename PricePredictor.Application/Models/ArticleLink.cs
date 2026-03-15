@@ -33,24 +33,12 @@ public sealed class ArticleLink
         string url,
         DateTime readAt,
         string source,
-        bool isProcessed = false)
+        bool isProcessed = false,
+        Guid? id = null)
     {
-        return CreateFrom(
-            Guid.CreateVersion7(),
-            url,
-            readAt,
-            source,
-            isProcessed);
-    }
+        var resolvedId = id ?? Guid.CreateVersion7();
 
-    public static ArticleLink CreateFrom(
-        Guid id,
-        string url,
-        DateTime readAt,
-        string source,
-        bool isProcessed)
-    {
-        if (id == Guid.Empty)
+        if (resolvedId == Guid.Empty)
         {
             throw new ArgumentException("Article link id cannot be empty.", nameof(id));
         }
@@ -66,10 +54,15 @@ public sealed class ArticleLink
         }
 
         return new ArticleLink(
-            id,
+            resolvedId,
             url,
             readAt,
             source,
             isProcessed);
+    }
+
+    public void MarkProcessed()
+    {
+        IsProcessed = true;
     }
 }
