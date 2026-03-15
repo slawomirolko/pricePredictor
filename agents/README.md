@@ -1,6 +1,3 @@
-# Army Crew
-
-Welcome to the Army Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
 
 ## Installation
 
@@ -20,8 +17,6 @@ crewai install
 ```
 ### Customizing
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
-
 - Modify `src/army/config/agents.yaml` to define your agents
 - Modify `src/army/config/tasks.yaml` to define your tasks
 - Modify `src/army/crew.py` to add your own logic, tools and specific args
@@ -32,7 +27,7 @@ crewai install
 To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
 
 ```bash
-$ crewai run
+$ uv run python -m army.main
 ```
 
 This command initializes the army Crew, assembling the agents and assigning them tasks as defined in your configuration.
@@ -54,7 +49,7 @@ For support, questions, or feedback regarding the Army Crew or crewAI.
 Let's create wonders together with the power and simplicity of crewAI.
 
 # Generate grpc files:
- python -m grpc_tools.protoc -I./Protos --python_out=./agents/src/gatewayClient  --grpc_python_out=./agents/src/gatewayClient ./Protos/gateway.proto
+python -m grpc_tools.protoc -I../Protos --python_out=./src/gateway_client --grpc_python_out=./src/gateway_client ../Protos/gateway.proto
 
 powershell -ExecutionPolicy Bypass -File .\agents\.venv\Scripts\Activate.ps1
 

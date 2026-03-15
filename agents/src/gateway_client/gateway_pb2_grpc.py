@@ -40,6 +40,16 @@ class GatewayStub(object):
                 request_serializer=gateway__pb2.GatewayRequest.SerializeToString,
                 response_deserializer=gateway__pb2.GatewayReply.FromString,
                 _registered_method=True)
+        self.GetVolatility = channel.unary_unary(
+                '/gateway.Gateway/GetVolatility',
+                request_serializer=gateway__pb2.VolatilityQueryRequest.SerializeToString,
+                response_deserializer=gateway__pb2.VolatilityQueryReply.FromString,
+                _registered_method=True)
+        self.DownloadGoldNewsArticle = channel.unary_unary(
+                '/gateway.Gateway/DownloadGoldNewsArticle',
+                request_serializer=gateway__pb2.DownloadArticleRequest.SerializeToString,
+                response_deserializer=gateway__pb2.DownloadArticleReply.FromString,
+                _registered_method=True)
 
 
 class GatewayServicer(object):
@@ -53,6 +63,18 @@ class GatewayServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetVolatility(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DownloadGoldNewsArticle(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GatewayServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -60,6 +82,16 @@ def add_GatewayServicer_to_server(servicer, server):
                     servicer.Send,
                     request_deserializer=gateway__pb2.GatewayRequest.FromString,
                     response_serializer=gateway__pb2.GatewayReply.SerializeToString,
+            ),
+            'GetVolatility': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetVolatility,
+                    request_deserializer=gateway__pb2.VolatilityQueryRequest.FromString,
+                    response_serializer=gateway__pb2.VolatilityQueryReply.SerializeToString,
+            ),
+            'DownloadGoldNewsArticle': grpc.unary_unary_rpc_method_handler(
+                    servicer.DownloadGoldNewsArticle,
+                    request_deserializer=gateway__pb2.DownloadArticleRequest.FromString,
+                    response_serializer=gateway__pb2.DownloadArticleReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -90,6 +122,60 @@ class Gateway(object):
             '/gateway.Gateway/Send',
             gateway__pb2.GatewayRequest.SerializeToString,
             gateway__pb2.GatewayReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetVolatility(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gateway.Gateway/GetVolatility',
+            gateway__pb2.VolatilityQueryRequest.SerializeToString,
+            gateway__pb2.VolatilityQueryReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DownloadGoldNewsArticle(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gateway.Gateway/DownloadGoldNewsArticle',
+            gateway__pb2.DownloadArticleRequest.SerializeToString,
+            gateway__pb2.DownloadArticleReply.FromString,
             options,
             channel_credentials,
             insecure,

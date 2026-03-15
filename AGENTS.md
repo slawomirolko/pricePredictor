@@ -166,6 +166,12 @@
   - Contains `Program.cs` and startup configuration
   - Minimal business logic - delegates to Application layer
 
+## PYTHON AGENTS & PROTOS
+- ✅ All Python code is located under `agents/` (including `agents/src/army`)
+- ✅ Python agents use the shared protobuf definitions from the root `Protos/` directory
+- ❌ Do not duplicate `.proto` files under `agents/`
+- ✅ Keep Python agent implementation code inside `agents/` while reusing contracts from `Protos/`
+
 ## DEPENDENCY DIRECTION
 - ✅ API → Application
 - ✅ API → Infrastructure
