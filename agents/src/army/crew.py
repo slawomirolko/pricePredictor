@@ -3,6 +3,8 @@ from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 from army.tools import GatewayMessageTool
+from army.settings import load_ollama_settings
+
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -13,6 +15,9 @@ class Army():
 
     agents: List[BaseAgent]
     tasks: List[Task]
+
+    def __init__(self) -> None:
+        self._ollama_settings = load_ollama_settings()
 
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
@@ -25,16 +30,16 @@ class Army():
         return Agent(
             config=self.agents_config['researcher'], # type: ignore[index]
             verbose=True,
-            llm="ollama/phi3",
+            llm=self._ollama_settings.selected_llm,
             tools=[GatewayMessageTool()]
         )
 
     @agent
-    def reporting_analyst(self) -> Agent:
+    def instructor(self) -> Agent:
         return Agent(
-            config=self.agents_config['reporting_analyst'], # type: ignore[index]
+            config=self.agents_config['instructor'], # type: ignore[index]
             verbose=True,
-            llm="ollama/phi3",
+            llm=self._ollama_settings.selected_llm,
             tools=[GatewayMessageTool()]
         )
 

@@ -11,8 +11,12 @@ logger = logging.getLogger(__name__)
 from datetime import datetime
 from gateway_client.grpc_client import AsyncGatewayGrpcClient
 from army.crew import Army
+from army.settings import apply_ollama_environment, load_ollama_settings
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+
+_SETTINGS = load_ollama_settings()
+apply_ollama_environment(_SETTINGS)
 
 # This main file is intended to be a way for you to run your
 # crew locally, so refrain from adding unnecessary logic into this file.
@@ -46,8 +50,8 @@ async def run_async():
 
     try:
         await Army().crew().kickoff_async(inputs=inputs)
-    except Exception as e:
-        raise Exception(f"An error occurred while running the crew: {e}")
+    except Exception:
+        raise
 
 
 if __name__ == "__main__":
@@ -65,8 +69,8 @@ def train():
     try:
         Army().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
 
-    except Exception as e:
-        raise Exception(f"An error occurred while training the crew: {e}")
+    except Exception:
+        raise
 
 def replay():
     """
@@ -75,8 +79,8 @@ def replay():
     try:
         Army().crew().replay(task_id=sys.argv[1])
 
-    except Exception as e:
-        raise Exception(f"An error occurred while replaying the crew: {e}")
+    except Exception:
+        raise
 
 def test():
     """
@@ -90,8 +94,8 @@ def test():
     try:
         Army().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
 
-    except Exception as e:
-        raise Exception(f"An error occurred while testing the crew: {e}")
+    except Exception:
+        raise
 
 def run_with_trigger():
     """
@@ -116,5 +120,5 @@ def run_with_trigger():
     try:
         result = Army().crew().kickoff(inputs=inputs)
         return result
-    except Exception as e:
-        raise Exception(f"An error occurred while running the crew with trigger: {e}")
+    except Exception:
+        raise
