@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Application.News;
 
@@ -10,20 +9,17 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
     private readonly HttpClient _http;
     private readonly IArticleContentExtractionService _articleContentExtractionService;
     private readonly ISeleniumFlowBuilderFactory _seleniumFlowBuilderFactory;
-    private readonly GoldNewsSettings _settings;
     private readonly ILogger<SeleniumGoldNewsClient> _logger;
 
     public SeleniumGoldNewsClient(
         HttpClient http,
         IArticleContentExtractionService articleContentExtractionService,
         ISeleniumFlowBuilderFactory seleniumFlowBuilderFactory,
-        IOptions<GoldNewsSettings> settings,
         ILogger<SeleniumGoldNewsClient> logger)
     {
         _http = http;
         _articleContentExtractionService = articleContentExtractionService;
         _seleniumFlowBuilderFactory = seleniumFlowBuilderFactory;
-        _settings = settings.Value;
         _logger = logger;
     }
 
@@ -47,7 +43,7 @@ public sealed class SeleniumGoldNewsClient : IGoldNewsClient
         {
             _logger.LogInformation("Fetching article via Selenium flow: {Url}", articleUrl);
 
-            using var seleniumFlow = _seleniumFlowBuilderFactory.Create(_settings.Headless);
+            using var seleniumFlow = _seleniumFlowBuilderFactory.Create();
 
             var navigationResult = await OpenArticleAsync(seleniumFlow, articleUrl, cancellationToken);
             if (!navigationResult.IsSuccess)

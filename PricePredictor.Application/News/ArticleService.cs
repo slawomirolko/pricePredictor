@@ -28,7 +28,7 @@ internal sealed class ArticleService : IArticleService
         const string newsUrl = "https://www.reuters.com";
         _logger.LogInformation("Starting article extraction from {Url}", newsUrl);
 
-        using var seleniumFlow = _seleniumFlowBuilderFactory.Create(headless: false);
+        using var seleniumFlow = _seleniumFlowBuilderFactory.Create();
 
         try
         {

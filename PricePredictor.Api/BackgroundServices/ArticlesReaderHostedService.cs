@@ -98,31 +98,30 @@ public sealed class ArticlesReaderHostedService : BackgroundService
             return;
         }
 
+        var linkToProcess = linksToProcess.OrderByDescending(link => link.ReadAt).FirstOrDefault();
+        if (linkToProcess is null)
+        {
+            _logger.LogInformation("No article link selected for processing.");
+            return;
+        }
+
         _logger.LogInformation(
-            "Processing {Count} article links (Unprocessed={UnprocessedCount}, UnknownUsefulness={UnknownUsefulnessCount}, UsefulMissingSummary={UsefulMissingSummaryCount}).",
-            linksToProcess.Count,
+            "Processing 1 article link (Unprocessed={UnprocessedCount}, UnknownUsefulness={UnknownUsefulnessCount}, UsefulMissingSummary={UsefulMissingSummaryCount}). Selected={Url}",
             unprocessedLinks.Count,
             unknownTradingUsefulnessLinkIds.Count,
-            usefulTradingMissingSummaryLinkIds.Count);
+            usefulTradingMissingSummaryLinkIds.Count,
+            linkToProcess.Url);
 
-        using var selenium = seleniumFactory.Create(headless: false);
+        using var selenium = seleniumFactory.Create();
 
-        foreach (var link in linksToProcess)
-        {
-            if (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-
-            await ProcessLinkAsync(
-                link,
-                selenium,
-                unitOfWork,
-                extractionClient,
-                extractionService,
-                _settings.EmbeddingDimensions,
-                stoppingToken);
-        }
+        await ProcessLinkAsync(
+            linkToProcess,
+            selenium,
+            unitOfWork,
+            extractionClient,
+            extractionService,
+            _settings.EmbeddingDimensions,
+            stoppingToken);
     }
 
     private async Task ProcessLinkAsync(
@@ -138,7 +137,18 @@ public sealed class ArticlesReaderHostedService : BackgroundService
 
         try
         {
-            var content = await FetchArticleContentAsync(link, selenium, extractionService, stoppingToken);
+            var navigateResult = await selenium.NavigateToReadyPageAsync(link.Url, stoppingToken);
+            if (navigateResult.IsError)
+            {
+                _logger.LogWarning(
+                    "Failed to navigate to article link {Url}. CurrentUrl={CurrentUrl}. Error: {Error}",
+                    link.Url,
+                    selenium.CurrentUrl,
+                    navigateResult.FirstError.Description);
+                return;
+            }
+
+            var content = await FetchArticleContentAsync(selenium, extractionService, stoppingToken);
 
             if (string.IsNullOrWhiteSpace(content))
             {
@@ -210,51 +220,10 @@ public sealed class ArticlesReaderHostedService : BackgroundService
     }
 
     private static async Task<string?> FetchArticleContentAsync(
-        ArticleLink link,
         ISeleniumFlowBuilder selenium,
         IArticleContentExtractionService extractionService,
         CancellationToken stoppingToken)
     {
-        var openResult = await selenium.OpenAsync(link.Url, stoppingToken);
-        if (openResult.IsError)
-        {
-            return null;
-        }
-
-        var waitAfterOpenResult = await selenium.WaitAsync(TimeSpan.FromSeconds(10), stoppingToken);
-        if (waitAfterOpenResult.IsError)
-        {
-            return null;
-        }
-
-        var blockedResult = selenium.IsBlockedPage();
-        if (!blockedResult.IsError && blockedResult.Value)
-        {
-            var refreshResult = await selenium.RefreshAsync(stoppingToken);
-            if (refreshResult.IsError)
-            {
-                return null;
-            }
-
-            var waitAfterRefreshResult = await selenium.WaitAsync(TimeSpan.FromSeconds(8), stoppingToken);
-            if (waitAfterRefreshResult.IsError)
-            {
-                return null;
-            }
-        }
-
-        var consentResult = await selenium.AcceptConsentAsync(stoppingToken);
-        if (consentResult.IsError)
-        {
-            return null;
-        }
-
-        var waitAfterConsentResult = await selenium.WaitAsync(TimeSpan.FromSeconds(3), stoppingToken);
-        if (waitAfterConsentResult.IsError)
-        {
-            return null;
-        }
-
         var htmlResult = selenium.GetHtml();
         if (htmlResult.IsError)
         {

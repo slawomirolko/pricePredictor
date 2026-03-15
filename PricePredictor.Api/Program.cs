@@ -64,7 +64,7 @@ builder.Services.AddSingleton(sp =>
     return new TradingIndicatorNotificationService(ntfyClient, weatherService, ntfySettings.Topic);
 });
 
-builder.Services.AddHostedService<ArticlesFinderHostedService>();
+// builder.Services.AddHostedService<ArticlesFinderHostedService>();
 builder.Services.AddHostedService<ArticlesReaderHostedService>();
 builder.Services.AddHostedService<YahooFinanceBackgroundService>();
 var app = builder.Build();

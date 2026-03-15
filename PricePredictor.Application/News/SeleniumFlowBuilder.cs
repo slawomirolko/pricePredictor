@@ -6,7 +6,7 @@ namespace PricePredictor.Application.News;
 
 public interface ISeleniumFlowBuilderFactory
 {
-    ISeleniumFlowBuilder Create(bool headless);
+    ISeleniumFlowBuilder Create();
 }
 
 public interface ISeleniumFlowBuilder : IDisposable
@@ -14,6 +14,7 @@ public interface ISeleniumFlowBuilder : IDisposable
     string CurrentUrl { get; }
     string Title { get; }
     Task<ErrorOr<bool>> OpenAsync(string url, CancellationToken cancellationToken);
+    Task<ErrorOr<bool>> NavigateToReadyPageAsync(string url, CancellationToken cancellationToken);
     Task<ErrorOr<bool>> RefreshAsync(CancellationToken cancellationToken);
     Task<ErrorOr<bool>> WaitAsync(TimeSpan delay, CancellationToken cancellationToken);
     ErrorOr<bool> IsBlockedPage();
@@ -25,19 +26,16 @@ public interface ISeleniumFlowBuilder : IDisposable
 
 internal sealed class SeleniumFlowBuilderFactory : ISeleniumFlowBuilderFactory
 {
-    public ISeleniumFlowBuilder Create(bool headless)
+    public ISeleniumFlowBuilder Create()
     {
-        var options = CreateOptions(headless);
+        var options = CreateOptions();
         return new SeleniumFlowBuilder(options);
     }
 
-    private static ChromeOptions CreateOptions(bool headless)
+    private static ChromeOptions CreateOptions()
     {
         var options = new ChromeOptions();
-        if (headless)
-        {
-            options.AddArgument("--headless=new");
-        }
+        // Chromium must stay visible during runs.
 
         options.AddArgument("--disable-gpu");
         options.AddArgument("--no-sandbox");
@@ -80,6 +78,30 @@ internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
                 code: "Selenium.OpenFailed",
                 description: $"Open failed for URL '{url}': {ex.Message}");
         }
+    }
+
+    public async Task<ErrorOr<bool>> NavigateToReadyPageAsync(string url, CancellationToken cancellationToken)
+    {
+        if (!Uri.TryCreate(url?.Trim(), UriKind.Absolute, out var targetUri))
+        {
+            return Error.Validation(
+                code: "Selenium.InvalidUrl",
+                description: $"Invalid navigation URL '{url}'.");
+        }
+
+        var firstAttemptResult = await NavigateCoreAsync(targetUri, cancellationToken);
+        if (!firstAttemptResult.IsError)
+        {
+            return true;
+        }
+
+        var retryAttemptResult = await NavigateCoreAsync(targetUri, cancellationToken);
+        if (retryAttemptResult.IsError)
+        {
+            return retryAttemptResult.FirstError;
+        }
+
+        return true;
     }
 
     public async Task<ErrorOr<bool>> RefreshAsync(CancellationToken cancellationToken)
@@ -249,5 +271,84 @@ internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
         {
             return false;
         }
+    }
+
+    private async Task<ErrorOr<bool>> NavigateCoreAsync(Uri targetUri, CancellationToken cancellationToken)
+    {
+        var openResult = await OpenAsync(targetUri.AbsoluteUri, cancellationToken);
+        if (openResult.IsError)
+        {
+            return openResult.FirstError;
+        }
+
+        var waitAfterOpenResult = await WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+        if (waitAfterOpenResult.IsError)
+        {
+            return waitAfterOpenResult.FirstError;
+        }
+
+        var blockedResult = IsBlockedPage();
+        if (!blockedResult.IsError && blockedResult.Value)
+        {
+            var refreshResult = await RefreshAsync(cancellationToken);
+            if (refreshResult.IsError)
+            {
+                return refreshResult.FirstError;
+            }
+
+            var waitAfterRefreshResult = await WaitAsync(TimeSpan.FromSeconds(8), cancellationToken);
+            if (waitAfterRefreshResult.IsError)
+            {
+                return waitAfterRefreshResult.FirstError;
+            }
+        }
+
+        var consentResult = await AcceptConsentAsync(cancellationToken);
+        if (consentResult.IsError)
+        {
+            return consentResult.FirstError;
+        }
+
+        var waitAfterConsentResult = await WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+        if (waitAfterConsentResult.IsError)
+        {
+            return waitAfterConsentResult.FirstError;
+        }
+
+        // Cookie banners can redirect to the home page, so verify article URL right after consent.
+        var locationCheckResult = EnsureExpectedLocation(targetUri);
+        if (locationCheckResult.IsError)
+        {
+            return locationCheckResult.FirstError;
+        }
+
+        return true;
+    }
+
+    private ErrorOr<bool> EnsureExpectedLocation(Uri targetUri)
+    {
+        if (!Uri.TryCreate(CurrentUrl, UriKind.Absolute, out var currentUri))
+        {
+            return Error.Unexpected(
+                code: "Selenium.NavigationMismatch",
+                description: $"Navigation failed. Expected '{targetUri.AbsoluteUri}', got '{CurrentUrl}'.");
+        }
+
+        if (!string.Equals(currentUri.Host, targetUri.Host, StringComparison.OrdinalIgnoreCase))
+        {
+            return Error.Unexpected(
+                code: "Selenium.NavigationMismatch",
+                description: $"Navigation host mismatch. Expected '{targetUri.Host}', got '{currentUri.Host}'. CurrentUrl='{currentUri.AbsoluteUri}'.");
+        }
+
+        if (!string.Equals(targetUri.AbsolutePath, "/", StringComparison.Ordinal)
+            && string.Equals(currentUri.AbsolutePath, "/", StringComparison.Ordinal))
+        {
+            return Error.Unexpected(
+                code: "Selenium.NavigationMismatch",
+                description: $"Navigation ended on homepage instead of article path. ExpectedPath='{targetUri.AbsolutePath}', CurrentUrl='{currentUri.AbsoluteUri}'.");
+        }
+
+        return true;
     }
 }

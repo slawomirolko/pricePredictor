@@ -17,7 +17,7 @@ public sealed record GoldNewsSettings
     public string CloudOllamaModel { get; init; } = "gpt-oss:120b";
     public string? CloudOllamaApiKey { get; init; }
     public bool UseCloud { get; set; } = true;
-    public bool Headless { get; init; } = true;
+    public bool Headless { get; init; } = false;
     public int ArticlesReaderMinDelaySeconds { get; init; } = 20;
     public int ArticlesReaderMaxDelaySeconds { get; init; } = 30;
 }

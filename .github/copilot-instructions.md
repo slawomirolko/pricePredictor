@@ -1,5 +1,10 @@
 # Copilot Instructions for PricePredictor
 
+## SELENIUM / CHROMIUM VISIBILITY
+- ✅ Chromium must always run in visible mode for Selenium flows
+- ❌ Do not enable headless mode (`--headless`, `--headless=new`)
+- ✅ Selenium factories/clients must create visible browser sessions only (no runtime toggle for headless)
+
 ## PERSISTENCE REPOSITORY RULES
 - ✅ Each repository must operate on a single table only
 - ✅ Repository implementation names must come from the table name they operate on
