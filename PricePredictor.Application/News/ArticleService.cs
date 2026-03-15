@@ -10,12 +10,12 @@ internal sealed class ArticleService : IArticleService
 {
     private const string Source = "reuters";
     private readonly ILogger<ArticleService> _logger;
-    private readonly IArticleRepository _repository;
+    private readonly IArticleReaderRepository _repository;
     private readonly ISeleniumFlowBuilderFactory _seleniumFlowBuilderFactory;
 
     public ArticleService(
         ILogger<ArticleService> logger,
-        IArticleRepository repository,
+        IArticleReaderRepository repository,
         ISeleniumFlowBuilderFactory seleniumFlowBuilderFactory)
     {
         _logger = logger;

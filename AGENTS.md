@@ -189,6 +189,8 @@
 
 ## APPLICATION MODELS
 - ✅ Static factory methods in models must return `ErrorOr<TModel>` (for example `ErrorOr<ArticleLink>`)
+- ✅ Use a single `Create(..., Guid? id = null)` factory pattern for Guid-based models (`id == null` means generate a new ID; provided `id` means rehydrate)
+- ❌ Do not add `CreateFrom(...)` methods
 - ✅ If a business model property changes, add/update a domain method on the model to perform that change (DDD style)
 - ✅ Persist model state changes by saving through Unit of Work (`SaveChangesAsync`) instead of ad-hoc setters or direct mutation outside the model
 - ❌ Do not throw exceptions for validation/domain errors from model factory methods; return `ErrorOr` errors instead
@@ -199,4 +201,4 @@
 - ✅ Reserve exceptions for truly exceptional/technical failures (e.g. infrastructure outage, unexpected runtime faults)
 - ✅ All models in `PricePredictor.Application` must set values only via static factory methods
 - ❌ Do not expose public setters or public constructors for creating mutable state
-- ✅ Prefer private constructors + static `Create(...)`/`From(...)` methods that enforce invariants
+- ✅ Prefer private constructors + static `Create(...)` methods that enforce invariants
