@@ -60,6 +60,45 @@ internal sealed class ArticlesRepository : AppNews.IArticleScanRepository
         return ids.ToHashSet();
     }
 
+    public async Task<IReadOnlyList<Guid>> GetTradingUsefulArticleLinkIdsAsync(
+        int maxCount,
+        CancellationToken cancellationToken)
+    {
+        if (maxCount <= 0)
+        {
+            return [];
+        }
+
+        return await _context.Articles
+            .AsNoTracking()
+            .Where(x => x.IsTradingUseful == true)
+            .GroupBy(x => x.ArticleLinkId)
+            .Select(group => new
+            {
+                ArticleLinkId = group.Key,
+                LatestScannedAtUtc = group.Max(article => article.ScannedAtUtc)
+            })
+            .OrderByDescending(x => x.LatestScannedAtUtc)
+            .Take(maxCount)
+            .Select(x => x.ArticleLinkId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AppModels.Article>> GetByArticleLinkIdsAsync(
+        IReadOnlyCollection<Guid> articleLinkIds,
+        CancellationToken cancellationToken)
+    {
+        if (articleLinkIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await _context.Articles
+            .AsNoTracking()
+            .Where(x => articleLinkIds.Contains(x.ArticleLinkId))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlySet<Guid>> GetArticleLinkIdsWithUnknownTradingUsefulnessAsync(CancellationToken cancellationToken)
     {
         var ids = await _context.Articles

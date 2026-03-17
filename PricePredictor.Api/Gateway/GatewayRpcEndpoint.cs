@@ -10,39 +10,26 @@ namespace PricePredictor.Api.Gateway;
 
 public class GatewayRpcEndpoint : Gateway.GatewayBase
 {
-    private readonly IGatewayService _gatewayService;
     private readonly IVolatilityRepository _volatilityRepository;
     private readonly IGoldNewsService _goldNewsService;
+    private readonly IImportantArticleService _importantArticleService;
     private readonly INewsArticleChannel _newsArticleChannel;
     private readonly ILogger<GatewayRpcEndpoint> _logger;
 
     public GatewayRpcEndpoint(
-        IGatewayService gatewayService,
         IVolatilityRepository volatilityRepository,
         IGoldNewsService goldNewsService,
+        IImportantArticleService importantArticleService,
         INewsArticleChannel newsArticleChannel,
         ILogger<GatewayRpcEndpoint> logger)
     {
-        _gatewayService = gatewayService;
         _volatilityRepository = volatilityRepository;
         _goldNewsService = goldNewsService;
+        _importantArticleService = importantArticleService;
         _newsArticleChannel = newsArticleChannel;
         _logger = logger;
     }
-
-    public override async Task<GatewayReply> Send(
-        GatewayRequest request,
-        ServerCallContext context)
-    {
-        var result = await _gatewayService
-            .HandleAsync(request.Payload, context.CancellationToken);
-
-        return new GatewayReply
-        {
-            Result = result
-        };
-    }
-
+    
     public override async Task<VolatilityQueryReply> GetVolatility(
         VolatilityQueryRequest request,
         ServerCallContext context)
@@ -106,6 +93,16 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
         };
     }
 
+    public override async Task<NewestImportantArticlesReply> GetNewestImportantArticles(
+        NewestImportantArticlesRequest request,
+        ServerCallContext context)
+    {
+        var articles = await _importantArticleService.GetNewestAsync(context.CancellationToken);
+        var reply = new NewestImportantArticlesReply();
+        reply.Articles.AddRange(articles.Select(MapImportantArticle));
+        return reply;
+    }
+
     public override async Task SubscribeLatestNews(
         LatestNewsSubscriptionRequest request,
         IServerStreamWriter<LatestNewsNotification> responseStream,
@@ -167,5 +164,13 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
         Vol60 = row.Vol60,
         ShortPanic = row.ShortPanic,
         LongPanic = row.LongPanic
+    };
+
+    private static ImportantArticle MapImportantArticle(ImportantArticleDto article) => new()
+    {
+        Url = article.Url,
+        Source = article.Source,
+        ReadAtUtc = Timestamp.FromDateTime(article.ReadAtUtc),
+        Summary = article.Summary ?? string.Empty
     };
 }

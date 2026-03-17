@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
-using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Application;
-using PricePredictor.Application.Notifications;
-using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure;
 using PricePredictor.Persistence;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
@@ -35,27 +32,15 @@ builder.Services.AddGrpc();
 builder.Services.AddApplication();
 
 // Infrastructure: External adapters and clients
-builder.Services.AddNtfyClient(builder.Configuration);
 builder.Services.AddOllamaArticleExtractionClient();
 builder.Services.AddGoldNewsClient();
-builder.Services.AddOpenMeteoClient();
 builder.Services.AddStooqGoldPriceClient();
 
 // Persistence: Database and repository setup
 builder.Services.AddPersistence(builder.Configuration);
 
-builder.Services.Configure<NtfySettings>(builder.Configuration.GetSection(NtfySettings.SectionName));
 builder.Services.Configure<GoldNewsSettings>(builder.Configuration.GetSection(GoldNewsSettings.SectionName));
 builder.Services.Configure<GoldNewsSettingsApp>(builder.Configuration.GetSection(GoldNewsSettingsApp.SectionName));
-builder.Services.AddSingleton(sp =>
-{
-    var ntfyClient = sp.GetRequiredService<INtfyClient>();
-    var weatherService = sp.GetRequiredService<IWeatherService>();
-    var ntfySettings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NtfySettings>>().Value;
-    return new TradingIndicatorNotificationService(ntfyClient, weatherService, ntfySettings.Topic);
-});
-
-builder.Services.AddHostedService<ArticlesReaderHostedService>();
 var app = builder.Build();
 
 app.Services.ApplyPendingMigrations();
@@ -69,4 +54,3 @@ app.MapControllers();
 app.MapGrpcService<GatewayRpcEndpoint>();
 
 app.Run();
-

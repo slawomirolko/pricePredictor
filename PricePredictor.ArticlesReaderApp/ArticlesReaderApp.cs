@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PricePredictor.Application;
 using PricePredictor.Application.Data;
@@ -5,18 +7,18 @@ using PricePredictor.Application.Models;
 using PricePredictor.Application.News;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 
-namespace PricePredictor.Api.BackgroundServices;
+namespace PricePredictor.ArticlesReaderApp;
 
-public sealed class ArticlesReaderHostedService : BackgroundService
+public sealed class ArticlesReaderApp
 {
-    private readonly ILogger<ArticlesReaderHostedService> _logger;
+    private readonly ILogger<ArticlesReaderApp> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly GoldNewsSettings _settings;
     private readonly TradingIndicatorNotificationService _notificationService;
     private readonly INewsArticleChannel _newsArticleChannel;
 
-    public ArticlesReaderHostedService(
-        ILogger<ArticlesReaderHostedService> logger,
+    public ArticlesReaderApp(
+        ILogger<ArticlesReaderApp> logger,
         IServiceScopeFactory scopeFactory,
         IOptions<GoldNewsSettings> settings,
         TradingIndicatorNotificationService notificationService,
@@ -29,15 +31,19 @@ public sealed class ArticlesReaderHostedService : BackgroundService
         _newsArticleChannel = newsArticleChannel;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task RunAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Articles reader background service started.");
+        _logger.LogInformation("Articles reader app started.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 await ProcessUnprocessedLinksAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
             }
             catch (Exception ex)
             {
@@ -46,10 +52,18 @@ public sealed class ArticlesReaderHostedService : BackgroundService
 
             var interval = CalculateWaitingTime();
             _logger.LogInformation("Articles reader sleeping for {Interval}", interval);
-            await Task.Delay(interval, stoppingToken);
+
+            try
+            {
+                await Task.Delay(interval, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
         }
 
-        _logger.LogInformation("Articles reader background service stopping.");
+        _logger.LogInformation("Articles reader app stopping.");
     }
 
     private TimeSpan CalculateWaitingTime()
@@ -250,7 +264,7 @@ public sealed class ArticlesReaderHostedService : BackgroundService
             return extracted;
         }
 
-        // Retry once after a short wait - Reuters pages can hydrate paragraphs asynchronously.
+        // Retry once after a short wait because Reuters pages can hydrate paragraphs asynchronously.
         var waitBeforeRetryResult = await selenium.WaitAsync(TimeSpan.FromSeconds(4), stoppingToken);
         if (waitBeforeRetryResult.IsError)
         {
@@ -296,3 +310,4 @@ public sealed class ArticlesReaderHostedService : BackgroundService
         }
     }
 }
+

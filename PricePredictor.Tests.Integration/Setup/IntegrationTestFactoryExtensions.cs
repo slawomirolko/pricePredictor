@@ -48,7 +48,6 @@ internal static class IntegrationTestFactoryExtensions
                 services.RemoveAll<DbContextOptions<PricePredictorDbContext>>();
                 services.RemoveAll<IDbContextFactory<PricePredictorDbContext>>();
                 services.RemoveAll<IHostedService>();
-                services.RemoveAll<IGatewayService>();
 
                 // Register persistence repositories and EF setup
                 services.AddPersistence(context.Configuration);
@@ -57,7 +56,6 @@ internal static class IntegrationTestFactoryExtensions
                 services.AddGoldNewsClient();
                 services.AddOpenMeteoClient();
                 services.AddStooqGoldPriceClient();
-                services.AddGoogleNewsRssClient(context.Configuration);
                 services.AddOllamaArticleExtractionClient();
 
                 services.Configure<GoldNewsSettings>(context.Configuration.GetSection(GoldNewsSettings.SectionName));
@@ -66,7 +64,6 @@ internal static class IntegrationTestFactoryExtensions
                 services.AddApplication();
                 services.AddScoped<INewsService, NewsService>();
                 services.AddScoped<Application.Weather.IWeatherService, Application.Weather.WeatherService>();
-                services.AddScoped<PricePredictor.Application.IGatewayService, GatewayService>();
 
                 // Ensure GoldNewsSettings from Application namespace is also configured
                 services.Configure<PricePredictor.Application.Data.GoldNewsSettings>(context.Configuration.GetSection(GoldNewsSettings.SectionName));

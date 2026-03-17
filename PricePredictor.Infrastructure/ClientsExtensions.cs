@@ -11,7 +11,6 @@ using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure.Finance;
 using PricePredictor.Infrastructure.Gold;
 using PricePredictor.Infrastructure.GoldNews;
-using PricePredictor.Infrastructure.News;
 using PricePredictor.Infrastructure.Weather;
 
 namespace PricePredictor.Infrastructure;
@@ -132,21 +131,6 @@ public static class ClientsExtensions
             services.AddHttpClient<IGoldPriceService, StooqGoldPriceService>(client =>
                 {
                     client.BaseAddress = new Uri("https://stooq.com/");
-                })
-                .AddPolicyHandler(retryPolicy);
-
-            return services;
-        }
-
-        public IServiceCollection AddGoogleNewsRssClient(IConfiguration configuration)
-        {
-            ArgumentNullException.ThrowIfNull(configuration);
-            var retryPolicy = CreateSharedHttpRetryPolicy();
-
-            services.AddHttpClient<IGoogleNewsRssClient, GoogleNewsRssClient>((sp, client) =>
-                {
-                    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<GoogleNewsRssSettings>>().Value;
-                    client.BaseAddress = new Uri(settings.BaseUrl);
                 })
                 .AddPolicyHandler(retryPolicy);
 
