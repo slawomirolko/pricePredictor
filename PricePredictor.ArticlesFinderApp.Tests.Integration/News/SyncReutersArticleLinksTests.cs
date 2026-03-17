@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using PricePredictor.Application.News;
-using PricePredictor.ArticlesFinderHostedService.Tests.Integration.Setup;
+using PricePredictor.ArticlesFinderApp.Tests.Integration.Setup;
 using Shouldly;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace PricePredictor.ArticlesFinderHostedService.Tests.Integration.News;
+namespace PricePredictor.ArticlesFinderApp.Tests.Integration.News;
 
 public sealed class SyncReutersArticleLinksTests : IntegrationTest
 {

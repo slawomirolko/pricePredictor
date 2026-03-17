@@ -2,7 +2,6 @@
 using PricePredictor.Api.BackgroundServices;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Application;
-using PricePredictor.Application.Finance;
 using PricePredictor.Application.Notifications;
 using PricePredictor.Application.Weather;
 using PricePredictor.Infrastructure;
@@ -41,7 +40,6 @@ builder.Services.AddOllamaArticleExtractionClient();
 builder.Services.AddGoldNewsClient();
 builder.Services.AddOpenMeteoClient();
 builder.Services.AddStooqGoldPriceClient();
-builder.Services.AddYahooFinanceClient();
 
 // Persistence: Database and repository setup
 builder.Services.AddPersistence(builder.Configuration);
@@ -49,9 +47,6 @@ builder.Services.AddPersistence(builder.Configuration);
 builder.Services.Configure<NtfySettings>(builder.Configuration.GetSection(NtfySettings.SectionName));
 builder.Services.Configure<GoldNewsSettings>(builder.Configuration.GetSection(GoldNewsSettings.SectionName));
 builder.Services.Configure<GoldNewsSettingsApp>(builder.Configuration.GetSection(GoldNewsSettingsApp.SectionName));
-builder.Services.Configure<YahooFinanceSettings>(builder.Configuration.GetSection(YahooFinanceSettings.SectionName));
-
-
 builder.Services.AddSingleton(sp =>
 {
     var ntfyClient = sp.GetRequiredService<INtfyClient>();
@@ -61,7 +56,6 @@ builder.Services.AddSingleton(sp =>
 });
 
 builder.Services.AddHostedService<ArticlesReaderHostedService>();
-builder.Services.AddHostedService<YahooFinanceBackgroundService>();
 var app = builder.Build();
 
 app.Services.ApplyPendingMigrations();

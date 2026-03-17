@@ -2,8 +2,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PricePredictor.ArticlesFinderApp;
 
-namespace PricePredictor.ArticlesFinderHostedService.Tests.Integration.Setup;
+namespace PricePredictor.ArticlesFinderApp.Tests.Integration.Setup;
 
 public sealed class ArticlesFinderIntegrationTestFactory : IDisposable
 {
@@ -34,7 +35,7 @@ public sealed class ArticlesFinderIntegrationTestFactory : IDisposable
         builder.Logging.SetMinimumLevel(LogLevel.Debug);
         builder.Logging.AddFilter("Microsoft", LogLevel.Information);
 
-        builder.Services.AddArticlesFinderHostedService(builder.Configuration, includeHostedService: false);
+        builder.Services.AddArticlesFinderApp(builder.Configuration);
 
         _host = builder.Build();
     }

@@ -8,8 +8,8 @@
   </Folder>
   <Project Path="PricePredictor.Api/PricePredictor.Api.csproj" />
   <Project Path="PricePredictor.FinanceTrackerApp/PricePredictor.FinanceTrackerApp.csproj" />
-  <Project Path="PricePredictor.ArticlesFinderHostedService/PricePredictor.ArticlesFinderHostedService.csproj" />
-  <Project Path="PricePredictor.ArticlesFinderHostedService.Tests.Integration/PricePredictor.ArticlesFinderHostedService.Tests.Integration.csproj" />
+  <Project Path="PricePredictor.ArticlesFinderApp/PricePredictor.ArticlesFinderApp.csproj" />
+  <Project Path="PricePredictor.ArticlesFinderApp.Tests.Integration/PricePredictor.ArticlesFinderApp.Tests.Integration.csproj" />
   <Project Path="PricePredictor.Application/PricePredictor.Application.csproj" />
   <Project Path="PricePredictor.Infrastructure/PricePredictor.Infrastructure.csproj" />
   <Project Path="PricePredictor.Persistence/PricePredictor.Persistence.csproj" />

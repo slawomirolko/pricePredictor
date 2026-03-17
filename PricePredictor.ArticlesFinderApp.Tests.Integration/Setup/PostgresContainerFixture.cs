@@ -4,7 +4,7 @@ using Npgsql;
 using PricePredictor.Persistence;
 using Testcontainers.PostgreSql;
 
-namespace PricePredictor.ArticlesFinderHostedService.Tests.Integration.Setup;
+namespace PricePredictor.ArticlesFinderApp.Tests.Integration.Setup;
 
 public sealed class PostgresContainerFixture : IAsyncLifetime
 {

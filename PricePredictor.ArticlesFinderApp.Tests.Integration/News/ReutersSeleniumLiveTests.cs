@@ -4,7 +4,7 @@ using Shouldly;
 using System.Text.RegularExpressions;
 using Xunit.Abstractions;
 
-namespace PricePredictor.ArticlesFinderHostedService.Tests.Integration.News;
+namespace PricePredictor.ArticlesFinderApp.Tests.Integration.News;
 
 public sealed class ReutersSeleniumLiveTests : IDisposable
 {

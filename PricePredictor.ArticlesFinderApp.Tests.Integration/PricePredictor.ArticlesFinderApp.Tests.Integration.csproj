@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PricePredictor.ArticlesFinderHostedService\PricePredictor.ArticlesFinderHostedService.csproj" />
+    <ProjectReference Include="..\PricePredictor.ArticlesFinderApp\PricePredictor.ArticlesFinderApp.csproj" />
     <ProjectReference Include="..\PricePredictor.Application\PricePredictor.Application.csproj" />
     <ProjectReference Include="..\PricePredictor.Persistence\PricePredictor.Persistence.csproj" />
   </ItemGroup>

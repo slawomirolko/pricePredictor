@@ -1,28 +1,27 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PricePredictor.Application.Data;
 using PricePredictor.Application.News;
 
-namespace PricePredictor.ArticlesFinderHostedService.BackgroundServices;
+namespace PricePredictor.ArticlesFinderApp;
 
-public sealed class ArticlesFinderHostedService : BackgroundService
+public sealed class ArticlesFinderApp
 {
     private static readonly TimeSpan SyncInterval = TimeSpan.FromSeconds(60);
-    private readonly ILogger<ArticlesFinderHostedService> _logger;
+    private readonly ILogger<ArticlesFinderApp> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public ArticlesFinderHostedService(
-        ILogger<ArticlesFinderHostedService> logger,
+    public ArticlesFinderApp(
+        ILogger<ArticlesFinderApp> logger,
         IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task RunAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Articles finder background service started.");
+        _logger.LogInformation("Articles finder application started.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -36,14 +35,14 @@ public sealed class ArticlesFinderHostedService : BackgroundService
 
                 var unprocessedLinks = await unitOfWork.ArticleLinks.GetUnprocessedLinksAsync(stoppingToken);
                 var unprocessedIds = unprocessedLinks.Select(x => x.Id).ToArray();
-
                 var scannedLinkIds = await unitOfWork.Articles
                     .GetScannedArticleLinkIdsAsync(unprocessedIds, stoppingToken);
+                var scannedLinkIdsSet = scannedLinkIds.ToHashSet();
 
                 var processedCount = 0;
                 foreach (var link in unprocessedLinks)
                 {
-                    if (!scannedLinkIds.Contains(link.Id))
+                    if (!scannedLinkIdsSet.Contains(link.Id))
                     {
                         continue;
                     }
@@ -68,14 +67,25 @@ public sealed class ArticlesFinderHostedService : BackgroundService
                     _logger.LogInformation("Article sync completed. Saved {Count} article links.", syncResult.ArticleLinks.Count);
                 }
             }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during article sync");
             }
 
-            await Task.Delay(SyncInterval, stoppingToken);
+            try
+            {
+                await Task.Delay(SyncInterval, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
         }
 
-        _logger.LogInformation("Articles finder background service stopping.");
+        _logger.LogInformation("Articles finder application stopping.");
     }
 }

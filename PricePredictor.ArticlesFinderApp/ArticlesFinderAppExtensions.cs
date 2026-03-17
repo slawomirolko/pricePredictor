@@ -6,14 +6,13 @@ using PricePredictor.Persistence;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 using GoldNewsSettingsApp = PricePredictor.Application.Data.GoldNewsSettings;
 
-namespace PricePredictor.ArticlesFinderHostedService;
+namespace PricePredictor.ArticlesFinderApp;
 
-public static class ArticlesFinderHostedServiceExtensions
+public static class ArticlesFinderAppExtensions
 {
-    public static IServiceCollection AddArticlesFinderHostedService(
+    public static IServiceCollection AddArticlesFinderApp(
         this IServiceCollection services,
-        IConfiguration configuration,
-        bool includeHostedService = true)
+        IConfiguration configuration)
     {
         services.AddApplication();
         services.AddGoldNewsClient();
@@ -24,10 +23,7 @@ public static class ArticlesFinderHostedServiceExtensions
         services.Configure<PersistenceDefaultConnectionSettings>(
             configuration.GetSection(PersistenceDefaultConnectionSettings.SectionName));
 
-        if (includeHostedService)
-        {
-            services.AddHostedService<BackgroundServices.ArticlesFinderHostedService>();
-        }
+        services.AddSingleton<ArticlesFinderApp>();
 
         return services;
     }

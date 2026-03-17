@@ -44,12 +44,12 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  pricepredictor.articlesfinderhostedservice:
-    container_name: pricepredictor.articlesfinderhostedservice
-    image: "pricepredictor.articlesfinderhostedservice:latest"
+  pricepredictor.articlesfinderapp:
+    container_name: pricepredictor.articlesfinderapp
+    image: "pricepredictor.articlesfinderapp:latest"
     build:
       context: .
-      dockerfile: PricePredictor.ArticlesFinderHostedService/Dockerfile
+      dockerfile: PricePredictor.ArticlesFinderApp/Dockerfile
     environment:
       - DOTNET_ENVIRONMENT=Production
       - PersistenceDefaultConnection__ConnectionString=Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;

@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PricePredictor.Application.Models;
 using PricePredictor.Persistence;
 
-namespace PricePredictor.ArticlesFinderHostedService.Tests.Integration.Setup;
+namespace PricePredictor.ArticlesFinderApp.Tests.Integration.Setup;
 
 [Collection("integration")]
 public abstract class IntegrationTest : IDisposable
