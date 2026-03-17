@@ -157,6 +157,10 @@
 - ✅ Each connection string must have its own dedicated settings type/section, following the same settings pattern as clients (`sealed record`, `SectionName`, `Configure<T>(GetSection(...))`)
 - ✅ Apply this rule to all connection strings across the entire solution
 
+## PROJECT NAMING
+- ✅ Every project in the solution must start with the `PricePredictor.` prefix (e.g., `PricePredictor.FinanceTrackerApp`, `PricePredictor.Api`)
+- ❌ Do not create projects without the `PricePredictor.` prefix
+
 ## ARCHITECTURE LAYERS
 - ✅ **Application Layer** (`PricePredictor.Application`):
   - Contains all service interfaces (e.g., `IWeatherService`, `IGatewayService`)

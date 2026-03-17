@@ -1,4 +1,4 @@
-﻿services:
+services:
   postgres:
     container_name: pricepredictor.postgres
     image: "pgvector/pgvector:pg17"
@@ -60,6 +60,24 @@
       - GoldNews__CloudOllamaModel=gpt-oss:20b-cloud
       - GoldNews__UseCloud=true
       - GoldNews__Headless=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pricepredictor.financetrackerapp:
+    container_name: pricepredictor.financetrackerapp
+    image: "pricepredictor.financetrackerapp:latest"
+    build:
+      context: .
+      dockerfile: PricePredictor.FinanceTrackerApp/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - PersistenceDefaultConnection__ConnectionString=Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;
     depends_on:
       postgres:
         condition: service_healthy
