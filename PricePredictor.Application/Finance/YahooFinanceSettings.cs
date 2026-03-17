@@ -32,7 +32,7 @@ public record YahooFinanceSettings
     /// <summary>
     /// Interval for sending notifications (in minutes)
     /// </summary>
-    public int NotificationIntervalMinutes { get; init; } = 5;
+    public int NotificationIntervalMinutes { get; init; }
 }
 
 /// <summary>

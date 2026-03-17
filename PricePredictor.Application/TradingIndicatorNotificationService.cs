@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿﻿using System.Text;
 using PricePredictor.Application.Finance;
 using PricePredictor.Application.Notifications;
 using PricePredictor.Application.Weather;
@@ -64,7 +64,7 @@ public class TradingIndicatorNotificationService
                 volumeSpike,
                 vroc);
 
-            await _ntfyClient.SendAsync(_topic, message);
+            await _ntfyClient.SendAsync(_topic, message, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -83,7 +83,7 @@ public class TradingIndicatorNotificationService
         try
         {
             var message = await FormatSummaryMessageAsync(allMetrics);
-            await _ntfyClient.SendAsync(_topic, message);
+            await _ntfyClient.SendAsync(_topic, message, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -301,4 +301,3 @@ public record TradingMetrics
     public decimal? DailyHigh { get; init; }
     public decimal? DailyLow { get; init; }
 }
-

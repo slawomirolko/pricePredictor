@@ -15,7 +15,7 @@ public class YahooFinanceBackgroundService : BackgroundService
     private readonly YahooFinanceSettings _settings;
     private readonly TradingIndicatorNotificationService _notificationService;
     private DateTime _lastBackupTime = DateTime.UtcNow;
-    private DateTime _lastNotificationTime = DateTime.UtcNow;
+    private DateTime _lastNotificationTime = DateTime.MinValue;
     private readonly Dictionary<string, List<double>> _returnsBuffer = new();
     private readonly Dictionary<string, List<(DateTime, double)>> _volumeBuffer = new(); // For volume calculations
     private readonly Dictionary<string, List<decimal>> _priceBuffer = new(); // For technical indicators
@@ -87,11 +87,15 @@ public class YahooFinanceBackgroundService : BackgroundService
     {
         try
         {
-            var candles = await _yahooClient.GetIntradayDataAsync(symbol, _settings.Interval, _settings.Range, cancellationToken);
+            var candles = await FetchCandlesAsync(symbol, cancellationToken);
 
             if (candles.Count == 0)
             {
-                _logger.LogWarning("No candles received for {Symbol}", symbol);
+                _logger.LogWarning(
+                    "No candles received for {Symbol}. Primary request used Interval={Interval}, Range={Range}.",
+                    symbol,
+                    _settings.Interval,
+                    _settings.Range);
                 return;
             }
 
@@ -104,9 +108,12 @@ public class YahooFinanceBackgroundService : BackgroundService
                 ? IndicatorsCalculator.CalculateLogarithmicReturn(lastCandle.Close, previousCandle.Close)
                 : 0.0;
 
+            // Yahoo can return null volume for some candles; treat it as zero to keep metrics pipeline alive.
+            var currentVolume = (double)(lastCandle.Volume ?? 0L);
+
             _returnsBuffer[symbol].Add(logReturn);
             _priceBuffer[symbol].Add(lastCandle.Close);
-            _volumeBuffer[symbol].Add((lastCandle.Timestamp, (double)lastCandle.Volume));
+            _volumeBuffer[symbol].Add((lastCandle.Timestamp, currentVolume));
 
             // Keep buffers at reasonable size (last 200 candles for 200+ minute history)
             if (_returnsBuffer[symbol].Count > 200)
@@ -137,11 +144,11 @@ public class YahooFinanceBackgroundService : BackgroundService
             
             // Calculate volume metrics
             var avgVolume = _volumeBuffer[symbol].Count > 0 ? _volumeBuffer[symbol].Average(v => v.Item2) : 1.0;
-            var volumeSpike = IndicatorsCalculator.VolumeSpike((double)lastCandle.Volume, avgVolume);
-            var pastVolume = _volumeBuffer[symbol].Count > 1 
-                ? _volumeBuffer[symbol][_volumeBuffer[symbol].Count - 2].Item2 
-                : (double)lastCandle.Volume;
-            var vroc = IndicatorsCalculator.VROC((double)lastCandle.Volume, pastVolume);
+            var volumeSpike = IndicatorsCalculator.VolumeSpike(currentVolume, avgVolume);
+            var pastVolume = _volumeBuffer[symbol].Count > 1
+                ? _volumeBuffer[symbol][_volumeBuffer[symbol].Count - 2].Item2
+                : currentVolume;
+            var vroc = IndicatorsCalculator.VROC(currentVolume, pastVolume);
             
             // Calculate composite panic score
             var compositePanicScore = IndicatorsCalculator.CompositePanicScore(
@@ -152,20 +159,69 @@ public class YahooFinanceBackgroundService : BackgroundService
                 "Symbol: {Symbol}, Timestamp: {Timestamp}, Close: {Close}, LogReturn: {Return:F6}, Vol5: {Vol5:F6}, Vol15: {Vol15:F6}, Vol60: {Vol60:F6}, ShortPanic: {ShortPanic:F6}, LongPanic: {LongPanic:F6}, CompositePanic: {CompositePanic:F6}",
                 symbol, lastCandle.Timestamp, lastCandle.Close, logReturn, vol5, vol15, vol60, shortPanicScore, longPanicScore, compositePanicScore);
 
-            // Save to database
+            // Persist intraday point (method handles its own persistence errors).
             await SaveToDatabaseAsync(symbol, lastCandle, logReturn, vol5, vol15, vol60, shortPanicScore, longPanicScore, cancellationToken);
 
-            var dailySummary = await UpdateDailySummaryAsync(symbol, candles, cancellationToken);
+            DailySummary? dailySummary = null;
+            try
+            {
+                dailySummary = await UpdateDailySummaryAsync(symbol, candles, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update daily summary for {Symbol}; notification will use intraday-only metrics.", symbol);
+            }
 
-            // Store metrics for notification
-            StoreMetricsForNotification(symbol, lastCandle, logReturn, vol5, vol15, vol60, 
-                shortPanicScore, longPanicScore, compositePanicScore, atr, rsiDeviation, 
+            // Always store latest metrics so summary notifications still work when daily persistence fails.
+            StoreMetricsForNotification(symbol, lastCandle, logReturn, vol5, vol15, vol60,
+                shortPanicScore, longPanicScore, compositePanicScore, atr, rsiDeviation,
                 bollingerDeviation, volumeSpike, vroc, dailySummary);
+
+            _logger.LogInformation(
+                "Stored latest metrics for {Symbol} at {Timestamp}. Tracked symbols: {Count}",
+                symbol,
+                lastCandle.Timestamp,
+                _latestMetrics.Count);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing symbol {Symbol}", symbol);
         }
+    }
+
+    private async Task<List<CandlePoint>> FetchCandlesAsync(string symbol, CancellationToken cancellationToken)
+    {
+        var primaryCandles = await _yahooClient.GetIntradayDataAsync(symbol, _settings.Interval, _settings.Range, cancellationToken);
+        if (primaryCandles.Count > 0)
+        {
+            return primaryCandles;
+        }
+
+        var fallbackInterval = _settings.Interval.Equals("1m", StringComparison.OrdinalIgnoreCase)
+            ? "5m"
+            : _settings.Interval;
+        var fallbackRange = _settings.Range.Equals("1d", StringComparison.OrdinalIgnoreCase)
+            ? "5d"
+            : _settings.Range;
+
+        if (fallbackInterval.Equals(_settings.Interval, StringComparison.OrdinalIgnoreCase)
+            && fallbackRange.Equals(_settings.Range, StringComparison.OrdinalIgnoreCase))
+        {
+            return primaryCandles;
+        }
+
+        var fallbackCandles = await _yahooClient.GetIntradayDataAsync(symbol, fallbackInterval, fallbackRange, cancellationToken);
+        if (fallbackCandles.Count > 0)
+        {
+            _logger.LogWarning(
+                "Primary candle request returned 0 rows for {Symbol}. Using fallback Interval={FallbackInterval}, Range={FallbackRange} with {Count} rows.",
+                symbol,
+                fallbackInterval,
+                fallbackRange,
+                fallbackCandles.Count);
+        }
+
+        return fallbackCandles;
     }
 
     private double GetRollingVolatility(string symbol, int minutes)
@@ -339,6 +395,24 @@ public class YahooFinanceBackgroundService : BackgroundService
                 var symbol = kvp.Key;
                 var metrics = kvp.Value;
                 _logger.LogWarning("HIGH PANIC ALERT for {Symbol}: {CompositePanic}", symbol, metrics.CompositePanicScore);
+
+                await _notificationService.SendTradingIndicatorsNotificationAsync(
+                    symbol: symbol,
+                    timestamp: metrics.Timestamp,
+                    close: metrics.Close,
+                    logReturn: metrics.LogReturn,
+                    vol5: metrics.Vol5,
+                    vol15: metrics.Vol15,
+                    vol60: metrics.Vol60,
+                    shortPanicScore: metrics.ShortPanicScore,
+                    longPanicScore: metrics.LongPanicScore,
+                    compositePanicScore: metrics.CompositePanicScore,
+                    atr: metrics.ATR,
+                    rsiDeviation: metrics.RSIDeviation,
+                    bollingerDeviation: metrics.BollingerDeviation,
+                    volumeSpike: metrics.VolumeSpike,
+                    vroc: metrics.VROC,
+                    cancellationToken: cancellationToken);
             }
         }
         catch (Exception ex)
@@ -371,40 +445,51 @@ public class YahooFinanceBackgroundService : BackgroundService
                     _ => new List<object>()
                 };
 
-                if (data is List<VolatilityGold> goldData)
+                switch (data)
                 {
-                    foreach (var item in goldData)
+                    case List<VolatilityGold> goldData:
                     {
-                        _logger.LogInformation(
-                            "  TS: {Timestamp}, O: {Open}, H: {High}, L: {Low}, C: {Close}, V: {Volume}, Ret: {Return:F6}, V5: {Vol5:F6}, V15: {Vol15:F6}, V60: {Vol60:F6}, SP: {SP:F6}, LP: {LP:F6}",
-                            item.Timestamp, item.Open, item.High, item.Low, item.Close, item.Volume, item.LogarithmicReturn, item.RollingVol5, item.RollingVol15, item.RollingVol60, item.ShortPanicScore, item.LongPanicScore);
+                        foreach (var item in goldData)
+                        {
+                            _logger.LogInformation(
+                                "  TS: {Timestamp}, O: {Open}, H: {High}, L: {Low}, C: {Close}, V: {Volume}, Ret: {Return:F6}, V5: {Vol5:F6}, V15: {Vol15:F6}, V60: {Vol60:F6}, SP: {SP:F6}, LP: {LP:F6}",
+                                item.Timestamp, item.Open, item.High, item.Low, item.Close, item.Volume, item.LogarithmicReturn, item.RollingVol5, item.RollingVol15, item.RollingVol60, item.ShortPanicScore, item.LongPanicScore);
+                        }
+
+                        break;
                     }
-                }
-                else if (data is List<VolatilitySilver> silverData)
-                {
-                    foreach (var item in silverData)
+                    case List<VolatilitySilver> silverData:
                     {
-                        _logger.LogInformation(
-                            "  TS: {Timestamp}, O: {Open}, H: {High}, L: {Low}, C: {Close}, V: {Volume}, Ret: {Return:F6}, V5: {Vol5:F6}, V15: {Vol15:F6}, V60: {Vol60:F6}, SP: {SP:F6}, LP: {LP:F6}",
-                            item.Timestamp, item.Open, item.High, item.Low, item.Close, item.Volume, item.LogarithmicReturn, item.RollingVol5, item.RollingVol15, item.RollingVol60, item.ShortPanicScore, item.LongPanicScore);
+                        foreach (var item in silverData)
+                        {
+                            _logger.LogInformation(
+                                "  TS: {Timestamp}, O: {Open}, H: {High}, L: {Low}, C: {Close}, V: {Volume}, Ret: {Return:F6}, V5: {Vol5:F6}, V15: {Vol15:F6}, V60: {Vol60:F6}, SP: {SP:F6}, LP: {LP:F6}",
+                                item.Timestamp, item.Open, item.High, item.Low, item.Close, item.Volume, item.LogarithmicReturn, item.RollingVol5, item.RollingVol15, item.RollingVol60, item.ShortPanicScore, item.LongPanicScore);
+                        }
+
+                        break;
                     }
-                }
-                else if (data is List<VolatilityNaturalGas> ngData)
-                {
-                    foreach (var item in ngData)
+                    case List<VolatilityNaturalGas> ngData:
                     {
-                        _logger.LogInformation(
-                            "  TS: {Timestamp}, O: {Open}, H: {High}, L: {Low}, C: {Close}, V: {Volume}, Ret: {Return:F6}, V5: {Vol5:F6}, V15: {Vol15:F6}, V60: {Vol60:F6}, SP: {SP:F6}, LP: {LP:F6}",
-                            item.Timestamp, item.Open, item.High, item.Low, item.Close, item.Volume, item.LogarithmicReturn, item.RollingVol5, item.RollingVol15, item.RollingVol60, item.ShortPanicScore, item.LongPanicScore);
+                        foreach (var item in ngData)
+                        {
+                            _logger.LogInformation(
+                                "  TS: {Timestamp}, O: {Open}, H: {High}, L: {Low}, C: {Close}, V: {Volume}, Ret: {Return:F6}, V5: {Vol5:F6}, V15: {Vol15:F6}, V60: {Vol60:F6}, SP: {SP:F6}, LP: {LP:F6}",
+                                item.Timestamp, item.Open, item.High, item.Low, item.Close, item.Volume, item.LogarithmicReturn, item.RollingVol5, item.RollingVol15, item.RollingVol60, item.ShortPanicScore, item.LongPanicScore);
+                        }
+
+                        break;
                     }
-                }
-                else if (data is List<VolatilityOil> clData)
-                {
-                    foreach (var item in clData)
+                    case List<VolatilityOil> clData:
                     {
-                        _logger.LogInformation(
-                            "  TS: {Timestamp}, O: {Open}, H: {High}, L: {Low}, C: {Close}, V: {Volume}, Ret: {Return:F6}, V5: {Vol5:F6}, V15: {Vol15:F6}, V60: {Vol60:F6}, SP: {SP:F6}, LP: {LP:F6}",
-                            item.Timestamp, item.Open, item.High, item.Low, item.Close, item.Volume, item.LogarithmicReturn, item.RollingVol5, item.RollingVol15, item.RollingVol60, item.ShortPanicScore, item.LongPanicScore);
+                        foreach (var item in clData)
+                        {
+                            _logger.LogInformation(
+                                "  TS: {Timestamp}, O: {Open}, H: {High}, L: {Low}, C: {Close}, V: {Volume}, Ret: {Return:F6}, V5: {Vol5:F6}, V15: {Vol15:F6}, V60: {Vol60:F6}, SP: {SP:F6}, LP: {LP:F6}",
+                                item.Timestamp, item.Open, item.High, item.Low, item.Close, item.Volume, item.LogarithmicReturn, item.RollingVol5, item.RollingVol15, item.RollingVol60, item.ShortPanicScore, item.LongPanicScore);
+                        }
+
+                        break;
                     }
                 }
             }

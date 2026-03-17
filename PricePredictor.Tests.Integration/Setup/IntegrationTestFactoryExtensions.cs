@@ -65,7 +65,6 @@ internal static class IntegrationTestFactoryExtensions
                 // Register Application services
                 services.AddApplication();
                 services.AddScoped<INewsService, NewsService>();
-                services.AddScoped<PricePredictor.Application.News.INewsService, Application.News.GoogleNewsRssService>();
                 services.AddScoped<Application.Weather.IWeatherService, Application.Weather.WeatherService>();
                 services.AddScoped<PricePredictor.Application.IGatewayService, GatewayService>();
 

@@ -33,23 +33,35 @@ public class YahooFinanceClient
             _logger.LogDebug("Fetching Yahoo Finance data: {Url}", url);
 
             var response = await _httpClient.GetFromJsonAsync<YahooFinanceResponse>(url, cancellationToken);
+            var chart = response?.Chart;
 
-            if (response?.Chart?.Result?.Length == 0 || response?.Chart?.Error != null)
+            if (chart is null)
             {
-                if (response?.Chart?.Error != null)
-                {
-                    _logger.LogError("Yahoo Finance error for {Symbol}: {Code} - {Description}",
-                        symbol, response.Chart.Error.Code, response.Chart.Error.Description);
-                }
-                else
-                {
-                    _logger.LogWarning("No data returned for symbol {Symbol}", symbol);
-                }
+                _logger.LogWarning("Yahoo Finance returned null chart payload for {Symbol}", symbol);
                 return new List<CandlePoint>();
             }
 
-            var result = response?.Chart?.Result?[0];
-            var candles = ParseCandles(result, symbol);
+            if (chart.Error != null)
+            {
+                _logger.LogError("Yahoo Finance error for {Symbol}: {Code} - {Description}",
+                    symbol, chart.Error.Code, chart.Error.Description);
+                return new List<CandlePoint>();
+            }
+
+            if (chart.Result is null || chart.Result.Length == 0)
+            {
+                _logger.LogWarning("No data returned for symbol {Symbol}", symbol);
+                return new List<CandlePoint>();
+            }
+
+            var result = chart.Result[0];
+            if (result is null)
+            {
+                _logger.LogWarning("Yahoo Finance returned null result payload for {Symbol}", symbol);
+                return new List<CandlePoint>();
+            }
+
+            var candles = ParseCandles(result);
             _logger.LogInformation("Fetched {Count} candles for {Symbol}", candles.Count, symbol);
 
             return candles;
@@ -66,24 +78,28 @@ public class YahooFinanceClient
         }
     }
 
-    private static List<CandlePoint> ParseCandles(ChartResult? result, string symbol)
+    private static List<CandlePoint> ParseCandles(ChartResult result)
     {
         var candles = new List<CandlePoint>();
 
-        if (result?.Timestamp == null || result.Indicators?.Quote?.Length == 0)
+        var timestamps = result.Timestamp;
+        var quote = result.Indicators?.Quote?.FirstOrDefault();
+
+        if (timestamps is null || quote is null)
         {
             return candles;
         }
 
-        var timestamps = result.Timestamp;
-        var quote = result.Indicators.Quote[0];
         var opens = quote.Open ?? Array.Empty<decimal?>();
         var highs = quote.High ?? Array.Empty<decimal?>();
         var lows = quote.Low ?? Array.Empty<decimal?>();
         var closes = quote.Close ?? Array.Empty<decimal?>();
         var volumes = quote.Volume ?? Array.Empty<long?>();
 
-        for (int i = 0; i < timestamps.Length; i++)
+        // Volume can be missing for some symbols; build candles from OHLC + timestamp only.
+        var upperBound = new[] { timestamps.Length, opens.Length, highs.Length, lows.Length, closes.Length }.Min();
+
+        for (int i = 0; i < upperBound; i++)
         {
             // Skip if any OHLC value is null
             if (opens[i] == null || highs[i] == null || lows[i] == null || closes[i] == null)
@@ -100,7 +116,7 @@ public class YahooFinanceClient
                 High = highs[i]!.Value,
                 Low = lows[i]!.Value,
                 Close = closes[i]!.Value,
-                Volume = volumes[i]
+                Volume = i < volumes.Length ? volumes[i] : null
             });
         }
 
@@ -114,8 +130,4 @@ public class YahooFinanceClient
         return dateTime;
     }
 }
-
-
-
-
 

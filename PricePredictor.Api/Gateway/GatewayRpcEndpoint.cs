@@ -3,6 +3,8 @@ using Google.Protobuf.WellKnownTypes;
 using PricePredictor.Application;
 using PricePredictor.Application.Finance;
 using PricePredictor.Application.Finance.Interfaces;
+using PricePredictor.Application.News;
+using IGoldNewsService = PricePredictor.Application.INewsService;
 
 namespace PricePredictor.Api.Gateway;
 
@@ -10,18 +12,21 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
 {
     private readonly IGatewayService _gatewayService;
     private readonly IVolatilityRepository _volatilityRepository;
-    private readonly INewsService _goldNewsService;
+    private readonly IGoldNewsService _goldNewsService;
+    private readonly INewsArticleChannel _newsArticleChannel;
     private readonly ILogger<GatewayRpcEndpoint> _logger;
 
     public GatewayRpcEndpoint(
         IGatewayService gatewayService,
         IVolatilityRepository volatilityRepository,
-        INewsService goldNewsService,
+        IGoldNewsService goldNewsService,
+        INewsArticleChannel newsArticleChannel,
         ILogger<GatewayRpcEndpoint> logger)
     {
         _gatewayService = gatewayService;
         _volatilityRepository = volatilityRepository;
         _goldNewsService = goldNewsService;
+        _newsArticleChannel = newsArticleChannel;
         _logger = logger;
     }
 
@@ -99,6 +104,44 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
             WasAlreadyStored = result.WasAlreadyStored,
             ContentLength = result.ContentLength
         };
+    }
+
+    public override async Task SubscribeLatestNews(
+        LatestNewsSubscriptionRequest request,
+        IServerStreamWriter<LatestNewsNotification> responseStream,
+        ServerCallContext context)
+    {
+        if (!string.Equals(request.Subscriber?.Trim(), "army", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new RpcException(new Status(StatusCode.PermissionDenied, "Only army subscriber is allowed."));
+        }
+
+        _logger.LogInformation("Latest-news stream opened for subscriber {Subscriber}.", request.Subscriber);
+
+        try
+        {
+            await foreach (var item in _newsArticleChannel.ReadAllAsync(context.CancellationToken))
+            {
+                var notification = new LatestNewsNotification
+                {
+                    Title = item.Title,
+                    Link = item.Link,
+                    Source = item.Source,
+                    SentAtUtc = Timestamp.FromDateTime(DateTime.UtcNow)
+                };
+
+                if (item.PublishedAtUtc.HasValue)
+                {
+                    notification.PublishedAtUtc = Timestamp.FromDateTime(item.PublishedAtUtc.Value.UtcDateTime);
+                }
+
+                await responseStream.WriteAsync(notification);
+            }
+        }
+        catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+        {
+            _logger.LogInformation("Latest-news stream closed for subscriber {Subscriber}.", request.Subscriber);
+        }
     }
 
     private static VolatilityCommodity MapCommodity(Commodity commodity) => commodity switch

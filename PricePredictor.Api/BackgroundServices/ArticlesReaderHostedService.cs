@@ -13,17 +13,20 @@ public sealed class ArticlesReaderHostedService : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly GoldNewsSettings _settings;
     private readonly TradingIndicatorNotificationService _notificationService;
+    private readonly INewsArticleChannel _newsArticleChannel;
 
     public ArticlesReaderHostedService(
         ILogger<ArticlesReaderHostedService> logger,
         IServiceScopeFactory scopeFactory,
         IOptions<GoldNewsSettings> settings,
-        TradingIndicatorNotificationService notificationService)
+        TradingIndicatorNotificationService notificationService,
+        INewsArticleChannel newsArticleChannel)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
         _settings = settings.Value;
         _notificationService = notificationService;
+        _newsArticleChannel = newsArticleChannel;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -121,6 +124,7 @@ public sealed class ArticlesReaderHostedService : BackgroundService
             extractionClient,
             extractionService,
             _settings.EmbeddingDimensions,
+            _newsArticleChannel,
             stoppingToken);
     }
 
@@ -131,6 +135,7 @@ public sealed class ArticlesReaderHostedService : BackgroundService
         IOllamaArticleExtractionClient extractionClient,
         IArticleContentExtractionService extractionService,
         int embeddingDimensions,
+        INewsArticleChannel newsArticleChannel,
         CancellationToken stoppingToken)
     {
         _logger.LogInformation("Processing article link: {Url}", link.Url);
@@ -198,6 +203,12 @@ public sealed class ArticlesReaderHostedService : BackgroundService
                     readAt: link.ReadAt,
                     summary: summary,
                     cancellationToken: stoppingToken);
+
+                newsArticleChannel.Publish(new NewsItem(
+                    Title: summary[..Math.Min(120, summary.Length)],
+                    Link: link.Url,
+                    PublishedAtUtc: new DateTimeOffset(link.ReadAt, TimeSpan.Zero),
+                    Source: link.Source));
             }
 
             if (saved && article.IsTradingUseful is not null)

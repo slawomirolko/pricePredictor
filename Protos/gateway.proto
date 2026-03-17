@@ -12,6 +12,7 @@ service Gateway {
   rpc Send (GatewayRequest) returns (GatewayReply);
   rpc GetVolatility (VolatilityQueryRequest) returns (VolatilityQueryReply);
   rpc DownloadGoldNewsArticle (DownloadArticleRequest) returns (DownloadArticleReply);
+  rpc SubscribeLatestNews (LatestNewsSubscriptionRequest) returns (stream LatestNewsNotification);
 }
 
 // Request message
@@ -68,4 +69,16 @@ message DownloadArticleReply {
   string message = 2;
   bool was_already_stored = 3;
   int32 content_length = 4;
+}
+
+message LatestNewsSubscriptionRequest {
+  string subscriber = 1;
+}
+
+message LatestNewsNotification {
+  string title = 1;
+  string link = 2;
+  google.protobuf.Timestamp published_at_utc = 3;
+  string source = 4;
+  google.protobuf.Timestamp sent_at_utc = 5;
 }

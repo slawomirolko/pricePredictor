@@ -9,6 +9,7 @@ using PricePredictor.Infrastructure;
 using PricePredictor.Infrastructure.News;
 using PricePredictor.Persistence;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
+using GoldNewsSettingsApp = PricePredictor.Application.Data.GoldNewsSettings;
 
 // Build host
 ThreadPool.SetMinThreads(200, 200);
@@ -47,11 +48,9 @@ builder.Services.AddYahooFinanceClient();
 // Persistence: Database and repository setup
 builder.Services.AddPersistence(builder.Configuration);
 
-builder.Services.AddSingleton<IGatewayService, GatewayService>();
-builder.Services.AddSingleton<IWeatherService, WeatherService>();
-
 builder.Services.Configure<NtfySettings>(builder.Configuration.GetSection(NtfySettings.SectionName));
 builder.Services.Configure<GoldNewsSettings>(builder.Configuration.GetSection(GoldNewsSettings.SectionName));
+builder.Services.Configure<GoldNewsSettingsApp>(builder.Configuration.GetSection(GoldNewsSettingsApp.SectionName));
 builder.Services.Configure<YahooFinanceSettings>(builder.Configuration.GetSection(YahooFinanceSettings.SectionName));
 builder.Services.Configure<GoogleNewsRssSettings>(builder.Configuration.GetSection(GoogleNewsRssSettings.SectionName));
 
