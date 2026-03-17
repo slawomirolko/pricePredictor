@@ -1,10 +1,14 @@
-﻿using PricePredictor.Application.Data;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using PricePredictor.Application.Data;
 using PricePredictor.Application.News;
 
-namespace PricePredictor.Api.BackgroundServices;
+namespace PricePredictor.ArticlesFinderHostedService.BackgroundServices;
 
-public class ArticlesFinderHostedService : BackgroundService
+public sealed class ArticlesFinderHostedService : BackgroundService
 {
+    private static readonly TimeSpan SyncInterval = TimeSpan.FromSeconds(60);
     private readonly ILogger<ArticlesFinderHostedService> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
 
@@ -54,15 +58,22 @@ public class ArticlesFinderHostedService : BackgroundService
                     _logger.LogInformation("Marked {Count} ArticleLinks as processed from scanned Articles.", processedCount);
                 }
 
-                var articles = await articleService.SyncArticleLinksAsync(stoppingToken);
-                _logger.LogInformation("Article sync completed. Saved {Count} article links.", articles.Count);
+                var syncResult = await articleService.SyncArticleLinksAsync(stoppingToken);
+                if (syncResult.IsSourceBlocked)
+                {
+                    _logger.LogWarning("Article sync skipped because Reuters blocked access: {Message}", syncResult.Message);
+                }
+                else
+                {
+                    _logger.LogInformation("Article sync completed. Saved {Count} article links.", syncResult.ArticleLinks.Count);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during article sync");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
+            await Task.Delay(SyncInterval, stoppingToken);
         }
 
         _logger.LogInformation("Articles finder background service stopping.");

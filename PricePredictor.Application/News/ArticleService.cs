@@ -23,35 +23,54 @@ internal sealed class ArticleService : IArticleService
         _seleniumFlowBuilderFactory = seleniumFlowBuilderFactory;
     }
 
-    public async Task<IReadOnlyList<ArticleLink>> SyncArticleLinksAsync(CancellationToken cancellationToken)
+    public async Task<ArticleSyncResult> SyncArticleLinksAsync(CancellationToken cancellationToken)
     {
         const string newsUrl = "https://www.reuters.com";
         _logger.LogInformation("Starting article extraction from {Url}", newsUrl);
 
-        using var seleniumFlow = _seleniumFlowBuilderFactory.Create();
-
         try
         {
-            var navigationResult = await NavigateAsync(seleniumFlow, newsUrl, cancellationToken);
-            if (!navigationResult.IsSuccess)
-            {
-                throw new InvalidOperationException(navigationResult.Error);
-            }
-
-            var linksResult = CollectArticleLinks(seleniumFlow);
-            if (!linksResult.IsSuccess)
-            {
-                throw new InvalidOperationException(linksResult.Error);
-            }
-
-            _logger.LogInformation("Found {Count} article links", linksResult.Value.Count);
-            return await PersistArticleLinksAsync(linksResult.Value, cancellationToken);
+            var discoveredLinks = await CollectReutersLinksAsync(newsUrl, cancellationToken);
+            _logger.LogInformation("Found {Count} article links", discoveredLinks.Count);
+            var savedLinks = await PersistArticleLinksAsync(discoveredLinks, cancellationToken);
+            return ArticleSyncResult.Success(savedLinks);
+        }
+        catch (ReutersSourceBlockedException ex)
+        {
+            _logger.LogWarning(ex, "Article extraction blocked by Reuters anti-bot protection");
+            return ArticleSyncResult.SourceBlocked(ex.Message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Article extraction failed");
             throw;
         }
+    }
+
+    private async Task<IReadOnlyList<DiscoveredArticleLink>> CollectReutersLinksAsync(
+        string newsUrl,
+        CancellationToken cancellationToken)
+    {
+        using var seleniumFlow = _seleniumFlowBuilderFactory.Create();
+
+        var navigationResult = await NavigateAsync(seleniumFlow, newsUrl, cancellationToken);
+        if (!navigationResult.IsSuccess)
+        {
+            throw new ReutersSourceBlockedException($"Reuters homepage navigation failed: {navigationResult.Error}");
+        }
+
+        var linksResult = CollectArticleLinks(seleniumFlow);
+        if (!linksResult.IsSuccess)
+        {
+            throw new ReutersSourceBlockedException($"Reuters homepage parsing failed: {linksResult.Error}");
+        }
+
+        if (linksResult.Value.Count > 0)
+        {
+            return linksResult.Value;
+        }
+
+        throw new ReutersSourceBlockedException("Reuters homepage returned zero article links.");
     }
 
     private async Task<FlowResult<bool>> NavigateAsync(
@@ -134,13 +153,13 @@ internal sealed class ArticleService : IArticleService
         return FlowResult<bool>.Success(true);
     }
 
-    private FlowResult<List<string>> CollectArticleLinks(ISeleniumFlowBuilder seleniumFlow)
+    private FlowResult<List<DiscoveredArticleLink>> CollectArticleLinks(ISeleniumFlowBuilder seleniumFlow)
     {
         var pageUri = new Uri(seleniumFlow.CurrentUrl);
         var htmlResult = seleniumFlow.GetHtml();
         if (htmlResult.IsError)
         {
-            return FlowResult<List<string>>.Fail(htmlResult.FirstError.Description);
+            return FlowResult<List<DiscoveredArticleLink>>.Fail(htmlResult.FirstError.Description);
         }
 
         _logger.LogInformation("Page source size: {Bytes} bytes", htmlResult.Value.Length);
@@ -148,7 +167,7 @@ internal sealed class ArticleService : IArticleService
         var allLinksResult = seleniumFlow.GetElements(By.TagName("a"));
         if (allLinksResult.IsError)
         {
-            return FlowResult<List<string>>.Fail(allLinksResult.FirstError.Description);
+            return FlowResult<List<DiscoveredArticleLink>>.Fail(allLinksResult.FirstError.Description);
         }
 
         _logger.LogInformation("Total <a> tags found: {Count}", allLinksResult.Value.Count);
@@ -168,8 +187,9 @@ internal sealed class ArticleService : IArticleService
             .Select(href => NormalizeToAbsoluteUrl(pageUri, href))
             .Where(IsArticleLink)
             .OfType<string>()
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(x => x, StringComparer.Ordinal)
+            .SelectMany(ParseDiscoveredArticleLinks)
+            .Distinct(DiscoveredArticleLink.Comparer)
+            .OrderBy(x => x.Url, StringComparer.Ordinal)
             .ToList();
 
         if (articleLinks.Count == 0)
@@ -178,38 +198,33 @@ internal sealed class ArticleService : IArticleService
             articleLinks = ExtractLinksFromHtml(pageUri, htmlResult.Value)
                 .Where(IsArticleLink)
                 .OfType<string>()
-                .Distinct(StringComparer.Ordinal)
-                .OrderBy(x => x, StringComparer.Ordinal)
+                .SelectMany(ParseDiscoveredArticleLinks)
+                .Distinct(DiscoveredArticleLink.Comparer)
+                .OrderBy(x => x.Url, StringComparer.Ordinal)
                 .ToList();
         }
 
-        return FlowResult<List<string>>.Success(articleLinks);
+        return FlowResult<List<DiscoveredArticleLink>>.Success(articleLinks);
     }
 
     private async Task<IReadOnlyList<ArticleLink>> PersistArticleLinksAsync(
-        IReadOnlyList<string> articleLinks,
+        IReadOnlyList<DiscoveredArticleLink> articleLinks,
         CancellationToken cancellationToken)
     {
         var savedLinks = new List<ArticleLink>();
-        foreach (var link in articleLinks)
+        foreach (var discoveredLink in articleLinks)
         {
-            var dateResult = ParsePublishedDate(link);
-            if (!dateResult.IsSuccess)
-            {
-                continue;
-            }
-
             var readTimeUtc = DateTime.UtcNow;
-            var readAt = ComposeReadAt(dateResult.Value, readTimeUtc);
+            var readAt = ComposeReadAt(discoveredLink.PublishedAtUtc, readTimeUtc);
 
             var articleLink = ArticleLink.Create(
-                url: link,
+                url: discoveredLink.Url,
                 readAt: readAt,
                 source: Source);
 
             await _repository.SaveArticleLinkAsync(articleLink, cancellationToken);
             savedLinks.Add(articleLink);
-            _logger.LogInformation("Saved: {Url} (ReadAt={ReadAt:O})", link, readAt);
+            _logger.LogInformation("Saved: {Url} (ReadAt={ReadAt:O})", discoveredLink.Url, readAt);
         }
 
         _logger.LogInformation("Saved {Count} article links to database", savedLinks.Count);
@@ -257,6 +272,17 @@ internal sealed class ArticleService : IArticleService
         }
 
         return FlowResult<DateTime>.Success(DateTime.SpecifyKind(publishedDate.Date, DateTimeKind.Utc));
+    }
+
+    private static IEnumerable<DiscoveredArticleLink> ParseDiscoveredArticleLinks(string url)
+    {
+        var dateResult = ParsePublishedDate(url);
+        if (!dateResult.IsSuccess)
+        {
+            return [];
+        }
+
+        return [new DiscoveredArticleLink(url, dateResult.Value)];
     }
 
     private static string? NormalizeToAbsoluteUrl(Uri pageUri, string? href)
@@ -337,4 +363,20 @@ internal sealed class ArticleService : IArticleService
         public static FlowResult<T> Success(T value) => new(true, value, null);
         public static FlowResult<T> Fail(string error) => new(false, default!, error);
     }
+
+    private readonly record struct DiscoveredArticleLink(string Url, DateTime PublishedAtUtc)
+    {
+        public static IEqualityComparer<DiscoveredArticleLink> Comparer { get; } = new UrlEqualityComparer();
+
+        private sealed class UrlEqualityComparer : IEqualityComparer<DiscoveredArticleLink>
+        {
+            public bool Equals(DiscoveredArticleLink x, DiscoveredArticleLink y) =>
+                StringComparer.Ordinal.Equals(x.Url, y.Url);
+
+            public int GetHashCode(DiscoveredArticleLink obj) =>
+                StringComparer.Ordinal.GetHashCode(obj.Url);
+        }
+    }
+
+    private sealed class ReutersSourceBlockedException(string message) : Exception(message);
 }

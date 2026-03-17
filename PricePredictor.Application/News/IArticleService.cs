@@ -2,13 +2,26 @@ using PricePredictor.Application.Models;
 
 namespace PricePredictor.Application.News;
 
-/// <summary>
-/// Service that extracts article links from news sources and stores them in the database.
-/// </summary>
 public interface IArticleService
 {
-    /// <summary>
-    /// Scrapes news sources, extracts article links with dates, and saves them to the database.
-    /// </summary>
-    Task<IReadOnlyList<ArticleLink>> SyncArticleLinksAsync(CancellationToken cancellationToken);
+    Task<ArticleSyncResult> SyncArticleLinksAsync(CancellationToken cancellationToken);
+}
+
+public sealed record ArticleSyncResult(
+    bool Succeeded,
+    bool IsSourceBlocked,
+    string Message,
+    IReadOnlyList<ArticleLink> ArticleLinks)
+{
+    public static ArticleSyncResult Success(IReadOnlyList<ArticleLink> articleLinks) => new(
+        Succeeded: true,
+        IsSourceBlocked: false,
+        Message: $"Saved {articleLinks.Count} article links.",
+        ArticleLinks: articleLinks);
+
+    public static ArticleSyncResult SourceBlocked(string message) => new(
+        Succeeded: false,
+        IsSourceBlocked: true,
+        Message: message,
+        ArticleLinks: []);
 }

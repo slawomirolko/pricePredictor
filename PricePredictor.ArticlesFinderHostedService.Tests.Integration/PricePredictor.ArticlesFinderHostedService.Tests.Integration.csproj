@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <UserSecretsId>06d373e9-0d06-4b40-873c-5d900594b071</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,17 +13,11 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="NSubstitute" />
     <PackageReference Include="Testcontainers" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Npgsql" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
-    <PackageReference Include="Grpc.Net.Client" />
-    <PackageReference Include="Google.Protobuf" />
-    <PackageReference Include="Grpc.Tools">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Selenium.WebDriver" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" />
     <PackageReference Include="Shouldly" />
   </ItemGroup>
 
@@ -33,12 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PricePredictor.Api\PricePredictor.Api.csproj" />
-    <ProjectReference Include="..\PricePredictor.Infrastructure\PricePredictor.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\Protos\gateway.proto" GrpcServices="Client" />
+    <ProjectReference Include="..\PricePredictor.ArticlesFinderHostedService\PricePredictor.ArticlesFinderHostedService.csproj" />
+    <ProjectReference Include="..\PricePredictor.Application\PricePredictor.Application.csproj" />
+    <ProjectReference Include="..\PricePredictor.Persistence\PricePredictor.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>

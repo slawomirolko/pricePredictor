@@ -8,6 +8,7 @@ using PricePredictor.Application.Finance.Interfaces;
 
 namespace PricePredictor.Application;
 
+// TODO divide to decouple api and ArtliclesFinderHostedService
 public interface INewsService
 {
     Task<NewsServiceResult> DownloadAndStoreAsync(string url, string? title, CancellationToken cancellationToken);

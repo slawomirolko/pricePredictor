@@ -13,6 +13,7 @@
     <PackageReference Include="OllamaSharp" />
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="Selenium.WebDriver" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" />
     <PackageReference Include="ErrorOr" />
   </ItemGroup>
 

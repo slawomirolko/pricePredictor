@@ -26,12 +26,40 @@
       - ASPNETCORE_ENVIRONMENT=Production
       - PersistenceDefaultConnection__ConnectionString=Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;
       - GoldNews__EmbeddingDimensions=3072
-      - GoldNews__OllamaUrl=http://host.docker.internal:11434
-      - GoogleNewsRss__BaseUrl=https://news.google.com/
-      - GoogleNewsRss__RssPath=rss/search?q=gold+price+XAUUSD&hl=en-US&gl=US&ceid=US:en
+      - GoldNews__LocalOllamaUrl=http://host.docker.internal:11434
+      - GoldNews__LocalOllamaModel=phi4:latest
+      - GoldNews__CloudOllamaUrl=http://host.docker.internal:11434
+      - GoldNews__CloudOllamaModel=gpt-oss:20b-cloud
+      - GoldNews__UseCloud=true
+      - GoldNews__Headless=true
     ports:
       - "5000:5000"
       - "50051:50051"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pricepredictor.articlesfinderhostedservice:
+    container_name: pricepredictor.articlesfinderhostedservice
+    image: "pricepredictor.articlesfinderhostedservice:latest"
+    build:
+      context: .
+      dockerfile: PricePredictor.ArticlesFinderHostedService/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - PersistenceDefaultConnection__ConnectionString=Server=postgres;Port=5432;Database=pricepredictor;User Id=postgres;Password=postgres;
+      - GoldNews__EmbeddingDimensions=3072
+      - GoldNews__LocalOllamaUrl=http://host.docker.internal:11434
+      - GoldNews__LocalOllamaModel=phi4:latest
+      - GoldNews__CloudOllamaUrl=http://host.docker.internal:11434
+      - GoldNews__CloudOllamaModel=gpt-oss:20b-cloud
+      - GoldNews__UseCloud=true
+      - GoldNews__Headless=true
     depends_on:
       postgres:
         condition: service_healthy

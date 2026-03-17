@@ -1,6 +1,9 @@
 using ErrorOr;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.DevTools;
+using Network = OpenQA.Selenium.DevTools.V131.Network;
+using Page = OpenQA.Selenium.DevTools.V131.Page;
 
 namespace PricePredictor.Application.News;
 
@@ -35,25 +38,24 @@ internal sealed class SeleniumFlowBuilderFactory : ISeleniumFlowBuilderFactory
     private static ChromeOptions CreateOptions()
     {
         var options = new ChromeOptions();
-        // Chromium must stay visible during runs.
 
+        // options.AddArgument("--headless=new");
+        options.AddArgument("--start-minimized");
         options.AddArgument("--disable-gpu");
         options.AddArgument("--no-sandbox");
         options.AddArgument("--disable-dev-shm-usage");
         options.AddArgument("--window-size=1920,1080");
         options.AddArgument("--lang=en-US");
+        options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
         options.AddArgument("--disable-blink-features=AutomationControlled");
-        options.AddArgument(
-            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
         options.AddExcludedArgument("enable-automation");
-        options.AddAdditionalChromeOption("useAutomationExtension", false);
         return options;
     }
 }
 
 internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
 {
-    private readonly IWebDriver _driver;
+    private readonly ChromeDriver _driver;
 
     public SeleniumFlowBuilder(ChromeOptions options)
     {
@@ -68,8 +70,8 @@ internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
     {
         try
         {
+            await ApplyStealthAndHeadersAsync();
             await Task.Run(() => _driver.Navigate().GoToUrl(url), cancellationToken);
-            ApplyStealthScripts();
             return true;
         }
         catch (Exception ex)
@@ -141,6 +143,9 @@ internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
             var isBlocked = _driver.PageSource.Contains("captcha", StringComparison.OrdinalIgnoreCase)
                 || _driver.PageSource.Contains("Verify you are human", StringComparison.OrdinalIgnoreCase)
                 || _driver.PageSource.Contains("Please verify you are a human", StringComparison.OrdinalIgnoreCase)
+                || _driver.PageSource.Contains("Automated (bot) activity", StringComparison.OrdinalIgnoreCase)
+                || _driver.PageSource.Contains("Rapid taps or clicks", StringComparison.OrdinalIgnoreCase)
+                || _driver.PageSource.Contains("JavaScript disabled", StringComparison.OrdinalIgnoreCase)
                 || _driver.Title.Contains("Access Denied", StringComparison.OrdinalIgnoreCase)
                 || _driver.Title.Contains("Just a moment", StringComparison.OrdinalIgnoreCase);
             return isBlocked;
@@ -163,6 +168,10 @@ internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
             {
                 return false;
             }
+
+            // Human-like delay before clicking
+            var randomDelayMs = new Random().Next(500, 2000);
+            await Task.Delay(randomDelayMs, cancellationToken);
 
             acceptButton.Click();
             await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
@@ -232,20 +241,64 @@ internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
         _driver.Dispose();
     }
 
-    private void ApplyStealthScripts()
+    private async Task ApplyStealthAndHeadersAsync()
     {
         try
         {
-            ((IJavaScriptExecutor)_driver).ExecuteScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+            IDevTools devTools = _driver;
+            var session = devTools.GetDevToolsSession();
 
-            ((IJavaScriptExecutor)_driver).ExecuteScript(@"
-                const getParameter = WebGLRenderingContext.prototype.getParameter;
-                WebGLRenderingContext.prototype.getParameter = function(parameter) {
-                    if (parameter === 37445) return 'Intel Open Source Technology Center';
-                    if (parameter === 37446) return 'Mesa DRI Intel(R) HD Graphics 520 (Skylake GT2)';
-                    return getParameter(parameter);
-                };
-            ");
+            // Set extra headers
+            var headers = new Network.Headers();
+            headers.Add("X-Requested-With", "XMLHttpRequest");
+            headers.Add("Accept-Language", "en-US,en;q=0.9");
+            headers.Add("sec-ch-ua", "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"131\", \"Google Chrome\";v=\"131\"");
+            headers.Add("sec-ch-ua-mobile", "?0");
+            headers.Add("sec-ch-ua-platform", "\"Windows\"");
+
+            await session.SendCommand(new Network.SetExtraHTTPHeadersCommandSettings
+            {
+                Headers = headers
+            });
+
+            // Inject script to be evaluated on new document
+            await session.SendCommand(new Page.AddScriptToEvaluateOnNewDocumentCommandSettings
+            {
+                Source = @"
+                    // Hide navigator.webdriver
+                    Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+
+                    // Spoof WebGL parameters
+                    const getParameter = WebGLRenderingContext.prototype.getParameter;
+                    WebGLRenderingContext.prototype.getParameter = function(parameter) {
+                        if (parameter === 37445) return 'Intel Open Source Technology Center';
+                        if (parameter === 37446) return 'Mesa DRI Intel(R) HD Graphics 520 (Skylake GT2)';
+                        return getParameter(parameter);
+                    };
+
+                    // Spoof languages
+                    Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+
+                    // Spoof plugins
+                    Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+
+                    // Spoof permissions
+                    const originalQuery = window.navigator.permissions.query;
+                    window.navigator.permissions.query = (parameters) => (
+                        parameters.name === 'notifications' ?
+                            Promise.resolve({ state: Notification.permission }) :
+                            originalQuery(parameters)
+                    );
+
+                    // Spoof chrome object
+                    window.chrome = {
+                        runtime: {},
+                        loadTimes: function() {},
+                        csi: function() {},
+                        app: {}
+                    };
+                "
+            });
         }
         catch
         {

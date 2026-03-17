@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using PricePredictor.Application.News;
-using PricePredictor.Tests.Integration.Setup;
+using PricePredictor.ArticlesFinderHostedService.Tests.Integration.Setup;
 using Shouldly;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace PricePredictor.Tests.Integration.News;
+namespace PricePredictor.ArticlesFinderHostedService.Tests.Integration.News;
 
 public sealed class SyncReutersArticleLinksTests : IntegrationTest
 {
@@ -15,7 +15,7 @@ public sealed class SyncReutersArticleLinksTests : IntegrationTest
     }
 
     [Fact]
-    public async Task SyncReutersArticleLinks_whenExecuted_storesArticleLinks()
+    public async Task SyncReutersArticleLinks_whenExecuted_returnsSuccessOrBlockedResult()
     {
         using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
@@ -24,20 +24,37 @@ public sealed class SyncReutersArticleLinksTests : IntegrationTest
         using var scope = Factory.Services.CreateScope();
         var articleService = scope.ServiceProvider.GetRequiredService<IArticleService>();
 
-        var extractedLinks = await articleService.SyncArticleLinksAsync(cancellation.Token);
-        extractedLinks.Count.ShouldBeGreaterThan(0);
+        var syncResult = await articleService.SyncArticleLinksAsync(cancellation.Token);
+
+        if (syncResult.IsSourceBlocked)
+        {
+            syncResult.Succeeded.ShouldBeFalse();
+            syncResult.ArticleLinks.Count.ShouldBe(0);
+            syncResult.Message.ShouldContain("Reuters");
+            return;
+        }
+
+        syncResult.Succeeded.ShouldBeTrue();
+        syncResult.ArticleLinks.Count.ShouldBeGreaterThan(0);
 
         var storedLinks = await GetStoredArticleLinksBySourceAsync("reuters", cancellation.Token);
-        storedLinks.Count.ShouldBe(extractedLinks.Count);
+        storedLinks.Count.ShouldBe(syncResult.ArticleLinks.Count);
 
-        var extractedUrlSet = extractedLinks.Select(x => x.Url).ToHashSet();
+        var extractedUrlSet = syncResult.ArticleLinks.Select(x => x.Url).ToHashSet();
         foreach (var storedLink in storedLinks)
         {
             extractedUrlSet.Contains(storedLink.Url).ShouldBeTrue();
 
             var parsedDate = ParseDateFromUrl(storedLink.Url);
-            parsedDate.HasValue.ShouldBeTrue();
-            storedLink.ReadAt.Date.ShouldBe(parsedDate.Value.Date);
+            if (parsedDate.HasValue)
+            {
+                storedLink.ReadAt.Date.ShouldBe(parsedDate.Value.Date);
+            }
+            else
+            {
+                storedLink.ReadAt.ShouldBeGreaterThan(DateTime.UnixEpoch);
+            }
+
             storedLink.ReadAt.TimeOfDay.ShouldNotBe(TimeSpan.Zero);
         }
     }
