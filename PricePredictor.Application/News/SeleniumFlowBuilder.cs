@@ -49,18 +49,26 @@ internal sealed class SeleniumFlowBuilderFactory : ISeleniumFlowBuilderFactory
         options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
         options.AddArgument("--disable-blink-features=AutomationControlled");
         options.AddExcludedArgument("enable-automation");
+
+        // Use Eager strategy so navigation completes as soon as the DOM is interactive,
+        // without waiting for all async scripts/trackers to finish loading.
+        // This prevents WebDriverTimeoutException on heavy news sites that never reach readyState=complete.
+        options.PageLoadStrategy = PageLoadStrategy.Eager;
+
         return options;
     }
 }
 
 internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
 {
+    private const int PageLoadTimeoutSeconds = 60;
+
     private readonly ChromeDriver _driver;
 
     public SeleniumFlowBuilder(ChromeOptions options)
     {
         _driver = new ChromeDriver(options);
-        _driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+        _driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(PageLoadTimeoutSeconds);
     }
 
     public string CurrentUrl => _driver.Url;
@@ -71,8 +79,19 @@ internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
         try
         {
             await ApplyStealthAndHeadersAsync();
+            // Task.Run's cancellationToken only prevents starting; it does not interrupt a running GoToUrl.
+            // GoToUrl is synchronous and will block until PageLoad timeout or renderer timeout.
+            // WebDriverTimeoutException is treated as a partial-load (page may still be usable), not a hard failure.
             await Task.Run(() => _driver.Navigate().GoToUrl(url), cancellationToken);
             return true;
+        }
+        catch (WebDriverTimeoutException ex)
+        {
+            // The page did not reach readyState within the timeout but may be partially loaded.
+            // Return a soft error so callers can decide whether to continue scraping.
+            return Error.Unexpected(
+                code: "Selenium.PageLoadTimeout",
+                description: $"Page load timed out for URL '{url}' after {PageLoadTimeoutSeconds}s: {ex.Message}");
         }
         catch (Exception ex)
         {
@@ -329,7 +348,9 @@ internal sealed class SeleniumFlowBuilder : ISeleniumFlowBuilder
     private async Task<ErrorOr<bool>> NavigateCoreAsync(Uri targetUri, CancellationToken cancellationToken)
     {
         var openResult = await OpenAsync(targetUri.AbsoluteUri, cancellationToken);
-        if (openResult.IsError)
+        // PageLoadTimeout means the page didn't fully load but may be partially usable — continue.
+        // Any other error (e.g. net::ERR_CONNECTION_REFUSED) is a hard failure.
+        if (openResult.IsError && openResult.FirstError.Code != "Selenium.PageLoadTimeout")
         {
             return openResult.FirstError;
         }

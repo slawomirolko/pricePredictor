@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgateway.proto\x12\x07gateway\x1a\x1fgoogle/protobuf/timestamp.proto\"!\n\x0eGatewayRequest\x12\x0f\n\x07payload\x18\x01 \x01(\t\"\x1e\n\x0cGatewayReply\x12\x0e\n\x06result\x18\x01 \x01(\t\"z\n\x16VolatilityQueryRequest\x12%\n\tcommodity\x18\x01 \x01(\x0e\x32\x12.gateway.Commodity\x12(\n\x04\x64\x61te\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07minutes\x18\x03 \x01(\x05\"\xf1\x01\n\x0fVolatilityPoint\x12-\n\ttimestamp\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0c\n\x04open\x18\x02 \x01(\x01\x12\x0c\n\x04high\x18\x03 \x01(\x01\x12\x0b\n\x03low\x18\x04 \x01(\x01\x12\r\n\x05\x63lose\x18\x05 \x01(\x01\x12\x0e\n\x06volume\x18\x06 \x01(\x03\x12\x12\n\nlog_return\x18\x07 \x01(\x01\x12\x0c\n\x04vol5\x18\x08 \x01(\x01\x12\r\n\x05vol15\x18\t \x01(\x01\x12\r\n\x05vol60\x18\n \x01(\x01\x12\x13\n\x0bshort_panic\x18\x0b \x01(\x01\x12\x12\n\nlong_panic\x18\x0c \x01(\x01\"g\n\x14VolatilityQueryReply\x12%\n\tcommodity\x18\x01 \x01(\x0e\x32\x12.gateway.Commodity\x12(\n\x06points\x18\x02 \x03(\x0b\x32\x18.gateway.VolatilityPoint\"4\n\x16\x44ownloadArticleRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\"l\n\x14\x44ownloadArticleReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x1a\n\x12was_already_stored\x18\x03 \x01(\x08\x12\x16\n\x0e\x63ontent_length\x18\x04 \x01(\x05*L\n\tCommodity\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x08\n\x04GOLD\x10\x01\x12\n\n\x06SILVER\x10\x02\x12\x0f\n\x0bNATURAL_GAS\x10\x03\x12\x07\n\x03OIL\x10\x04\x32\xed\x01\n\x07Gateway\x12\x36\n\x04Send\x12\x17.gateway.GatewayRequest\x1a\x15.gateway.GatewayReply\x12O\n\rGetVolatility\x12\x1f.gateway.VolatilityQueryRequest\x1a\x1d.gateway.VolatilityQueryReply\x12Y\n\x17\x44ownloadGoldNewsArticle\x12\x1f.gateway.DownloadArticleRequest\x1a\x1d.gateway.DownloadArticleReplyB\x1d\xaa\x02\x1aPricePredictor.Api.Gatewayb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgateway.proto\x12\x07gateway\x1a\x1fgoogle/protobuf/timestamp.proto\"z\n\x16VolatilityQueryRequest\x12%\n\tcommodity\x18\x01 \x01(\x0e\x32\x12.gateway.Commodity\x12(\n\x04\x64\x61te\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07minutes\x18\x03 \x01(\x05\"\xf1\x01\n\x0fVolatilityPoint\x12-\n\ttimestamp\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0c\n\x04open\x18\x02 \x01(\x01\x12\x0c\n\x04high\x18\x03 \x01(\x01\x12\x0b\n\x03low\x18\x04 \x01(\x01\x12\r\n\x05\x63lose\x18\x05 \x01(\x01\x12\x0e\n\x06volume\x18\x06 \x01(\x03\x12\x12\n\nlog_return\x18\x07 \x01(\x01\x12\x0c\n\x04vol5\x18\x08 \x01(\x01\x12\r\n\x05vol15\x18\t \x01(\x01\x12\r\n\x05vol60\x18\n \x01(\x01\x12\x13\n\x0bshort_panic\x18\x0b \x01(\x01\x12\x12\n\nlong_panic\x18\x0c \x01(\x01\"g\n\x14VolatilityQueryReply\x12%\n\tcommodity\x18\x01 \x01(\x0e\x32\x12.gateway.Commodity\x12(\n\x06points\x18\x02 \x03(\x0b\x32\x18.gateway.VolatilityPoint\"4\n\x16\x44ownloadArticleRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\"l\n\x14\x44ownloadArticleReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x1a\n\x12was_already_stored\x18\x03 \x01(\x08\x12\x16\n\x0e\x63ontent_length\x18\x04 \x01(\x05\" \n\x1eNewestImportantArticlesRequest\"\x85\x01\n\x10ImportantArticle\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\x0e\n\x06source\x18\x02 \x01(\t\x12/\n\x0bread_at_utc\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07summary\x18\x04 \x01(\t\x12\x12\n\narticle_id\x18\x05 \x01(\t\"K\n\x1cNewestImportantArticlesReply\x12+\n\x08\x61rticles\x18\x01 \x03(\x0b\x32\x19.gateway.ImportantArticle\"3\n\x1dLatestNewsSubscriptionRequest\x12\x12\n\nsubscriber\x18\x01 \x01(\t\"\xac\x01\n\x16LatestNewsNotification\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0c\n\x04link\x18\x02 \x01(\t\x12\x34\n\x10published_at_utc\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0e\n\x06source\x18\x04 \x01(\t\x12/\n\x0bsent_at_utc\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp*L\n\tCommodity\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x08\n\x04GOLD\x10\x01\x12\n\n\x06SILVER\x10\x02\x12\x0f\n\x0bNATURAL_GAS\x10\x03\x12\x07\n\x03OIL\x10\x04\x32\x85\x03\n\x07Gateway\x12O\n\rGetVolatility\x12\x1f.gateway.VolatilityQueryRequest\x1a\x1d.gateway.VolatilityQueryReply\x12Y\n\x17\x44ownloadGoldNewsArticle\x12\x1f.gateway.DownloadArticleRequest\x1a\x1d.gateway.DownloadArticleReply\x12l\n\x1aGetNewestImportantArticles\x12\'.gateway.NewestImportantArticlesRequest\x1a%.gateway.NewestImportantArticlesReply\x12`\n\x13SubscribeLatestNews\x12&.gateway.LatestNewsSubscriptionRequest\x1a\x1f.gateway.LatestNewsNotification0\x01\x42\x1d\xaa\x02\x1aPricePredictor.Api.Gatewayb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,22 +33,28 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'gateway_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\252\002\032PricePredictor.Api.Gateway'
-  _globals['_COMMODITY']._serialized_start=763
-  _globals['_COMMODITY']._serialized_end=839
-  _globals['_GATEWAYREQUEST']._serialized_start=59
-  _globals['_GATEWAYREQUEST']._serialized_end=92
-  _globals['_GATEWAYREPLY']._serialized_start=94
-  _globals['_GATEWAYREPLY']._serialized_end=124
-  _globals['_VOLATILITYQUERYREQUEST']._serialized_start=126
-  _globals['_VOLATILITYQUERYREQUEST']._serialized_end=248
-  _globals['_VOLATILITYPOINT']._serialized_start=251
-  _globals['_VOLATILITYPOINT']._serialized_end=492
-  _globals['_VOLATILITYQUERYREPLY']._serialized_start=494
-  _globals['_VOLATILITYQUERYREPLY']._serialized_end=597
-  _globals['_DOWNLOADARTICLEREQUEST']._serialized_start=599
-  _globals['_DOWNLOADARTICLEREQUEST']._serialized_end=651
-  _globals['_DOWNLOADARTICLEREPLY']._serialized_start=653
-  _globals['_DOWNLOADARTICLEREPLY']._serialized_end=761
-  _globals['_GATEWAY']._serialized_start=842
-  _globals['_GATEWAY']._serialized_end=1079
+  _globals['_COMMODITY']._serialized_start=1171
+  _globals['_COMMODITY']._serialized_end=1247
+  _globals['_VOLATILITYQUERYREQUEST']._serialized_start=59
+  _globals['_VOLATILITYQUERYREQUEST']._serialized_end=181
+  _globals['_VOLATILITYPOINT']._serialized_start=184
+  _globals['_VOLATILITYPOINT']._serialized_end=425
+  _globals['_VOLATILITYQUERYREPLY']._serialized_start=427
+  _globals['_VOLATILITYQUERYREPLY']._serialized_end=530
+  _globals['_DOWNLOADARTICLEREQUEST']._serialized_start=532
+  _globals['_DOWNLOADARTICLEREQUEST']._serialized_end=584
+  _globals['_DOWNLOADARTICLEREPLY']._serialized_start=586
+  _globals['_DOWNLOADARTICLEREPLY']._serialized_end=694
+  _globals['_NEWESTIMPORTANTARTICLESREQUEST']._serialized_start=696
+  _globals['_NEWESTIMPORTANTARTICLESREQUEST']._serialized_end=728
+  _globals['_IMPORTANTARTICLE']._serialized_start=731
+  _globals['_IMPORTANTARTICLE']._serialized_end=864
+  _globals['_NEWESTIMPORTANTARTICLESREPLY']._serialized_start=866
+  _globals['_NEWESTIMPORTANTARTICLESREPLY']._serialized_end=941
+  _globals['_LATESTNEWSSUBSCRIPTIONREQUEST']._serialized_start=943
+  _globals['_LATESTNEWSSUBSCRIPTIONREQUEST']._serialized_end=994
+  _globals['_LATESTNEWSNOTIFICATION']._serialized_start=997
+  _globals['_LATESTNEWSNOTIFICATION']._serialized_end=1169
+  _globals['_GATEWAY']._serialized_start=1250
+  _globals['_GATEWAY']._serialized_end=1639
 # @@protoc_insertion_point(module_scope)

@@ -3,7 +3,10 @@
 import grpc
 import warnings
 
-from . import gateway_pb2 as gateway__pb2
+try:
+    from . import gateway_pb2 as gateway__pb2  # relative import when used as package
+except ImportError:
+    import gateway_pb2 as gateway__pb2  # noqa: E402 (kept for grpc_tools compatibility)
 
 GRPC_GENERATED_VERSION = '1.71.2'
 GRPC_VERSION = grpc.__version__
@@ -35,11 +38,6 @@ class GatewayStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Send = channel.unary_unary(
-                '/gateway.Gateway/Send',
-                request_serializer=gateway__pb2.GatewayRequest.SerializeToString,
-                response_deserializer=gateway__pb2.GatewayReply.FromString,
-                _registered_method=True)
         self.GetVolatility = channel.unary_unary(
                 '/gateway.Gateway/GetVolatility',
                 request_serializer=gateway__pb2.VolatilityQueryRequest.SerializeToString,
@@ -50,18 +48,21 @@ class GatewayStub(object):
                 request_serializer=gateway__pb2.DownloadArticleRequest.SerializeToString,
                 response_deserializer=gateway__pb2.DownloadArticleReply.FromString,
                 _registered_method=True)
+        self.GetNewestImportantArticles = channel.unary_unary(
+                '/gateway.Gateway/GetNewestImportantArticles',
+                request_serializer=gateway__pb2.NewestImportantArticlesRequest.SerializeToString,
+                response_deserializer=gateway__pb2.NewestImportantArticlesReply.FromString,
+                _registered_method=True)
+        self.SubscribeLatestNews = channel.unary_stream(
+                '/gateway.Gateway/SubscribeLatestNews',
+                request_serializer=gateway__pb2.LatestNewsSubscriptionRequest.SerializeToString,
+                response_deserializer=gateway__pb2.LatestNewsNotification.FromString,
+                _registered_method=True)
 
 
 class GatewayServicer(object):
     """Main gRPC service
     """
-
-    def Send(self, request, context):
-        """Unary call
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
 
     def GetVolatility(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -75,14 +76,21 @@ class GatewayServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetNewestImportantArticles(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SubscribeLatestNews(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GatewayServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Send': grpc.unary_unary_rpc_method_handler(
-                    servicer.Send,
-                    request_deserializer=gateway__pb2.GatewayRequest.FromString,
-                    response_serializer=gateway__pb2.GatewayReply.SerializeToString,
-            ),
             'GetVolatility': grpc.unary_unary_rpc_method_handler(
                     servicer.GetVolatility,
                     request_deserializer=gateway__pb2.VolatilityQueryRequest.FromString,
@@ -92,6 +100,16 @@ def add_GatewayServicer_to_server(servicer, server):
                     servicer.DownloadGoldNewsArticle,
                     request_deserializer=gateway__pb2.DownloadArticleRequest.FromString,
                     response_serializer=gateway__pb2.DownloadArticleReply.SerializeToString,
+            ),
+            'GetNewestImportantArticles': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetNewestImportantArticles,
+                    request_deserializer=gateway__pb2.NewestImportantArticlesRequest.FromString,
+                    response_serializer=gateway__pb2.NewestImportantArticlesReply.SerializeToString,
+            ),
+            'SubscribeLatestNews': grpc.unary_stream_rpc_method_handler(
+                    servicer.SubscribeLatestNews,
+                    request_deserializer=gateway__pb2.LatestNewsSubscriptionRequest.FromString,
+                    response_serializer=gateway__pb2.LatestNewsNotification.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -104,33 +122,6 @@ def add_GatewayServicer_to_server(servicer, server):
 class Gateway(object):
     """Main gRPC service
     """
-
-    @staticmethod
-    def Send(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/gateway.Gateway/Send',
-            gateway__pb2.GatewayRequest.SerializeToString,
-            gateway__pb2.GatewayReply.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
 
     @staticmethod
     def GetVolatility(request,
@@ -176,6 +167,60 @@ class Gateway(object):
             '/gateway.Gateway/DownloadGoldNewsArticle',
             gateway__pb2.DownloadArticleRequest.SerializeToString,
             gateway__pb2.DownloadArticleReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetNewestImportantArticles(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gateway.Gateway/GetNewestImportantArticles',
+            gateway__pb2.NewestImportantArticlesRequest.SerializeToString,
+            gateway__pb2.NewestImportantArticlesReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SubscribeLatestNews(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/gateway.Gateway/SubscribeLatestNews',
+            gateway__pb2.LatestNewsSubscriptionRequest.SerializeToString,
+            gateway__pb2.LatestNewsNotification.FromString,
             options,
             channel_credentials,
             insecure,

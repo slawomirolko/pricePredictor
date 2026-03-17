@@ -1,9 +1,12 @@
+import logging
+from typing import Any, List
+
 from crewai import Agent, Crew, Process, Task
-from crewai.project import CrewBase, agent, crew, task
+from crewai.project import CrewBase, agent, before_kickoff, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from typing import List
-from army.tools import GatewayMessageTool
 from army.settings import load_ollama_settings
+
+logger = logging.getLogger(__name__)
 
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
@@ -19,6 +22,19 @@ class Army():
     def __init__(self) -> None:
         self._ollama_settings = load_ollama_settings()
 
+    @before_kickoff
+    def log_inputs(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        newest_important_articles = str(inputs.get("newest_important_articles", "[]"))
+        logger.info(
+            "Crew kickoff inputs: topic=%s current_year=%s last_read_at_utc=%s newest_important_articles_chars=%s newest_important_articles_preview=%s",
+            inputs.get("topic", ""),
+            inputs.get("current_year", ""),
+            inputs.get("last_read_at_utc", ""),
+            len(newest_important_articles),
+            newest_important_articles[:1000],
+        )
+        return inputs
+
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
     # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
@@ -26,12 +42,11 @@ class Army():
     # If you would like to add tools to your agents, you can learn more about it here:
     # https://docs.crewai.com/concepts/agents#agent-tools
     @agent
-    def researcher(self) -> Agent:
+    def articles_reader(self) -> Agent:
         return Agent(
-            config=self.agents_config['researcher'], # type: ignore[index]
+            config=self.agents_config['articles_reader'], # type: ignore[index]
             verbose=True,
-            llm=self._ollama_settings.selected_llm,
-            tools=[GatewayMessageTool()]
+            llm=self._ollama_settings.selected_llm
         )
 
     @agent
@@ -39,8 +54,7 @@ class Army():
         return Agent(
             config=self.agents_config['instructor'], # type: ignore[index]
             verbose=True,
-            llm=self._ollama_settings.selected_llm,
-            tools=[GatewayMessageTool()]
+            llm=self._ollama_settings.selected_llm
         )
 
     # To learn more about structured task outputs,

@@ -1,3 +1,1 @@
-from .gateway_tool import GatewayMessageTool
-
-__all__ = ["GatewayMessageTool"]
+__all__: list[str] = []

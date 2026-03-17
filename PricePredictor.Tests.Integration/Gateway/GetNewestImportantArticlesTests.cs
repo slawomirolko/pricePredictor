@@ -19,33 +19,43 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
     {
         var testId = Guid.NewGuid().ToString("N");
         var source = $"test-important-articles-{testId}";
+        var article1Id = Guid.CreateVersion7();
+        var article2Id = Guid.CreateVersion7();
+        var article3Id = Guid.CreateVersion7();
+        var article4Id = Guid.CreateVersion7();
+        var article5Id = Guid.CreateVersion7();
         var articles = new[]
         {
             new SeedArticle(
+                article1Id,
                 $"https://example.com/{testId}/article-1",
                 source,
                 new DateTime(2099, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 true,
                 "summary-1"),
             new SeedArticle(
+                article2Id,
                 $"https://example.com/{testId}/article-2",
                 source,
                 new DateTime(2099, 1, 1, 11, 0, 0, DateTimeKind.Utc),
                 true,
                 "summary-2"),
             new SeedArticle(
+                article3Id,
                 $"https://example.com/{testId}/article-3",
                 source,
                 new DateTime(2099, 1, 1, 12, 0, 0, DateTimeKind.Utc),
                 false,
                 "summary-3"),
             new SeedArticle(
+                article4Id,
                 $"https://example.com/{testId}/article-4",
                 source,
                 new DateTime(2099, 1, 1, 13, 0, 0, DateTimeKind.Utc),
                 true,
                 "summary-4"),
             new SeedArticle(
+                article5Id,
                 $"https://example.com/{testId}/article-5",
                 source,
                 new DateTime(2099, 1, 1, 14, 0, 0, DateTimeKind.Utc),
@@ -58,6 +68,11 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
         var reply = await GatewayClient.GetNewestImportantArticlesAsync(new NewestImportantArticlesRequest());
 
         reply.Articles.Count.ShouldBe(3);
+        reply.Articles.Select(x => x.ArticleId).ToArray().ShouldBe([
+            article5Id.ToString(),
+            article4Id.ToString(),
+            article2Id.ToString()
+        ]);
         reply.Articles.Select(x => x.Url).ToArray().ShouldBe([
             $"https://example.com/{testId}/article-5",
             $"https://example.com/{testId}/article-4",
@@ -94,7 +109,8 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
                 articleLinkId: link.Id,
                 isTradingUseful: seedArticle.IsTradingUseful,
                 scannedAtUtc: seedArticle.ReadAtUtc.AddMinutes(1),
-                summary: seedArticle.Summary);
+                summary: seedArticle.Summary,
+                id: seedArticle.ArticleId);
 
             articleResult.IsError.ShouldBeFalse();
             dbContext.Articles.Add(articleResult.Value);
@@ -104,6 +120,7 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
     }
 
     private sealed record SeedArticle(
+        Guid ArticleId,
         string Url,
         string Source,
         DateTime ReadAtUtc,

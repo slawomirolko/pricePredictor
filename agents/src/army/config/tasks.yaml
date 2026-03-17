@@ -1,20 +1,47 @@
 research_task:
   description: >
-    Conduct a thorough research about {topic}
-    First, call the `gateway_message` tool with a payload asking for a server message about {topic},
-    then use that response as additional context for your research.
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
+    Review the latest article summaries provided below.
+    Current year: {current_year}
+    Last processed article read timestamp (UTC): {last_read_at_utc}
+    Newest important articles payload:
+    {newest_important_articles}
+
+    Evaluate whether each article still has active price impact at the current time.
+    Focus mainly on gold, silver, oil, and natural gas.
+    Also note any meaningful effect on currencies or the broader market.
+    Determine whether each article is likely to affect trading prices in the upcoming minutes and hours for short-term investors.
+    Estimate how long that short-term effect is likely to remain actionable.
+    The short-term forecast must never exceed 12 hours.
+    For each relevant article, determine:
+    whether the impact is still active now,
+    whether there is short-term trading impact in the upcoming minutes and hours,
+    which markets are affected,
+    the likely direction of the move,
+    and how long the effect is likely to remain relevant.
+    If an article affects markets, return the article `id` exactly as provided in the input request.
+    Do not invent, transform, or infer article ids when they are missing from the input.
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    A JSON array of trading impact assessments.
+    Each item should contain:
+    `has_active_impact`,
+    `shortTermImpact`,
+    `article_id` when the input provided one and the article has active impact,
+    `affected_markets`,
+    `direction`,
+    `expected_duration`,
+    `short_term_investor_duration` as a duration capped at 12 hours,
+    `reason`.
+  agent: articles_reader
 
 reporting_task:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    If needed, call the `gateway_message` tool to request extra server context for unclear sections.
-    Make sure the report is detailed and contains any and all relevant information.
+    Review the specialist output and produce a concise market-impact report.
+    Current year: {current_year}
+    Prioritize gold, silver, oil, and natural gas.
+    Include currency or broader market effects only when material.
+    For each active article, include the `article_id` exactly as received in the previous input when available,
+    plus the affected markets, likely direction, and expected duration of the effect.
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
+    A concise markdown report of active market impacts with article ids when available in the input.
     Formatted as markdown without '```'
   agent: instructor

@@ -168,6 +168,7 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
 
     private static ImportantArticle MapImportantArticle(ImportantArticleDto article) => new()
     {
+        ArticleId = article.ArticleId.ToString(),
         Url = article.Url,
         Source = article.Source,
         ReadAtUtc = Timestamp.FromDateTime(article.ReadAtUtc),

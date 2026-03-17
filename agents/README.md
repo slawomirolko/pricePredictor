@@ -13,6 +13,7 @@ Next, navigate to your project directory and install the dependencies:
 
 (Optional) Lock the dependencies and install them by using the CLI command:
 ```bash
+
 crewai install
 ```
 ### Customizing
@@ -29,6 +30,12 @@ To kickstart your crew of AI agents and begin task execution, run this from the 
 ```bash
 $ uv run python -m army.main
 ```
+
+OR EVERY MINUTE:
+```
+$ uv run --project .\agents run_every_minute
+```
+ Ctrl+C to end
 
 This command initializes the army Crew, assembling the agents and assigning them tasks as defined in your configuration.
 

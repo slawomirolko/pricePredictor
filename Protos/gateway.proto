@@ -8,22 +8,10 @@ import "google/protobuf/timestamp.proto";
 
 // Main gRPC service
 service Gateway {
-  // Unary call
-  rpc Send (GatewayRequest) returns (GatewayReply);
   rpc GetVolatility (VolatilityQueryRequest) returns (VolatilityQueryReply);
   rpc DownloadGoldNewsArticle (DownloadArticleRequest) returns (DownloadArticleReply);
   rpc GetNewestImportantArticles (NewestImportantArticlesRequest) returns (NewestImportantArticlesReply);
   rpc SubscribeLatestNews (LatestNewsSubscriptionRequest) returns (stream LatestNewsNotification);
-}
-
-// Request message
-message GatewayRequest {
-  string payload = 1;
-}
-
-// Response message
-message GatewayReply {
-  string result = 1;
 }
 
 enum Commodity {
@@ -80,6 +68,7 @@ message ImportantArticle {
   string source = 2;
   google.protobuf.Timestamp read_at_utc = 3;
   string summary = 4;
+  string article_id = 5;
 }
 
 message NewestImportantArticlesReply {

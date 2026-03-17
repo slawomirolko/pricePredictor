@@ -24,16 +24,22 @@ internal sealed class ImportantArticleService : IImportantArticleService
 
         var articleLinks = await _unitOfWork.ArticleLinks.GetLinksByIdsAsync(usefulArticleLinkIds, cancellationToken);
         var articles = await _unitOfWork.Articles.GetByArticleLinkIdsAsync(usefulArticleLinkIds, cancellationToken);
-        var summariesByArticleLinkId = articles.ToDictionary(x => x.ArticleLinkId, x => x.Summary);
+        var articlesByArticleLinkId = articles.ToDictionary(x => x.ArticleLinkId);
 
         return articleLinks
             .OrderByDescending(x => x.ReadAt)
             .Take(NewestArticleCount)
-            .Select(x => new ImportantArticleDto(
-                x.Url,
-                x.Source,
-                DateTime.SpecifyKind(x.ReadAt, DateTimeKind.Utc),
-                summariesByArticleLinkId.GetValueOrDefault(x.Id)))
+            .Select(x =>
+            {
+                var article = articlesByArticleLinkId[x.Id];
+
+                return new ImportantArticleDto(
+                    article.Id,
+                    x.Url,
+                    x.Source,
+                    DateTime.SpecifyKind(x.ReadAt, DateTimeKind.Utc),
+                    article.Summary);
+            })
             .ToList();
     }
 }
