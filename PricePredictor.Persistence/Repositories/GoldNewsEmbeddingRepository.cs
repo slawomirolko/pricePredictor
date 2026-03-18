@@ -31,6 +31,40 @@ public class GoldNewsEmbeddingsRepository : IGoldNewsEmbeddingRepository
         return result as string;
     }
 
+    public async Task<IReadOnlyDictionary<Guid, string>> GetEmbeddingTextsAsync(
+        IReadOnlyCollection<Guid> articleIds,
+        CancellationToken cancellationToken)
+    {
+        if (articleIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var connection = await OpenConnectionAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT article_id, embedding::text
+FROM gold_news_embeddings
+WHERE article_id = ANY(@articleIds)
+  AND article_id IS NOT NULL";
+
+        AttachCurrentTransaction(command);
+        AddParameter(command, "@articleIds", articleIds.ToArray());
+
+        var results = new Dictionary<Guid, string>(articleIds.Count);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var articleId = reader.GetGuid(0);
+            var embeddingText = reader.GetString(1);
+            results[articleId] = embeddingText;
+        }
+
+        return results;
+    }
+
     public async Task EnsureStorageAsync(int dimensions, CancellationToken cancellationToken)
     {
         await Task.CompletedTask;

@@ -1,9 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Application.Models;
 using PricePredictor.Persistence;
 using PricePredictor.Tests.Integration.Setup;
 using Shouldly;
+using System.Globalization;
+using PricePredictor.Application.Data;
+using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
 
 namespace PricePredictor.Tests.Integration.Gateway;
 
@@ -64,8 +68,13 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
         };
 
         await SeedArticlesAsync(articles, CancellationToken.None);
+        using var scope = Factory.Services.CreateScope();
+        var settings = scope.ServiceProvider.GetRequiredService<IOptions<GoldNewsSettings>>().Value;
 
         var reply = await GatewayClient.GetNewestImportantArticlesAsync(new NewestImportantArticlesRequest());
+        var expectedArticle5Embedding = CreateExpectedEmbeddingText(5, settings.EmbeddingDimensions);
+        var expectedArticle4Embedding = CreateExpectedEmbeddingText(4, settings.EmbeddingDimensions);
+        var expectedArticle2Embedding = CreateExpectedEmbeddingText(2, settings.EmbeddingDimensions);
 
         reply.Articles.Count.ShouldBe(3);
         reply.Articles.Select(x => x.ArticleId).ToArray().ShouldBe([
@@ -85,9 +94,9 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
             new DateTime(2099, 1, 1, 11, 0, 0, DateTimeKind.Utc)
         ]);
         reply.Articles.Select(x => x.Summary).ToArray().ShouldBe([
-            "summary-5",
-            "summary-4",
-            "summary-2"
+            expectedArticle5Embedding,
+            expectedArticle4Embedding,
+            expectedArticle2Embedding
         ]);
     }
 
@@ -95,6 +104,8 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
     {
         using var scope = Factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<PricePredictorDbContext>();
+        var embeddingsRepository = scope.ServiceProvider.GetRequiredService<IGoldNewsEmbeddingRepository>();
+        var settings = scope.ServiceProvider.GetRequiredService<IOptions<GoldNewsSettings>>().Value;
 
         foreach (var seedArticle in articles)
         {
@@ -117,6 +128,33 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        foreach (var seedArticle in articles)
+        {
+            await embeddingsRepository.UpsertArticleAsync(
+                seedArticle.ArticleId,
+                seedArticle.ReadAtUtc,
+                seedArticle.Summary,
+                CreateEmbedding(seedArticle.EmbeddingMarker, settings.EmbeddingDimensions),
+                settings.EmbeddingDimensions,
+                cancellationToken);
+        }
+    }
+
+    private static float[] CreateEmbedding(int marker, int dimensions)
+    {
+        var embedding = new float[dimensions];
+        embedding[0] = marker;
+        embedding[1] = marker + 0.25f;
+        embedding[2] = marker + 0.5f;
+        return embedding;
+    }
+
+    private static string CreateExpectedEmbeddingText(int marker, int dimensions)
+    {
+        return "[" + string.Join(
+            ",",
+            CreateEmbedding(marker, dimensions).Select(x => x.ToString("G9", CultureInfo.InvariantCulture))) + "]";
     }
 
     private sealed record SeedArticle(
@@ -125,5 +163,8 @@ public sealed class GetNewestImportantArticlesTests : IntegrationTest
         string Source,
         DateTime ReadAtUtc,
         bool IsTradingUseful,
-        string Summary);
+        string Summary)
+    {
+        public int EmbeddingMarker => int.Parse(Summary.Split('-')[1], CultureInfo.InvariantCulture);
+    }
 }

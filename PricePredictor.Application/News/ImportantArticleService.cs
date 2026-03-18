@@ -25,6 +25,9 @@ internal sealed class ImportantArticleService : IImportantArticleService
         var articleLinks = await _unitOfWork.ArticleLinks.GetLinksByIdsAsync(usefulArticleLinkIds, cancellationToken);
         var articles = await _unitOfWork.Articles.GetByArticleLinkIdsAsync(usefulArticleLinkIds, cancellationToken);
         var articlesByArticleLinkId = articles.ToDictionary(x => x.ArticleLinkId);
+        var embeddingTextsByArticleId = await _unitOfWork.Embeddings.GetEmbeddingTextsAsync(
+            articles.Select(x => x.Id).ToArray(),
+            cancellationToken);
 
         return articleLinks
             .OrderByDescending(x => x.ReadAt)
@@ -32,13 +35,14 @@ internal sealed class ImportantArticleService : IImportantArticleService
             .Select(x =>
             {
                 var article = articlesByArticleLinkId[x.Id];
+                embeddingTextsByArticleId.TryGetValue(article.Id, out var embeddingText);
 
                 return new ImportantArticleDto(
                     article.Id,
                     x.Url,
                     x.Source,
                     DateTime.SpecifyKind(x.ReadAt, DateTimeKind.Utc),
-                    article.Summary);
+                    embeddingText ?? string.Empty);
             })
             .ToList();
     }
