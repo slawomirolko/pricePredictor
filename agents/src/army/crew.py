@@ -1,12 +1,21 @@
 import logging
 from typing import Any, List
 
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, LLM, Process, Task
 from crewai.project import CrewBase, agent, before_kickoff, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from army.settings import load_ollama_settings
+from army.settings import OLLAMA_API_KEY, OLLAMA_URL
 
 logger = logging.getLogger(__name__)
+
+
+def _create_llm(model: str) -> LLM:
+    return LLM(
+        model=model,
+        base_url=OLLAMA_URL,
+        api_key=OLLAMA_API_KEY,
+        headers={"Authorization": f"Bearer {OLLAMA_API_KEY}"},
+    )
 
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
@@ -18,9 +27,6 @@ class Army():
 
     agents: List[BaseAgent]
     tasks: List[Task]
-
-    def __init__(self) -> None:
-        self._ollama_settings = load_ollama_settings()
 
     @before_kickoff
     def log_inputs(self, inputs: dict[str, Any]) -> dict[str, Any]:
@@ -46,7 +52,7 @@ class Army():
         return Agent(
             config=self.agents_config['articles_reader'], # type: ignore[index]
             verbose=True,
-            llm=self._ollama_settings.selected_llm
+            llm=_create_llm("ollama_chat/gpt-oss:120b-cloud")
         )
 
     @agent
@@ -54,7 +60,23 @@ class Army():
         return Agent(
             config=self.agents_config['instructor'], # type: ignore[index]
             verbose=True,
-            llm=self._ollama_settings.selected_llm
+            llm=_create_llm("ollama_chat/gpt-oss:120b-cloud")
+        )
+
+    @agent
+    def trader(self) -> Agent:
+        return Agent(
+            config=self.agents_config['trader'], # type: ignore[index]
+            verbose=False,
+            llm=_create_llm("ollama_chat/glm-5:cloud")
+        )
+
+    @agent
+    def decision_maker(self) -> Agent:
+        return Agent(
+            config=self.agents_config['decision_maker'], # type: ignore[index]
+            verbose=True,
+            llm=_create_llm("ollama_chat/gpt-oss:120b-cloud")
         )
 
     # To learn more about structured task outputs,
@@ -67,10 +89,24 @@ class Army():
         )
 
     @task
+    def trading_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['trading_task'], # type: ignore[index]
+            context=[self.research_task()]
+        )
+
+    @task
+    def decision_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['decision_task'], # type: ignore[index]
+            context=[self.research_task(), self.trading_task()]
+        )
+
+    @task
     def reporting_task(self) -> Task:
         return Task(
             config=self.tasks_config['reporting_task'], # type: ignore[index]
-            output_file='report.md'
+            context=[self.decision_task()]
         )
 
     @crew

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
 using PricePredictor.Api.Gateway;
 using PricePredictor.Application;
+using PricePredictor.Application.Finance;
 using PricePredictor.Infrastructure;
 using PricePredictor.Persistence;
 using GoldNewsSettings = PricePredictor.Infrastructure.GoldNewsSettings;
@@ -35,12 +36,14 @@ builder.Services.AddApplication();
 builder.Services.AddOllamaArticleExtractionClient();
 builder.Services.AddGoldNewsClient();
 builder.Services.AddStooqGoldPriceClient();
+builder.Services.AddYahooFinanceClient();
 
 // Persistence: Database and repository setup
 builder.Services.AddPersistence(builder.Configuration);
 
 builder.Services.Configure<GoldNewsSettings>(builder.Configuration.GetSection(GoldNewsSettings.SectionName));
 builder.Services.Configure<GoldNewsSettingsApp>(builder.Configuration.GetSection(GoldNewsSettingsApp.SectionName));
+builder.Services.Configure<YahooFinanceSettings>(builder.Configuration.GetSection(YahooFinanceSettings.SectionName));
 var app = builder.Build();
 
 app.Services.ApplyPendingMigrations();

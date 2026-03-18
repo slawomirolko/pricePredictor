@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
+using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 
 namespace PricePredictor.Infrastructure.Finance;
 
@@ -7,7 +9,7 @@ namespace PricePredictor.Infrastructure.Finance;
 /// Typed HTTP Client for Yahoo Finance API
 /// Uses 1-minute intervals for intraday data
 /// </summary>
-public class YahooFinanceClient
+public class YahooFinanceClient : ICommodityMarketDataClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<YahooFinanceClient> _logger;
@@ -37,31 +39,32 @@ public class YahooFinanceClient
 
             if (chart is null)
             {
-                _logger.LogWarning("Yahoo Finance returned null chart payload for {Symbol}", symbol);
-                return new List<CandlePoint>();
+                throw new InvalidOperationException($"Yahoo Finance returned null chart payload for symbol={symbol}, interval={interval}, range={range}.");
             }
 
             if (chart.Error != null)
             {
-                _logger.LogError("Yahoo Finance error for {Symbol}: {Code} - {Description}",
-                    symbol, chart.Error.Code, chart.Error.Description);
-                return new List<CandlePoint>();
+                throw new InvalidOperationException(
+                    $"Yahoo Finance error for symbol={symbol}, interval={interval}, range={range}, code={chart.Error.Code}, description={chart.Error.Description}.");
             }
 
             if (chart.Result is null || chart.Result.Length == 0)
             {
-                _logger.LogWarning("No data returned for symbol {Symbol}", symbol);
-                return new List<CandlePoint>();
+                throw new InvalidOperationException($"Yahoo Finance returned no result payload for symbol={symbol}, interval={interval}, range={range}.");
             }
 
             var result = chart.Result[0];
             if (result is null)
             {
-                _logger.LogWarning("Yahoo Finance returned null result payload for {Symbol}", symbol);
-                return new List<CandlePoint>();
+                throw new InvalidOperationException($"Yahoo Finance returned a null result item for symbol={symbol}, interval={interval}, range={range}.");
             }
 
             var candles = ParseCandles(result);
+            if (candles.Count == 0)
+            {
+                throw new InvalidOperationException($"Yahoo Finance returned zero parsed candles for symbol={symbol}, interval={interval}, range={range}.");
+            }
+
             _logger.LogInformation("Fetched {Count} candles for {Symbol}", candles.Count, symbol);
 
             return candles;
@@ -69,13 +72,36 @@ public class YahooFinanceClient
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "HTTP error fetching data for {Symbol}", symbol);
-            return new List<CandlePoint>();
+            throw new InvalidOperationException($"HTTP error fetching Yahoo Finance data for symbol={symbol}, interval={interval}, range={range}.", ex);
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching Yahoo Finance data for {Symbol}", symbol);
-            return new List<CandlePoint>();
+            throw new InvalidOperationException($"Error fetching Yahoo Finance data for symbol={symbol}, interval={interval}, range={range}.", ex);
         }
+    }
+
+    public async Task<CommodityLatestMarketDataDto> GetLatestAsync(
+        string symbol,
+        string interval = "1m",
+        string range = "1d",
+        CancellationToken cancellationToken = default)
+    {
+        var candles = await GetIntradayDataAsync(symbol, interval, range, cancellationToken);
+        var latest = candles.OrderByDescending(x => x.Timestamp).First();
+
+        return new CommodityLatestMarketDataDto(
+            symbol,
+            latest.Timestamp,
+            latest.Open,
+            latest.High,
+            latest.Low,
+            latest.Close,
+            latest.Volume);
     }
 
     private static List<CandlePoint> ParseCandles(ChartResult result)

@@ -7,6 +7,7 @@ try:
     from . import gateway_pb2 as gateway__pb2  # relative import when used as package
 except ImportError:
     import gateway_pb2 as gateway__pb2  # noqa: E402 (kept for grpc_tools compatibility)
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 GRPC_GENERATED_VERSION = '1.71.2'
 GRPC_VERSION = grpc.__version__
@@ -43,6 +44,16 @@ class GatewayStub(object):
                 request_serializer=gateway__pb2.VolatilityQueryRequest.SerializeToString,
                 response_deserializer=gateway__pb2.VolatilityQueryReply.FromString,
                 _registered_method=True)
+        self.ExportVolatilityPeriodJson = channel.unary_unary(
+                '/gateway.Gateway/ExportVolatilityPeriodJson',
+                request_serializer=gateway__pb2.VolatilityPeriodRequest.SerializeToString,
+                response_deserializer=gateway__pb2.JsonPayloadReply.FromString,
+                _registered_method=True)
+        self.ExportLatestVolatilityJson = channel.unary_unary(
+                '/gateway.Gateway/ExportLatestVolatilityJson',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=gateway__pb2.JsonPayloadReply.FromString,
+                _registered_method=True)
         self.DownloadGoldNewsArticle = channel.unary_unary(
                 '/gateway.Gateway/DownloadGoldNewsArticle',
                 request_serializer=gateway__pb2.DownloadArticleRequest.SerializeToString,
@@ -65,6 +76,18 @@ class GatewayServicer(object):
     """
 
     def GetVolatility(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExportVolatilityPeriodJson(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExportLatestVolatilityJson(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -95,6 +118,16 @@ def add_GatewayServicer_to_server(servicer, server):
                     servicer.GetVolatility,
                     request_deserializer=gateway__pb2.VolatilityQueryRequest.FromString,
                     response_serializer=gateway__pb2.VolatilityQueryReply.SerializeToString,
+            ),
+            'ExportVolatilityPeriodJson': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExportVolatilityPeriodJson,
+                    request_deserializer=gateway__pb2.VolatilityPeriodRequest.FromString,
+                    response_serializer=gateway__pb2.JsonPayloadReply.SerializeToString,
+            ),
+            'ExportLatestVolatilityJson': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExportLatestVolatilityJson,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=gateway__pb2.JsonPayloadReply.SerializeToString,
             ),
             'DownloadGoldNewsArticle': grpc.unary_unary_rpc_method_handler(
                     servicer.DownloadGoldNewsArticle,
@@ -140,6 +173,60 @@ class Gateway(object):
             '/gateway.Gateway/GetVolatility',
             gateway__pb2.VolatilityQueryRequest.SerializeToString,
             gateway__pb2.VolatilityQueryReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ExportVolatilityPeriodJson(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gateway.Gateway/ExportVolatilityPeriodJson',
+            gateway__pb2.VolatilityPeriodRequest.SerializeToString,
+            gateway__pb2.JsonPayloadReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ExportLatestVolatilityJson(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gateway.Gateway/ExportLatestVolatilityJson',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            gateway__pb2.JsonPayloadReply.FromString,
             options,
             channel_credentials,
             insecure,

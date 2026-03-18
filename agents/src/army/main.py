@@ -4,7 +4,7 @@ import json
 import logging
 import sys
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -12,16 +12,21 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from gateway_client.grpc_client import AsyncGatewayGrpcClient
 from army.crew import Army
-from army.settings import apply_ollama_environment, load_ollama_settings
+from army.settings import (
+    OLLAMA_API_KEY_SOURCE,
+    OLLAMA_URL,
+    apply_ollama_environment,
+    get_ollama_api_key_fingerprint,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
-_SETTINGS = load_ollama_settings()
-apply_ollama_environment(_SETTINGS)
+apply_ollama_environment()
 _STATE_FILE_PATH = Path(__file__).resolve().parents[2] / "state" / "army_state.json"
+_TRADING_LOOKBACK_HOURS = 1
 
 
 def run():
@@ -102,16 +107,20 @@ async def _run_scheduled_crew():
 def _build_default_inputs():
     state = _load_state()
     last_read_at_utc = state.get("last_read_at_utc", "")
+    now_utc = datetime.utcnow()
 
     return {
         "topic": "AI LLMs",
-        "current_year": str(datetime.now().year),
+        "current_year": str(now_utc.year),
         "last_read_at_utc": last_read_at_utc,
+        "now_utc": _format_utc(now_utc),
     }
 
 
 async def _attach_newest_articles_async(inputs: dict[str, str]) -> dict[str, str]:
     client = AsyncGatewayGrpcClient("localhost:50051")
+    now_utc = datetime.utcnow().replace(microsecond=0)
+    start_utc = now_utc - timedelta(hours=_TRADING_LOOKBACK_HOURS)
 
     try:
         articles = await client.get_newest_important_articles()
@@ -127,9 +136,23 @@ async def _attach_newest_articles_async(inputs: dict[str, str]) -> dict[str, str
                 article["url"],
                 article["read_at_utc"],
             )
+
+        inputs["volatility_period_json"] = await client.get_volatility_period_json(
+            _format_utc(start_utc),
+            _format_utc(now_utc),
+        )
+        inputs["latest_volatility_json"] = await client.get_latest_volatility_json()
+        logger.info(
+            "Fetched volatility inputs for %s hours. period_chars=%s latest_chars=%s",
+            _TRADING_LOOKBACK_HOURS,
+            len(inputs["volatility_period_json"]),
+            len(inputs["latest_volatility_json"]),
+        )
     except Exception as exc:
         inputs["newest_important_articles"] = "[]"
-        logger.error("Failed to fetch newest important articles: %s", exc)
+        inputs["volatility_period_json"] = "{}"
+        inputs["latest_volatility_json"] = "{}"
+        logger.error("Failed to fetch gateway inputs: %s", exc)
     finally:
         await client.close()
 
@@ -177,15 +200,17 @@ def _log_articles_reader_output(result: Any) -> None:
 
 def _log_ollama_context() -> None:
     logger.info(
-        "Ollama context: model=%s selected_llm=%s api_base=%s.",
-        _SETTINGS.ollama_model,
-        _SETTINGS.selected_llm,
-        _SETTINGS.ollama_url,
+        "Ollama context: api_base=%s api_key_source=%s api_key=%s.",
+        OLLAMA_URL,
+        OLLAMA_API_KEY_SOURCE,
+        get_ollama_api_key_fingerprint(),
     )
 
 
 def _log_crew_input_context(inputs: dict[str, str]) -> None:
     articles_json = inputs.get("newest_important_articles", "[]")
+    volatility_json = inputs.get("volatility_period_json", "{}")
+    latest_volatility_json = inputs.get("latest_volatility_json", "{}")
     article_count = 0
 
     try:
@@ -196,23 +221,32 @@ def _log_crew_input_context(inputs: dict[str, str]) -> None:
         pass
 
     logger.info(
-        "Crew input context: topic=%s article_count=%s newest_important_articles_chars=%s.",
+        "Crew input context: topic=%s article_count=%s newest_important_articles_chars=%s volatility_period_chars=%s latest_volatility_chars=%s.",
         inputs.get("topic", ""),
         article_count,
         len(articles_json),
+        len(volatility_json),
+        len(latest_volatility_json),
     )
 
 
 def _log_crew_failure_context(inputs: dict[str, str], exc: Exception) -> None:
     articles_json = inputs.get("newest_important_articles", "[]")
+    volatility_json = inputs.get("volatility_period_json", "{}")
+    latest_volatility_json = inputs.get("latest_volatility_json", "{}")
     preview = articles_json[:1000]
+    volatility_preview = volatility_json[:1000]
+    latest_volatility_preview = latest_volatility_json[:1000]
 
     logger.error(
-        "Crew kickoff failed. model=%s api_base=%s article_payload_chars=%s article_payload_preview=%s error=%s",
-        _SETTINGS.selected_llm,
-        _SETTINGS.ollama_url,
+        "Crew kickoff failed. api_base=%s article_payload_chars=%s article_payload_preview=%s volatility_payload_chars=%s volatility_payload_preview=%s latest_payload_chars=%s latest_payload_preview=%s error=%s",
+        OLLAMA_URL,
         len(articles_json),
         preview,
+        len(volatility_json),
+        volatility_preview,
+        len(latest_volatility_json),
+        latest_volatility_preview,
         exc,
     )
 

@@ -1,16 +1,22 @@
-﻿using Grpc.Core;
 using Google.Protobuf.WellKnownTypes;
-using PricePredictor.Application;
+using Grpc.Core;
 using PricePredictor.Application.Finance;
 using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Application.News;
+using System.Text.Json;
 using IGoldNewsService = PricePredictor.Application.INewsService;
 
 namespace PricePredictor.Api.Gateway;
 
 public class GatewayRpcEndpoint : Gateway.GatewayBase
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     private readonly IVolatilityRepository _volatilityRepository;
+    private readonly IVolatilityExportService _volatilityExportService;
     private readonly IGoldNewsService _goldNewsService;
     private readonly IImportantArticleService _importantArticleService;
     private readonly INewsArticleChannel _newsArticleChannel;
@@ -18,18 +24,20 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
 
     public GatewayRpcEndpoint(
         IVolatilityRepository volatilityRepository,
+        IVolatilityExportService volatilityExportService,
         IGoldNewsService goldNewsService,
         IImportantArticleService importantArticleService,
         INewsArticleChannel newsArticleChannel,
         ILogger<GatewayRpcEndpoint> logger)
     {
         _volatilityRepository = volatilityRepository;
+        _volatilityExportService = volatilityExportService;
         _goldNewsService = goldNewsService;
         _importantArticleService = importantArticleService;
         _newsArticleChannel = newsArticleChannel;
         _logger = logger;
     }
-    
+
     public override async Task<VolatilityQueryReply> GetVolatility(
         VolatilityQueryRequest request,
         ServerCallContext context)
@@ -63,6 +71,50 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
         reply.Points.AddRange(points.Select(MapPoint));
 
         return reply;
+    }
+
+    public override async Task<JsonPayloadReply> ExportVolatilityPeriodJson(
+        VolatilityPeriodRequest request,
+        ServerCallContext context)
+    {
+        if (request.StartUtc == null)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "StartUtc is required."));
+        }
+
+        if (request.EndUtc == null)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "EndUtc is required."));
+        }
+
+        var startUtc = NormalizeUtc(request.StartUtc);
+        var endUtc = NormalizeUtc(request.EndUtc);
+
+        if (startUtc >= endUtc)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "StartUtc must be earlier than EndUtc."));
+        }
+
+        var export = await _volatilityExportService.GetPeriodAsync(startUtc, endUtc, context.CancellationToken);
+
+        return new JsonPayloadReply
+        {
+            Json = JsonSerializer.Serialize(export, SerializerOptions),
+            ContentType = "application/json"
+        };
+    }
+
+    public override async Task<JsonPayloadReply> ExportLatestVolatilityJson(
+        Empty request,
+        ServerCallContext context)
+    {
+        var export = await _volatilityExportService.GetNewestAsync(context.CancellationToken);
+
+        return new JsonPayloadReply
+        {
+            Json = JsonSerializer.Serialize(export, SerializerOptions),
+            ContentType = "application/json"
+        };
     }
 
     public override async Task<DownloadArticleReply> DownloadGoldNewsArticle(
@@ -174,4 +226,12 @@ public class GatewayRpcEndpoint : Gateway.GatewayBase
         ReadAtUtc = Timestamp.FromDateTime(article.ReadAtUtc),
         Summary = article.Summary ?? string.Empty
     };
+
+    private static DateTime NormalizeUtc(Timestamp timestamp)
+    {
+        var value = timestamp.ToDateTime();
+        return value.Kind == DateTimeKind.Utc
+            ? value
+            : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+    }
 }

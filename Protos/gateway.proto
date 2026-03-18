@@ -5,10 +5,13 @@ option csharp_namespace = "PricePredictor.Api.Gateway";
 package gateway;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 // Main gRPC service
 service Gateway {
   rpc GetVolatility (VolatilityQueryRequest) returns (VolatilityQueryReply);
+  rpc ExportVolatilityPeriodJson (VolatilityPeriodRequest) returns (JsonPayloadReply);
+  rpc ExportLatestVolatilityJson (google.protobuf.Empty) returns (JsonPayloadReply);
   rpc DownloadGoldNewsArticle (DownloadArticleRequest) returns (DownloadArticleReply);
   rpc GetNewestImportantArticles (NewestImportantArticlesRequest) returns (NewestImportantArticlesReply);
   rpc SubscribeLatestNews (LatestNewsSubscriptionRequest) returns (stream LatestNewsNotification);
@@ -46,6 +49,16 @@ message VolatilityPoint {
 message VolatilityQueryReply {
   Commodity commodity = 1;
   repeated VolatilityPoint points = 2;
+}
+
+message VolatilityPeriodRequest {
+  google.protobuf.Timestamp start_utc = 1;
+  google.protobuf.Timestamp end_utc = 2;
+}
+
+message JsonPayloadReply {
+  string json = 1;
+  string content_type = 2;
 }
 
 message DownloadArticleRequest {

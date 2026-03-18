@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PricePredictor.Application.Data;
 using PricePredictor.Application.News;
 
@@ -7,16 +8,33 @@ namespace PricePredictor.ArticlesFinderApp;
 
 public sealed class ArticlesFinderApp
 {
-    private static readonly TimeSpan SyncInterval = TimeSpan.FromSeconds(60);
     private readonly ILogger<ArticlesFinderApp> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly int _syncIntervalSecondsMin;
+    private readonly int _syncIntervalSecondsMax;
 
     public ArticlesFinderApp(
         ILogger<ArticlesFinderApp> logger,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        IOptions<ArticlesFinderSettings> settings)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
+        var appSettings = settings.Value;
+        if (appSettings.SyncIntervalSecondsMin <= 0)
+        {
+            throw new InvalidOperationException(
+                $"{ArticlesFinderSettings.SectionName}:{nameof(ArticlesFinderSettings.SyncIntervalSecondsMin)} must be greater than 0.");
+        }
+
+        if (appSettings.SyncIntervalSecondsMax < appSettings.SyncIntervalSecondsMin)
+        {
+            throw new InvalidOperationException(
+                $"{ArticlesFinderSettings.SectionName}:{nameof(ArticlesFinderSettings.SyncIntervalSecondsMax)} must be greater than or equal to {nameof(ArticlesFinderSettings.SyncIntervalSecondsMin)}.");
+        }
+
+        _syncIntervalSecondsMin = appSettings.SyncIntervalSecondsMin;
+        _syncIntervalSecondsMax = appSettings.SyncIntervalSecondsMax;
     }
 
     public async Task RunAsync(CancellationToken stoppingToken)
@@ -78,7 +96,8 @@ public sealed class ArticlesFinderApp
 
             try
             {
-                await Task.Delay(SyncInterval, stoppingToken);
+                var delaySeconds = Random.Shared.Next(_syncIntervalSecondsMin, _syncIntervalSecondsMax + 1);
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds), stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

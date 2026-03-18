@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using PricePredictor.Application.Finance;
+using PricePredictor.Application.Finance.Interfaces;
 using PricePredictor.Application.News;
 using PricePredictor.Application.Weather;
 
@@ -10,6 +12,7 @@ public static class ApplicationExtensions
     {
         services.AddScoped<IWeatherService, WeatherService>();
         services.AddScoped<INewsService, NewsService>();
+        services.AddScoped<IVolatilityExportService, VolatilityExportService>();
 
         services.AddSingleton<INewsArticleChannel, NewsArticleChannel>();
         services.AddSingleton<IArticleContentExtractionService, ArticleContentExtractionService>();

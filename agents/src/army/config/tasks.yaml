@@ -33,15 +33,68 @@ research_task:
     `reason`.
   agent: articles_reader
 
+trading_task:
+  description: >
+    Use the previous specialist output together with the recent volatility export below
+    to analyse upcoming trader-relevant changes.
+    Current year: {current_year}
+    Current UTC time: {now_utc}
+    Volatility export JSON:
+    {volatility_period_json}
+    Latest volatility JSON:
+    {latest_volatility_json}
+
+    Produce a trader-style short-term view for gold, silver, natural gas, and oil.
+    Blend article catalysts with the recent volatility structure.
+    Focus on the next minutes and hours only.
+    The forecast horizon must never exceed 12 hours.
+    For each commodity, decide:
+    whether there is an actionable setup,
+    the likely direction,
+    confidence,
+    the time horizon,
+    key catalyst articles by exact `article_id` when available from the previous task,
+    and the main invalidation or risk factors.
+    If there is no setup, say so explicitly instead of forcing a signal.
+  expected_output: >
+    A JSON object with keys `gold`, `silver`, `natural_gas`, and `oil`.
+    Each commodity value should contain:
+    `has_setup`,
+    `direction`,
+    `confidence`,
+    `time_horizon`,
+    `article_ids`,
+    `thesis`,
+    `risks`.
+  agent: trader
+
+decision_task:
+  description: >
+    Review the previous two agent outputs: the article-impact specialist output
+    and the trader output. Decide whether it currently makes sense to buy, sell,
+    or wait for gold, silver, natural gas, and oil.
+    Only recommend `buy` or `sell` when the previous two outputs support a clear,
+    actionable setup. Otherwise return `wait`.
+    Keep the horizon intraday and never beyond 12 hours.
+  expected_output: >
+    A JSON object with keys `gold`, `silver`, `natural_gas`, and `oil`.
+    Each commodity value should contain:
+    `action`,
+    `confidence`,
+    `makes_sense`,
+    `reason`,
+    `supporting_article_ids`,
+    `time_horizon`.
+  agent: decision_maker
+
 reporting_task:
   description: >
-    Review the specialist output and produce a concise market-impact report.
+    Review the final decision output and produce a concise market-impact report.
     Current year: {current_year}
     Prioritize gold, silver, oil, and natural gas.
     Include currency or broader market effects only when material.
-    For each active article, include the `article_id` exactly as received in the previous input when available,
-    plus the affected markets, likely direction, and expected duration of the effect.
+    For each commodity, include the final action, confidence, article ids when available,
+    and the main reason.
   expected_output: >
-    A concise markdown report of active market impacts with article ids when available in the input.
-    Formatted as markdown without '```'
+    A concise plain-text market-impact report with article ids when available in the input.
   agent: instructor

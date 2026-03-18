@@ -7,6 +7,8 @@ ThreadPool.SetMinThreads(200, 200);
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.Services.Configure<ArticlesFinderSettings>(
+    builder.Configuration.GetSection(ArticlesFinderSettings.SectionName));
 builder.Services.AddArticlesFinderApp(builder.Configuration);
 
 using var host = builder.Build();

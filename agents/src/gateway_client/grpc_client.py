@@ -1,4 +1,6 @@
 import grpc
+from google.protobuf.empty_pb2 import Empty
+from google.protobuf.timestamp_pb2 import Timestamp
 from . import gateway_pb2
 from .gateway_pb2_grpc import GatewayStub
 
@@ -21,6 +23,24 @@ class AsyncGatewayGrpcClient:
             }
             for article in response.articles
         ]
+
+    async def get_volatility_period_json(self, start_utc: str, end_utc: str) -> str:
+        start_timestamp = Timestamp()
+        start_timestamp.FromJsonString(start_utc)
+
+        end_timestamp = Timestamp()
+        end_timestamp.FromJsonString(end_utc)
+
+        request = gateway_pb2.VolatilityPeriodRequest(
+            start_utc=start_timestamp,
+            end_utc=end_timestamp,
+        )
+        response = await self._stub.ExportVolatilityPeriodJson(request)
+        return response.json
+
+    async def get_latest_volatility_json(self) -> str:
+        response = await self._stub.ExportLatestVolatilityJson(Empty())
+        return response.json
 
     async def close(self):
         await self._channel.close()

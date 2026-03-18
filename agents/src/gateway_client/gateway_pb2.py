@@ -23,9 +23,10 @@ _sym_db = _symbol_database.Default()
 
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgateway.proto\x12\x07gateway\x1a\x1fgoogle/protobuf/timestamp.proto\"z\n\x16VolatilityQueryRequest\x12%\n\tcommodity\x18\x01 \x01(\x0e\x32\x12.gateway.Commodity\x12(\n\x04\x64\x61te\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07minutes\x18\x03 \x01(\x05\"\xf1\x01\n\x0fVolatilityPoint\x12-\n\ttimestamp\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0c\n\x04open\x18\x02 \x01(\x01\x12\x0c\n\x04high\x18\x03 \x01(\x01\x12\x0b\n\x03low\x18\x04 \x01(\x01\x12\r\n\x05\x63lose\x18\x05 \x01(\x01\x12\x0e\n\x06volume\x18\x06 \x01(\x03\x12\x12\n\nlog_return\x18\x07 \x01(\x01\x12\x0c\n\x04vol5\x18\x08 \x01(\x01\x12\r\n\x05vol15\x18\t \x01(\x01\x12\r\n\x05vol60\x18\n \x01(\x01\x12\x13\n\x0bshort_panic\x18\x0b \x01(\x01\x12\x12\n\nlong_panic\x18\x0c \x01(\x01\"g\n\x14VolatilityQueryReply\x12%\n\tcommodity\x18\x01 \x01(\x0e\x32\x12.gateway.Commodity\x12(\n\x06points\x18\x02 \x03(\x0b\x32\x18.gateway.VolatilityPoint\"4\n\x16\x44ownloadArticleRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\"l\n\x14\x44ownloadArticleReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x1a\n\x12was_already_stored\x18\x03 \x01(\x08\x12\x16\n\x0e\x63ontent_length\x18\x04 \x01(\x05\" \n\x1eNewestImportantArticlesRequest\"\x85\x01\n\x10ImportantArticle\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\x0e\n\x06source\x18\x02 \x01(\t\x12/\n\x0bread_at_utc\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07summary\x18\x04 \x01(\t\x12\x12\n\narticle_id\x18\x05 \x01(\t\"K\n\x1cNewestImportantArticlesReply\x12+\n\x08\x61rticles\x18\x01 \x03(\x0b\x32\x19.gateway.ImportantArticle\"3\n\x1dLatestNewsSubscriptionRequest\x12\x12\n\nsubscriber\x18\x01 \x01(\t\"\xac\x01\n\x16LatestNewsNotification\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0c\n\x04link\x18\x02 \x01(\t\x12\x34\n\x10published_at_utc\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0e\n\x06source\x18\x04 \x01(\t\x12/\n\x0bsent_at_utc\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp*L\n\tCommodity\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x08\n\x04GOLD\x10\x01\x12\n\n\x06SILVER\x10\x02\x12\x0f\n\x0bNATURAL_GAS\x10\x03\x12\x07\n\x03OIL\x10\x04\x32\x85\x03\n\x07Gateway\x12O\n\rGetVolatility\x12\x1f.gateway.VolatilityQueryRequest\x1a\x1d.gateway.VolatilityQueryReply\x12Y\n\x17\x44ownloadGoldNewsArticle\x12\x1f.gateway.DownloadArticleRequest\x1a\x1d.gateway.DownloadArticleReply\x12l\n\x1aGetNewestImportantArticles\x12\'.gateway.NewestImportantArticlesRequest\x1a%.gateway.NewestImportantArticlesReply\x12`\n\x13SubscribeLatestNews\x12&.gateway.LatestNewsSubscriptionRequest\x1a\x1f.gateway.LatestNewsNotification0\x01\x42\x1d\xaa\x02\x1aPricePredictor.Api.Gatewayb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rgateway.proto\x12\x07gateway\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"z\n\x16VolatilityQueryRequest\x12%\n\tcommodity\x18\x01 \x01(\x0e\x32\x12.gateway.Commodity\x12(\n\x04\x64\x61te\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07minutes\x18\x03 \x01(\x05\"\xf1\x01\n\x0fVolatilityPoint\x12-\n\ttimestamp\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0c\n\x04open\x18\x02 \x01(\x01\x12\x0c\n\x04high\x18\x03 \x01(\x01\x12\x0b\n\x03low\x18\x04 \x01(\x01\x12\r\n\x05\x63lose\x18\x05 \x01(\x01\x12\x0e\n\x06volume\x18\x06 \x01(\x03\x12\x12\n\nlog_return\x18\x07 \x01(\x01\x12\x0c\n\x04vol5\x18\x08 \x01(\x01\x12\r\n\x05vol15\x18\t \x01(\x01\x12\r\n\x05vol60\x18\n \x01(\x01\x12\x13\n\x0bshort_panic\x18\x0b \x01(\x01\x12\x12\n\nlong_panic\x18\x0c \x01(\x01\"g\n\x14VolatilityQueryReply\x12%\n\tcommodity\x18\x01 \x01(\x0e\x32\x12.gateway.Commodity\x12(\n\x06points\x18\x02 \x03(\x0b\x32\x18.gateway.VolatilityPoint\"u\n\x17VolatilityPeriodRequest\x12-\n\tstart_utc\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12+\n\x07\x65nd_utc\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"6\n\x10JsonPayloadReply\x12\x0c\n\x04json\x18\x01 \x01(\t\x12\x14\n\x0c\x63ontent_type\x18\x02 \x01(\t\"4\n\x16\x44ownloadArticleRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\"l\n\x14\x44ownloadArticleReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x1a\n\x12was_already_stored\x18\x03 \x01(\x08\x12\x16\n\x0e\x63ontent_length\x18\x04 \x01(\x05\" \n\x1eNewestImportantArticlesRequest\"\x85\x01\n\x10ImportantArticle\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\x0e\n\x06source\x18\x02 \x01(\t\x12/\n\x0bread_at_utc\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07summary\x18\x04 \x01(\t\x12\x12\n\narticle_id\x18\x05 \x01(\t\"K\n\x1cNewestImportantArticlesReply\x12+\n\x08\x61rticles\x18\x01 \x03(\x0b\x32\x19.gateway.ImportantArticle\"3\n\x1dLatestNewsSubscriptionRequest\x12\x12\n\nsubscriber\x18\x01 \x01(\t\"\xac\x01\n\x16LatestNewsNotification\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0c\n\x04link\x18\x02 \x01(\t\x12\x34\n\x10published_at_utc\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0e\n\x06source\x18\x04 \x01(\t\x12/\n\x0bsent_at_utc\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp*L\n\tCommodity\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x08\n\x04GOLD\x10\x01\x12\n\n\x06SILVER\x10\x02\x12\x0f\n\x0bNATURAL_GAS\x10\x03\x12\x07\n\x03OIL\x10\x04\x32\xb1\x04\n\x07Gateway\x12O\n\rGetVolatility\x12\x1f.gateway.VolatilityQueryRequest\x1a\x1d.gateway.VolatilityQueryReply\x12Y\n\x1a\x45xportVolatilityPeriodJson\x12 .gateway.VolatilityPeriodRequest\x1a\x19.gateway.JsonPayloadReply\x12O\n\x1a\x45xportLatestVolatilityJson\x12\x16.google.protobuf.Empty\x1a\x19.gateway.JsonPayloadReply\x12Y\n\x17\x44ownloadGoldNewsArticle\x12\x1f.gateway.DownloadArticleRequest\x1a\x1d.gateway.DownloadArticleReply\x12l\n\x1aGetNewestImportantArticles\x12\'.gateway.NewestImportantArticlesRequest\x1a%.gateway.NewestImportantArticlesReply\x12`\n\x13SubscribeLatestNews\x12&.gateway.LatestNewsSubscriptionRequest\x1a\x1f.gateway.LatestNewsNotification0\x01\x42\x1d\xaa\x02\x1aPricePredictor.Api.Gatewayb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,28 +34,32 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'gateway_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\252\002\032PricePredictor.Api.Gateway'
-  _globals['_COMMODITY']._serialized_start=1171
-  _globals['_COMMODITY']._serialized_end=1247
-  _globals['_VOLATILITYQUERYREQUEST']._serialized_start=59
-  _globals['_VOLATILITYQUERYREQUEST']._serialized_end=181
-  _globals['_VOLATILITYPOINT']._serialized_start=184
-  _globals['_VOLATILITYPOINT']._serialized_end=425
-  _globals['_VOLATILITYQUERYREPLY']._serialized_start=427
-  _globals['_VOLATILITYQUERYREPLY']._serialized_end=530
-  _globals['_DOWNLOADARTICLEREQUEST']._serialized_start=532
-  _globals['_DOWNLOADARTICLEREQUEST']._serialized_end=584
-  _globals['_DOWNLOADARTICLEREPLY']._serialized_start=586
-  _globals['_DOWNLOADARTICLEREPLY']._serialized_end=694
-  _globals['_NEWESTIMPORTANTARTICLESREQUEST']._serialized_start=696
-  _globals['_NEWESTIMPORTANTARTICLESREQUEST']._serialized_end=728
-  _globals['_IMPORTANTARTICLE']._serialized_start=731
-  _globals['_IMPORTANTARTICLE']._serialized_end=864
-  _globals['_NEWESTIMPORTANTARTICLESREPLY']._serialized_start=866
-  _globals['_NEWESTIMPORTANTARTICLESREPLY']._serialized_end=941
-  _globals['_LATESTNEWSSUBSCRIPTIONREQUEST']._serialized_start=943
-  _globals['_LATESTNEWSSUBSCRIPTIONREQUEST']._serialized_end=994
-  _globals['_LATESTNEWSNOTIFICATION']._serialized_start=997
-  _globals['_LATESTNEWSNOTIFICATION']._serialized_end=1169
-  _globals['_GATEWAY']._serialized_start=1250
-  _globals['_GATEWAY']._serialized_end=1639
+  _globals['_COMMODITY']._serialized_start=1375
+  _globals['_COMMODITY']._serialized_end=1451
+  _globals['_VOLATILITYQUERYREQUEST']._serialized_start=88
+  _globals['_VOLATILITYQUERYREQUEST']._serialized_end=210
+  _globals['_VOLATILITYPOINT']._serialized_start=213
+  _globals['_VOLATILITYPOINT']._serialized_end=454
+  _globals['_VOLATILITYQUERYREPLY']._serialized_start=456
+  _globals['_VOLATILITYQUERYREPLY']._serialized_end=559
+  _globals['_VOLATILITYPERIODREQUEST']._serialized_start=561
+  _globals['_VOLATILITYPERIODREQUEST']._serialized_end=678
+  _globals['_JSONPAYLOADREPLY']._serialized_start=680
+  _globals['_JSONPAYLOADREPLY']._serialized_end=734
+  _globals['_DOWNLOADARTICLEREQUEST']._serialized_start=736
+  _globals['_DOWNLOADARTICLEREQUEST']._serialized_end=788
+  _globals['_DOWNLOADARTICLEREPLY']._serialized_start=790
+  _globals['_DOWNLOADARTICLEREPLY']._serialized_end=898
+  _globals['_NEWESTIMPORTANTARTICLESREQUEST']._serialized_start=900
+  _globals['_NEWESTIMPORTANTARTICLESREQUEST']._serialized_end=932
+  _globals['_IMPORTANTARTICLE']._serialized_start=935
+  _globals['_IMPORTANTARTICLE']._serialized_end=1068
+  _globals['_NEWESTIMPORTANTARTICLESREPLY']._serialized_start=1070
+  _globals['_NEWESTIMPORTANTARTICLESREPLY']._serialized_end=1145
+  _globals['_LATESTNEWSSUBSCRIPTIONREQUEST']._serialized_start=1147
+  _globals['_LATESTNEWSSUBSCRIPTIONREQUEST']._serialized_end=1198
+  _globals['_LATESTNEWSNOTIFICATION']._serialized_start=1201
+  _globals['_LATESTNEWSNOTIFICATION']._serialized_end=1373
+  _globals['_GATEWAY']._serialized_start=1454
+  _globals['_GATEWAY']._serialized_end=2015
 # @@protoc_insertion_point(module_scope)

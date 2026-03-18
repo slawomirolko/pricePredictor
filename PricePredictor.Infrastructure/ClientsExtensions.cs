@@ -141,7 +141,7 @@ public static class ClientsExtensions
         {
             var retryPolicy = CreateSharedHttpRetryPolicy();
 
-            services.AddHttpClient<YahooFinanceClient>(client =>
+            services.AddHttpClient<ICommodityMarketDataClient, YahooFinanceClient>(client =>
                 {
                     client.BaseAddress = new Uri("https://query1.finance.yahoo.com/");
                     client.DefaultRequestHeaders.UserAgent.ParseAdd(
